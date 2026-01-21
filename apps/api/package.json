@@ -9,6 +9,8 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@frostdesk/db": "*",
+    "dotenv": "^16.3.1",
     "fastify": "^4.24.3"
   },
   "devDependencies": {

@@ -8,8 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "echo 'Add dev scripts for your apps'",
-    "build": "echo 'Add build scripts for your apps'",
+    "build": "npm run build -w @frostdesk/db && npm run build -w @frostdesk/api",
+    "dev": "npm run dev -w @frostdesk/db & npm run dev -w @frostdesk/api",
     "test": "echo 'Add test scripts'"
   },
   "engines": {
