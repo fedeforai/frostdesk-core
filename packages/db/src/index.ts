@@ -14,3 +14,17 @@ export function createDbClient(): SupabaseClient {
 
   return createClient(url, serviceRoleKey);
 }
+
+export function getDatabaseUrl(): string {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
+  return databaseUrl;
+}
+
+export { getClient } from './client.js';
+export { createConversation, createMessage } from './messages.js';
+export * from './bookings.js';
