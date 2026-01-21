@@ -1,0 +1,18 @@
+{
+  "name": "frostdesk-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Core repository for Frostdesk project",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "echo 'Add dev scripts for your apps'",
+    "build": "echo 'Add build scripts for your apps'",
+    "test": "echo 'Add test scripts'"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
