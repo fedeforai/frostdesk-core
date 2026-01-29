@@ -1,6 +1,11 @@
 import { sql } from './client.js';
 import { findInboundMessageByExternalId, insertInboundMessage, type InsertInboundMessageParams } from './inbound_messages_repository.js';
 
+/** Transaction callback receives a callable client; postgres types expose it as TransactionSql. Cast for tagged template usage. */
+function txAsSql(tx: unknown): typeof sql {
+  return tx as unknown as typeof sql;
+}
+
 export type MessageDirection = 'inbound' | 'outbound';
 
 export interface Message {
@@ -165,11 +170,12 @@ export async function persistInboundMessageWithInboxBridge(
   
   // Use transaction to ensure both inserts succeed or both fail (atomicity)
   return await sql.begin(async (tx) => {
+    const db = txAsSql(tx);
     // Step 1: Insert into inbound_messages
     console.log('[DEBUG PERSIST] Inside transaction - conversationId:', params.conversationId, 'type:', typeof params.conversationId);
     // PILOT MODE: message_type column not in schema, removed from INSERT
     
-    const inboundMessageResult = await tx<Array<{ id: string }>>`
+    const inboundMessageResult = await db<Array<{ id: string }>>`
       INSERT INTO inbound_messages (
         channel,
         conversation_id,
@@ -198,7 +204,7 @@ export async function persistInboundMessageWithInboxBridge(
     const inboundMessageId = inboundMessageResult[0].id;
 
     // Step 2: Insert into messages (for UI/Inbox visibility)
-    await tx`
+    await db`
       INSERT INTO messages (
         conversation_id,
         channel,
@@ -265,8 +271,9 @@ export async function persistOutboundMessage(
 ): Promise<{ id: string }> {
   // Use transaction to ensure atomicity: insert message + disable AI if human
   return await sql.begin(async (tx) => {
+    const db = txAsSql(tx);
     // Step 1: Insert outbound message
-    const result = await tx<Array<{ id: string }>>`
+    const result = await db<Array<{ id: string }>>`
       INSERT INTO messages (
         conversation_id,
         channel,
@@ -295,7 +302,7 @@ export async function persistOutboundMessage(
     // DISABLED: ai_enabled column does not exist in pilot schema
     /*
     if (params.senderIdentity === 'human') {
-      await tx`
+      await db`
         UPDATE conversations
         SET ai_enabled = false, updated_at = NOW()
         WHERE id = ${params.conversationId}

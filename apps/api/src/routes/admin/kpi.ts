@@ -19,8 +19,12 @@ export async function adminKPIRoutes(app: FastifyInstance) {
       return reply.send({ ok: true, snapshot });
     } catch (error) {
       const normalized = normalizeError(error);
-      const { status, body } = mapErrorToHttp(normalized);
-      return reply.status(status).send(body);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
     }
   });
 }

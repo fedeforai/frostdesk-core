@@ -1,6 +1,11 @@
 import { sql } from './client.js';
 import type { AIDraftMetadata } from './ai_draft_repository.js';
 
+/** Transaction callback receives a callable client; postgres types expose it as TransactionSql. Cast for tagged template usage. */
+function txAsSql(tx: unknown): typeof sql {
+  return tx as unknown as typeof sql;
+}
+
 export class DraftNotFoundError extends Error {
   code = 'DRAFT_NOT_FOUND';
   
@@ -19,8 +24,9 @@ export async function sendApprovedAIDraft(params: {
 }> {
   const { conversationId, approvedBy } = params;
 
-  return await sql.begin(async (sql) => {
-    const draftResult = await sql<Array<{
+  return await sql.begin(async (tx) => {
+    const db = txAsSql(tx);
+    const draftResult = await db<Array<{
       value: AIDraftMetadata;
     }>>`
       SELECT value
@@ -36,7 +42,7 @@ export async function sendApprovedAIDraft(params: {
 
     const draft = draftResult[0].value;
 
-    const conversationResult = await sql<Array<{
+    const conversationResult = await db<Array<{
       id: string;
       channel: string;
     }>>`
@@ -53,7 +59,7 @@ export async function sendApprovedAIDraft(params: {
     const conversation = conversationResult[0];
     const channel = conversation.channel || 'whatsapp';
 
-    const messageResult = await sql<Array<{ id: string }>>`
+    const messageResult = await db<Array<{ id: string }>>`
       INSERT INTO messages (
         conversation_id,
         channel,
@@ -86,7 +92,7 @@ export async function sendApprovedAIDraft(params: {
     // Increment quota usage
     const today = new Date();
     const period = today.toISOString().split('T')[0];
-    const quotaUpdateResult = await sql`
+    const quotaUpdateResult = await db`
       UPDATE ai_channel_quotas
       SET used = used + 1
       WHERE channel = ${channel}
@@ -97,7 +103,7 @@ export async function sendApprovedAIDraft(params: {
       throw new Error(`Quota row not found for channel ${channel} and period ${period}`);
     }
 
-    const bookingResult = await sql<Array<{
+    const bookingResult = await db<Array<{
       id: string;
       instructor_id: number;
     }>>`
@@ -109,7 +115,7 @@ export async function sendApprovedAIDraft(params: {
 
     if (bookingResult.length > 0) {
       const booking = bookingResult[0];
-      await sql`
+      await db`
         INSERT INTO booking_audit_log (
           instructor_id,
           actor_user_id,
@@ -126,7 +132,7 @@ export async function sendApprovedAIDraft(params: {
       `;
     }
 
-    await sql`
+    await db`
       DELETE FROM message_metadata
       WHERE conversation_id = ${conversationId}
         AND key = 'ai_draft'

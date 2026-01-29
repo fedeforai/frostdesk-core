@@ -22,11 +22,13 @@ export async function generateAndStoreAIDraft(params: {
     throw new Error('AI is disabled');
   }
 
+  // Type narrow: after guard above, draft has text/model/created_at
+  const draftData = draft as { text: string; model: string; created_at: string };
   const savedDraft = await saveAIDraft({
     conversationId: params.conversationId,
-    text: draft.text,
-    model: draft.model,
-    created_at: draft.created_at,
+    text: draftData.text,
+    model: draftData.model,
+    created_at: draftData.created_at,
   });
 
   return {

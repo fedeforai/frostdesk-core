@@ -76,7 +76,10 @@ export async function insertAISnapshot(
   }
 
   // Insert new snapshot (including confidence gate decision fields)
-  const result = await sql<Array<{ id: string }>>`
+  // Coerce optional params to null so sql template gets ParameterOrFragment (no undefined)
+  const relevanceReason = params.relevance_reason ?? null;
+  const result = await Promise.resolve(
+    sql<Array<{ id: string }>>`
     INSERT INTO ai_snapshots (
       message_id,
       conversation_id,
@@ -98,9 +101,9 @@ export async function insertAISnapshot(
       ${params.channel},
       ${params.relevant},
       ${params.relevance_confidence},
-      ${params.relevance_reason},
-      ${params.intent},
-      ${params.intent_confidence},
+      ${relevanceReason},
+      ${params.intent ?? null},
+      ${params.intent_confidence ?? null},
       ${params.model},
       ${params.decision ?? null},
       ${params.reason ?? null},
@@ -109,7 +112,8 @@ export async function insertAISnapshot(
       NOW()
     )
     RETURNING id
-  `;
+  `,
+  );
 
   if (result.length === 0) {
     throw new Error('Failed to insert AI snapshot: no row returned');
