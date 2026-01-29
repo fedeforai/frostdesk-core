@@ -11,7 +11,7 @@
     "dev": "tsup src/index.ts --watch"
   },
   "devDependencies": {
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "tsup": "^8.0.0",
+    "typescript": "^5.x"
   }
 }
