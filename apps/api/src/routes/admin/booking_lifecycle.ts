@@ -1,7 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getBookingLifecycleAdmin } from '@frostdesk/db/src/booking_lifecycle_service.js';
-import { BookingNotFoundError } from '@frostdesk/db/src/booking_repository.js';
-import { isValidUUID } from '@frostdesk/db/src/utils.js';
+import { getBookingLifecycleAdmin, BookingNotFoundError, isValidUUID } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';

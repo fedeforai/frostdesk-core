@@ -1,4 +1,4 @@
-import { assertAdminAccess as dbAssertAdminAccess } from '@frostdesk/db/src/admin_access.js';
+import { assertAdminAccess as dbAssertAdminAccess } from '@frostdesk/db';
 
 /**
  * Asserts admin access by extracting userId from request context.

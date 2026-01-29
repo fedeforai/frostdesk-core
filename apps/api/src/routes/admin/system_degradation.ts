@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getSystemDegradationSignalsReadModel } from '@frostdesk/db/src/system_degradation_service.js';
+import { getSystemDegradationSignalsReadModel } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 

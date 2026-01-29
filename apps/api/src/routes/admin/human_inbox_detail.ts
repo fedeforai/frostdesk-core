@@ -1,7 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { getHumanInboxDetailReadModel } from '@frostdesk/db/src/human_inbox_detail_service.js';
-import { buildAIDecisionSnapshot } from '@frostdesk/db/src/ai_decision_snapshot.js';
-import { listAISnapshotsByConversationId } from '@frostdesk/db/src/ai_snapshot_repository.js';
+import {
+  getHumanInboxDetailReadModel,
+  buildAIDecisionSnapshot,
+  listAISnapshotsByConversationId,
+} from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';

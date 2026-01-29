@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { generateAndStoreAIDraft } from '@frostdesk/db/src/ai_draft_service.js';
-import { getMessagesByConversation } from '@frostdesk/db/src/message_repository.js';
+import { generateAndStoreAIDraft, getMessagesByConversation } from '@frostdesk/db';
+import { generateDraftReply } from '../../ai/generate_draft_reply.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -40,6 +40,7 @@ export async function adminAIDraftRoutes(app: FastifyInstance) {
         conversationId,
         latestMessageText,
         userId,
+        generateDraft: generateDraftReply,
       });
 
       return reply.send({

@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getIntentConfidenceTelemetry } from '@frostdesk/db/src/intent_confidence_service.js';
+import { getIntentConfidenceTelemetry } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 

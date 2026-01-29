@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getAIGatingDecision } from '@frostdesk/db/src/ai_gating_service.js';
+import { getAIGatingDecision } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';

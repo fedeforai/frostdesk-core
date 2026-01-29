@@ -2,11 +2,13 @@ import { FastifyInstance } from 'fastify';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
-import { resolveConversationByChannel } from '@frostdesk/db/src/conversation_repository.js';
-import { persistInboundMessageWithInboxBridge } from '@frostdesk/db/src/message_repository.js';
-import { orchestrateInboundDraft } from '@frostdesk/db/src/inbound_draft_orchestrator.js';
+import {
+  resolveConversationByChannel,
+  persistInboundMessageWithInboxBridge,
+  orchestrateInboundDraft,
+  isValidUUID,
+} from '@frostdesk/db';
 import { randomUUID } from 'crypto';
-import { isValidUUID } from '@frostdesk/db/src/utils.js';
 
 /**
  * WhatsApp Webhook Routes (Pilot, READ-ONLY)

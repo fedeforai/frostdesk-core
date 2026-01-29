@@ -1,7 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { assertAdminAccess } from '@frostdesk/db/src/admin_access.js';
-import { persistOutboundMessage } from '@frostdesk/db/src/message_repository.js';
-import { isValidUUID } from '@frostdesk/db/src/utils.js';
+import { assertAdminAccess, persistOutboundMessage, isValidUUID } from '@frostdesk/db';
 import { sendWhatsAppText } from '../../integrations/whatsapp_cloud_api.js';
 import { resolveWhatsAppTargetPhone, TARGET_NOT_FOUND } from '../../integrations/whatsapp_target_resolution.js';
 import { normalizeError } from '../../errors/normalize_error.js';

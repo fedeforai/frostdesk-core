@@ -1,4 +1,4 @@
-import { classifyIntent } from '@frostdesk/ai/src/intent_classifier.js';
+import { classifyIntent } from '@frostdesk/ai';
 import { saveMessageIntent } from '@frostdesk/db/src/message_intent_repository.js';
 
 export async function classifyAndStoreIntent(input: {

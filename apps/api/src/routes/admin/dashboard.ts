@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getAdminDashboardMetricsReadModel } from '@frostdesk/db/src/admin_dashboard_service.js';
+import { getAdminDashboardMetricsReadModel } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 

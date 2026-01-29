@@ -3,8 +3,7 @@
  * Read-only. Used only by human-triggered outbound routes.
  */
 
-import { getConversationById } from '@frostdesk/db/src/conversation_repository.js';
-import { getLatestInboundSenderIdentityByConversationId } from '@frostdesk/db/src/inbound_messages_repository.js';
+import { getConversationById, getLatestInboundSenderIdentityByConversationId } from '@frostdesk/db';
 
 export const TARGET_NOT_FOUND = 'TARGET_NOT_FOUND';
 

@@ -1,9 +1,11 @@
 import { sql } from './client.js';
-import { classifyRelevanceAndIntent } from '@frostdesk/ai/src/relevanceAndIntentClassifier.js';
-import { decideByConfidence } from '@frostdesk/ai/src/confidenceDecisionEngine.js';
-import { escalationGate } from '@frostdesk/ai/src/escalationGate.js';
-import { generateAIReply } from '@frostdesk/ai/src/ai_reply_stub.js';
-import { sanitizeDraftText } from '@frostdesk/ai/src/draftQualityGuardrails.js';
+import {
+  classifyRelevanceAndIntent,
+  decideByConfidence,
+  escalationGate,
+  generateAIReply,
+  sanitizeDraftText,
+} from '@frostdesk/ai';
 import { insertAISnapshot, findAISnapshotByMessageId } from './ai_snapshot_repository.js';
 import { insertDraftOnce, findDraftByMessageId } from './ai_draft_repository.js';
 

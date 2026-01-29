@@ -1,7 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { setConversationAIModeAdmin } from '@frostdesk/db/src/conversation_service.js';
-import { ConversationNotFoundError } from '@frostdesk/db/src/conversation_repository.js';
-import { isValidUUID } from '@frostdesk/db/src/utils.js';
+import { setConversationAIModeAdmin, ConversationNotFoundError, isValidUUID } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';

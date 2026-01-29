@@ -1,5 +1,4 @@
-import { sql } from '@frostdesk/db/src/client.js';
-import { isAIEnabledForConversation } from '@frostdesk/db/src/ai_global_gate.js';
+import { sql, isAIEnabledForConversation } from '@frostdesk/db';
 
 export async function generateDraftReply(params: {
   conversationId: string;

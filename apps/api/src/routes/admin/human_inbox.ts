@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getHumanInbox } from '@frostdesk/db/src/human_inbox_service.js';
+import { getHumanInbox } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';

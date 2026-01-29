@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { getConversationTimelineReadModel } from '@frostdesk/db/src/conversation_timeline_service.js';
+import { getConversationTimelineReadModel } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 

@@ -1,16 +1,20 @@
 import { FastifyInstance } from 'fastify';
-import { findChannelIdentityMapping, insertChannelIdentityMapping } from '@frostdesk/db/src/channel_identity_mapping_repository.js';
-import { resolveConversationForInboundMessage } from '@frostdesk/db/src/conversation_service.js';
-import { findInboundMessageByExternalId, insertInboundMessage } from '@frostdesk/db/src/inbound_messages_repository.js';
-import { createMessage } from '@frostdesk/db/src/message_repository.js';
-import { sql } from '@frostdesk/db/src/client.js';
+import {
+  findChannelIdentityMapping,
+  insertChannelIdentityMapping,
+  resolveConversationForInboundMessage,
+  findInboundMessageByExternalId,
+  insertInboundMessage,
+  createMessage,
+  sql,
+  sendAIReply,
+  ensureValidUUID,
+} from '@frostdesk/db';
 import { sendWhatsAppAck } from '../integrations/whatsapp_outbound.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
-import { generateAIReply } from '@frostdesk/ai/src/ai_reply_stub.js';
-import { sendAIReply } from '@frostdesk/db/src/ai_reply_service.js';
-import { ensureValidUUID } from '@frostdesk/db/src/utils.js';
+import { generateAIReply } from '@frostdesk/ai';
 // PILOT STUB — services disabled
 // import { classifyAndStoreIntent } from '@frostdesk/services/src/intent_classification_service.js';
 

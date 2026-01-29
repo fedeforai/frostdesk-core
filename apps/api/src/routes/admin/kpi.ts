@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getAdminKPISnapshotReadModel } from '@frostdesk/db/src/admin_kpi_service.js';
+import { getAdminKPISnapshotReadModel } from '@frostdesk/db';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 

@@ -1,20 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import {
   getAdminConversations,
-} from '@frostdesk/db/src/admin_conversation_service.js';
-import {
   getAdminBookings,
   adminOverrideBookingStatus,
-} from '@frostdesk/db/src/admin_booking_service.js';
-import {
   getAdminBookingDetail,
-} from '@frostdesk/db/src/admin_booking_detail_service.js';
-import {
   getAdminMessages,
-} from '@frostdesk/db/src/admin_message_service.js';
-import { UnauthorizedError, isAdmin, getUserRole } from '@frostdesk/db/src/admin_access.js';
-import { BookingNotFoundError } from '@frostdesk/db/src/booking_repository.js';
-import { InvalidBookingTransitionError } from '@frostdesk/db/src/booking_state_machine.js';
+  UnauthorizedError,
+  isAdmin,
+  getUserRole,
+  BookingNotFoundError,
+  InvalidBookingTransitionError,
+} from '@frostdesk/db';
 import { adminFeatureFlagsRoutes } from './admin/feature_flags.js';
 import { adminHumanInboxRoutes } from './admin/human_inbox.js';
 import { adminHumanInboxDetailRoutes } from './admin/human_inbox_detail.js';

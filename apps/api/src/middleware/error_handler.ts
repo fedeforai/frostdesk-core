@@ -1,7 +1,5 @@
 import type { FastifyInstance, FastifyError, FastifyRequest, FastifyReply } from 'fastify';
-import { UnauthorizedError } from '@frostdesk/db/src/admin_access.js';
-import { BookingNotFoundError } from '@frostdesk/db/src/booking_repository.js';
-import { InvalidBookingTransitionError } from '@frostdesk/db/src/booking_state_machine.js';
+import { UnauthorizedError, BookingNotFoundError, InvalidBookingTransitionError } from '@frostdesk/db';
 
 /**
  * Unified error envelope format.
