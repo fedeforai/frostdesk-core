@@ -1,0 +1,10 @@
+export { generateAIReply } from './ai_reply_stub.js';
+export { sanitizeDraftText } from './draftQualityGuardrails.js';
+export type { DraftQualityInput, DraftQualityOutput, DraftViolation, IntentType as DraftIntentType } from './draftQualityGuardrails.js';
+export { classifyRelevance, type RelevanceResult, type RelevanceReason } from './relevanceClassifier.js';
+export { classifyIntent, type IntentResult, type IntentType } from './intentClassifier.js';
+export { classifyRelevanceAndIntent, type RelevanceAndIntentSnapshot } from './relevanceAndIntentClassifier.js';
+export { RELEVANCE_MIN, INTENT_MIN_DRAFT, INTENT_MIN_NO_ESCALATION, DecisionType, ReasonCode } from './confidencePolicy.js';
+export { decideByConfidence, type ConfidenceDecisionInput, type ConfidenceDecisionOutput } from './confidenceDecisionEngine.js';
+export { escalationGate, type EscalationGateInput, type EscalationGateOutput } from './escalationGate.js';
+export { resolveDraftEligibility, type DraftEligibilityInput, type DraftEligibilityOutput } from './draftEligibilityResolver.js';

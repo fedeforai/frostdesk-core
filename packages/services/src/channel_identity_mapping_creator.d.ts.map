@@ -1,0 +1,1 @@
+{"version":3,"file":"channel_identity_mapping_creator.d.ts","sourceRoot":"","sources":["channel_identity_mapping_creator.ts"],"names":[],"mappings":"AAKA,qBAAa,iCAAkC,SAAQ,KAAK;gBAC9C,OAAO,EAAE,MAAM,EAAE,gBAAgB,EAAE,MAAM;CAItD;AAED;;;;;;;;;;;;;;;;;;;;GAoBG;AACH,wBAAsB,4BAA4B,CAChD,OAAO,EAAE,MAAM,EACf,gBAAgB,EAAE,MAAM,EACxB,cAAc,EAAE,MAAM,GACrB,OAAO,CAAC,MAAM,CAAC,CAQjB"}

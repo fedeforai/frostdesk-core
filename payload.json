@@ -1,0 +1,23 @@
+{
+  "entry": [
+    {
+      "changes": [
+        {
+          "value": {
+            "messages": [
+              {
+                "id": "wamid.TEST123",
+                "from": "393331234567",
+                "timestamp": "1700000000",
+                "type": "text",
+                "text": {
+                  "body": "Hello pilot"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

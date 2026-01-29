@@ -1,30 +1,18 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-export function createDbClient(): SupabaseClient {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url) {
-    throw new Error('SUPABASE_URL environment variable is required');
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
-  }
-
-  return createClient(url, serviceRoleKey);
-}
-
-export function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required');
-  }
-
-  return databaseUrl;
-}
-
-export { getClient } from './client.js';
-export { createConversation, createMessage } from './messages.js';
-export * from './bookings.js';
+export { ensureValidUUID, isValidUUID } from './utils.js';
+export { insertMessage } from './messages.js';
+export { createDbClient } from './supabase_client.js';
+export { updateBookingState } from './booking_repository.js';
+export { getFeatureFlag, isFeatureEnabled } from './feature_flag_repository.js';
+export { getBookingLifecycle } from './booking_lifecycle_repository.js';
+export { getBookingLifecycleAdmin } from './booking_lifecycle_service.js';
+export type { BookingLifecycleEvent, BookingLifecycleEventType } from './booking_lifecycle_repository.js';
+export { persistOutboundMessage } from './message_repository.js';
+export { setConversationAIMode, getConversationById } from './conversation_repository.js';
+export { getLatestInboundSenderIdentityByConversationId } from './inbound_messages_repository.js';
+export { setConversationAIModeAdmin } from './conversation_service.js';
+export { insertAISnapshot, findAISnapshotByMessageId, listAISnapshotsByConversation } from './ai_snapshot_repository.js';
+export type { AISnapshot, InsertAISnapshotParams } from './ai_snapshot_repository.js';
+export { findDraftByMessageId, insertDraftOnce } from './ai_draft_repository.js';
+export type { AIDraftMetadata } from './ai_draft_repository.js';
+export { orchestrateInboundDraft } from './inbound_draft_orchestrator.js';
+export type { InboundDraftOrchestratorParams, InboundDraftOrchestratorResult } from './inbound_draft_orchestrator.js';

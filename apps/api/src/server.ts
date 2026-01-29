@@ -1,13 +1,28 @@
 import Fastify from 'fastify';
 import { healthRoutes } from './routes/health.js';
+import { inboundRoutes } from './routes/inbound.js';
+import { webhookRoutes } from './routes/webhook.js';
+import { webhookWhatsAppRoutes } from './routes/webhook_whatsapp.js';
+import { adminRoutes } from './routes/admin.js';
+import { registerRateLimit } from './middleware/rate_limit.js';
+import { registerErrorHandler } from './middleware/error_handler.js';
 
 export async function buildServer() {
   const fastify = Fastify({
     logger: true,
   });
 
-  // Register routes
+  // Register error handler first (catches all errors)
+  await registerErrorHandler(fastify);
+
+  // Register rate limiting middleware before routes
+  await registerRateLimit(fastify);
+
   await fastify.register(healthRoutes);
+  await fastify.register(inboundRoutes);
+  await fastify.register(webhookRoutes);
+  await fastify.register(webhookWhatsAppRoutes);
+  await fastify.register(adminRoutes);
 
   return fastify;
 }
