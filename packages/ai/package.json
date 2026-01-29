@@ -7,7 +7,7 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "npm exec tsup src/index.ts --format esm --dts --outDir dist",
+    "build": "npm exec tsup",
     "dev": "tsup src/index.ts --watch"
   },
   "dependencies": {
