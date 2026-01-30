@@ -187,3 +187,7 @@ export type {
   InstructorWhatsappAccount,
   VerifyInstructorWhatsappParams,
 } from './instructor_whatsapp_repository.js';
+
+// Instructor inbox (repository — read-only)
+export { getInstructorInbox } from './instructor_inbox_repository.js';
+export type { InstructorInboxItem } from './instructor_inbox_repository.js';
