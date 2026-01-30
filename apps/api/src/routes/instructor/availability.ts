@@ -2,9 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   getInstructorProfileByUserId,
   getInstructorAvailability,
-  createInstructorAvailability,
-  updateInstructorAvailability,
-  findInstructorAvailabilityBySlot,
+  upsertInstructorAvailability,
   toggleInstructorAvailability,
 } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
@@ -131,36 +129,17 @@ export async function instructorAvailabilityRoutes(app: FastifyInstance): Promis
       if (!startBeforeEnd(body.start_time, body.end_time)) {
         return reply.status(400).send({
           ok: false,
-          error: { code: ERROR_CODES.INVALID_PAYLOAD },
+          error: { code: ERROR_CODES.INVALID_TIME_RANGE },
           message: 'start_time must be before end_time',
         });
       }
-      const instructorId = profile!.id;
-      const existing = await findInstructorAvailabilityBySlot(
-        instructorId,
-        body.day_of_week,
-        body.start_time,
-        body.end_time
-      );
-      let row;
-      if (existing) {
-        row = await updateInstructorAvailability({
-          id: existing.id,
-          instructorId,
-          dayOfWeek: existing.day_of_week,
-          startTime: existing.start_time,
-          endTime: existing.end_time,
-          isActive: body.is_active,
-        });
-      } else {
-        row = await createInstructorAvailability({
-          instructorId,
-          dayOfWeek: body.day_of_week,
-          startTime: body.start_time,
-          endTime: body.end_time,
-          isActive: body.is_active,
-        });
-      }
+      const row = await upsertInstructorAvailability({
+        instructor_id: profile!.id,
+        day_of_week: body.day_of_week,
+        start_time: body.start_time,
+        end_time: body.end_time,
+        is_active: body.is_active,
+      });
       return reply.send({
         ok: true,
         availability: toApiAvailability(row),

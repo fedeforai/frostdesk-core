@@ -32,16 +32,22 @@ const ERROR_CODE_TO_STATUS: Record<string, number> = {
   'INVALID_ENV': 400,
   'missing_text': 400,
   'invalid_payload': 400,
-  
+  'INVALID_TIME_RANGE': 400,
+
+  // 401 Unauthorized
+  'UNAUTHENTICATED': 401,
   // 403 Forbidden
   'ADMIN_ONLY': 403,
+  'ONBOARDING_REQUIRED': 403,
   
   // 404 Not Found
+  'NOT_FOUND': 404,
   'BOOKING_NOT_FOUND': 404,
   'CONVERSATION_NOT_FOUND': 404,
   
   // 409 Conflict
   'INVALID_BOOKING_TRANSITION': 409,
+  'PROFILE_ALREADY_EXISTS': 409,
   
   // 429 Too Many Requests
   'RATE_LIMIT_EXCEEDED': 429,
