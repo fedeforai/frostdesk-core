@@ -172,3 +172,7 @@ export type {
   CreateInstructorServiceParams,
   UpdateInstructorServiceParams,
 } from './instructor_services_repository.js';
+
+// Instructor guardrails (repository)
+export { getInstructorGuardrails } from './instructor_guardrails_repository.js';
+export type { InstructorGuardrails } from './instructor_guardrails_repository.js';
