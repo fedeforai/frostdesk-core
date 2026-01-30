@@ -22,6 +22,8 @@ export interface GetHumanInboxParams {
   userId: string;
   status?: string;
   channel?: string;
+  /** Pilot/local only: when true, skip admin check (caller must set when ALLOW_DEBUG_USER and userId=debug-user). */
+  _skipAdminCheck?: boolean;
 }
 
 export interface HumanInboxItem {
@@ -34,6 +36,12 @@ export interface HumanInboxItem {
     created_at: string | null;
   };
   last_activity_at: string;
+  /** BookingDecision v1 — escalation visibility (read-only). true iff latest ai_snapshot.require_escalation === true. */
+  needs_human: boolean;
+  /** Latest ai_snapshot per conversation; audit only. Pass-through, no logic. */
+  intent_confidence: number | null;
+  /** Latest ai_snapshot per conversation; audit only. Pass-through, no logic. */
+  relevance_confidence: number | null;
 }
 
 /**
@@ -52,10 +60,11 @@ export interface HumanInboxItem {
 export async function getHumanInbox(
   params: GetHumanInboxParams
 ): Promise<HumanInboxItem[]> {
-  const { userId, status, channel } = params;
+  const { userId, status, channel, _skipAdminCheck } = params;
 
-  // Assert admin access (first line, no conditional, no bypass)
-  await assertAdminAccess(userId);
+  if (!_skipAdminCheck) {
+    await assertAdminAccess(userId);
+  }
 
   // Call repository
   const rows = await getHumanInboxRows({ status, channel });
@@ -71,5 +80,9 @@ export async function getHumanInbox(
       created_at: row.last_message_created_at,
     },
     last_activity_at: row.last_activity_at,
+    // BookingDecision v1 — escalation visibility (read-only)
+    needs_human: row.require_escalation === true,
+    intent_confidence: row.intent_confidence ?? null,
+    relevance_confidence: row.relevance_confidence ?? null,
   }));
 }

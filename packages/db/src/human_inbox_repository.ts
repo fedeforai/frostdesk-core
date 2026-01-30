@@ -25,6 +25,12 @@ export interface HumanInboxRow {
   last_message_text: string | null;
   last_message_created_at: string | null;
   last_activity_at: string;
+  /** BookingDecision v1 — escalation visibility (read-only). Derived from latest ai_snapshot: relevant + booking intent + low confidence. */
+  require_escalation: boolean | null;
+  /** Latest ai_snapshot per conversation; audit only. No decision logic. */
+  intent_confidence: number | null;
+  /** Latest ai_snapshot per conversation; audit only. No decision logic. */
+  relevance_confidence: number | null;
 }
 
 /**
@@ -74,7 +80,10 @@ export async function getHumanInboxRows(
       lm.last_message_direction,
       lm.last_message_text,
       lm.last_message_created_at,
-      ca.last_activity_at
+      ca.last_activity_at,
+      (SELECT (s.relevant = true AND s.intent IN ('NEW_BOOKING', 'RESCHEDULE') AND (s.intent_confidence < 0.7 OR s.relevance_confidence < 0.7)) FROM ai_snapshots s WHERE s.conversation_id = ca.conversation_id ORDER BY s.created_at DESC LIMIT 1) AS require_escalation,
+      (SELECT s.intent_confidence FROM ai_snapshots s WHERE s.conversation_id = ca.conversation_id ORDER BY s.created_at DESC LIMIT 1) AS intent_confidence,
+      (SELECT s.relevance_confidence FROM ai_snapshots s WHERE s.conversation_id = ca.conversation_id ORDER BY s.created_at DESC LIMIT 1) AS relevance_confidence
     FROM conversation_activity ca
     LEFT JOIN last_messages lm ON lm.conversation_id = ca.conversation_id
     WHERE 1=1

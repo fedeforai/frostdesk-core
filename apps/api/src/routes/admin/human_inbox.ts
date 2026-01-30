@@ -38,11 +38,17 @@ export async function adminHumanInboxRoutes(app: FastifyInstance) {
         channel?: string;
       };
 
-      // Call service (admin guard enforced inside service)
+      // Pilot/local: skip admin check when ALLOW_DEBUG_USER=1|true and userId=debug-user (env read only in API layer)
+      const ALLOW_DEBUG_USER = process.env.ALLOW_DEBUG_USER;
+      const skip =
+        (ALLOW_DEBUG_USER === '1' || ALLOW_DEBUG_USER === 'true') && userId === 'debug-user';
+      console.log('🧪 ADMIN INBOX DEBUG', { userId, ALLOW_DEBUG_USER, skip });
+
       const items = await getHumanInbox({
         userId,
         status,
         channel,
+        _skipAdminCheck: skip,
       });
 
       return reply.send({

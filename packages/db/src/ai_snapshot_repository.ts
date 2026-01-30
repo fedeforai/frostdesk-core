@@ -27,11 +27,6 @@ export interface AISnapshot {
   intent?: string | null;
   intent_confidence?: number | null;
   model: string;
-  // Confidence gate decision fields
-  decision?: string | null; // DecisionType
-  reason?: string | null; // ReasonCode
-  allow_draft?: boolean | null;
-  require_escalation?: boolean | null;
   created_at: string;
 }
 
@@ -45,11 +40,6 @@ export interface InsertAISnapshotParams {
   intent?: 'NEW_BOOKING' | 'RESCHEDULE' | 'CANCEL' | 'INFO_REQUEST' | null;
   intent_confidence?: number | null;
   model: string;
-  // Confidence gate decision fields (optional for backward compatibility)
-  decision?: 'IGNORE' | 'ESCALATE_ONLY' | 'DRAFT_AND_ESCALATE' | 'DRAFT_ONLY' | null;
-  reason?: 'LOW_RELEVANCE' | 'LOW_INTENT' | 'MEDIUM_CONFIDENCE' | 'HIGH_CONFIDENCE' | null;
-  allow_draft?: boolean | null;
-  require_escalation?: boolean | null;
 }
 
 /**
@@ -75,8 +65,7 @@ export async function insertAISnapshot(
     return existing[0].id;
   }
 
-  // Insert new snapshot (including confidence gate decision fields)
-  // Coerce optional params to null so sql template gets ParameterOrFragment (no undefined)
+  // Insert new snapshot (classification only; no decision fields persisted)
   const relevanceReason = params.relevance_reason ?? null;
   const result = await Promise.resolve(
     sql<Array<{ id: string }>>`
@@ -90,10 +79,6 @@ export async function insertAISnapshot(
       intent,
       intent_confidence,
       model,
-      decision,
-      reason,
-      allow_draft,
-      require_escalation,
       created_at
     ) VALUES (
       ${params.message_id}::uuid,
@@ -105,10 +90,6 @@ export async function insertAISnapshot(
       ${params.intent ?? null},
       ${params.intent_confidence ?? null},
       ${params.model},
-      ${params.decision ?? null},
-      ${params.reason ?? null},
-      ${params.allow_draft ?? null},
-      ${params.require_escalation ?? null},
       NOW()
     )
     RETURNING id
@@ -143,10 +124,6 @@ export async function findAISnapshotByMessageId(
       intent,
       intent_confidence,
       model,
-      decision,
-      reason,
-      allow_draft,
-      require_escalation,
       created_at
     FROM ai_snapshots
     WHERE message_id = ${messageId}::uuid
@@ -177,10 +154,6 @@ export async function listAISnapshotsByConversation(
       intent,
       intent_confidence,
       model,
-      decision,
-      reason,
-      allow_draft,
-      require_escalation,
       created_at
     FROM ai_snapshots
     WHERE conversation_id = ${conversationId}::uuid
@@ -212,10 +185,6 @@ export async function listAISnapshotsByConversationId(
       intent,
       intent_confidence,
       model,
-      decision,
-      reason,
-      allow_draft,
-      require_escalation,
       created_at
     FROM ai_snapshots
     WHERE conversation_id = ${conversationId}::uuid

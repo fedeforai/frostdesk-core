@@ -203,7 +203,6 @@ export async function registerErrorHandler(app: FastifyInstance): Promise<void> 
   // Error handler: catches thrown errors
   app.setErrorHandler(async (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     const { statusCode, payload } = normalizeError(error);
-    
     return reply.status(statusCode).send(payload);
   });
 

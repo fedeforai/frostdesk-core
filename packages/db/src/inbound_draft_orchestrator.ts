@@ -1,6 +1,7 @@
 import { sql } from './client.js';
 import {
   classifyRelevanceAndIntent,
+  decideBooking,
   decideByConfidence,
   escalationGate,
   generateAIReply,
@@ -59,10 +60,6 @@ export interface InboundDraftOrchestratorParams {
 export interface InboundDraftOrchestratorResult {
   snapshotId: string;
   draftGenerated: boolean;
-  decision: string;
-  reason: string;
-  allowDraft: boolean;
-  requireEscalation: boolean;
 }
 
 /**
@@ -95,15 +92,10 @@ export async function orchestrateInboundDraft(
   // Step 2: Check idempotency (if snapshot already exists, return early)
   const existingSnapshot = await findAISnapshotByMessageId(messageId);
   if (existingSnapshot) {
-    // Check if draft exists for this message_id
     const existingDraft = await findDraftByMessageId(messageId);
     return {
       snapshotId: existingSnapshot.id,
       draftGenerated: existingDraft !== null,
-      decision: existingSnapshot.decision || 'UNKNOWN',
-      reason: existingSnapshot.reason || 'UNKNOWN',
-      allowDraft: existingSnapshot.allow_draft === true,
-      requireEscalation: existingSnapshot.require_escalation === true,
     };
   }
 
@@ -114,7 +106,52 @@ export async function orchestrateInboundDraft(
     language,
   });
 
-  // Step 4: Apply confidence policy
+  // BookingDecision v1 gate (frozen)
+  const intentForBooking =
+    classification.intent === 'NEW_BOOKING' || classification.intent === 'RESCHEDULE'
+      ? 'booking'
+      : (classification.intent ?? 'info');
+  const bookingDecision = decideBooking({
+    relevance: classification.relevant,
+    relevanceConfidence: classification.relevanceConfidence,
+    intent: intentForBooking,
+    intentConfidence: classification.intentConfidence ?? 0,
+  });
+
+  switch (bookingDecision.action) {
+    case 'ignore': {
+      const snapshotId = await insertAISnapshot({
+        message_id: messageId,
+        conversation_id: conversationId,
+        channel,
+        relevant: classification.relevant,
+        relevance_confidence: classification.relevanceConfidence,
+        relevance_reason: classification.relevanceReason || null,
+        intent: classification.intent || null,
+        intent_confidence: classification.intentConfidence || null,
+        model: classification.model,
+      });
+      return { snapshotId, draftGenerated: false };
+    }
+    case 'escalate': {
+      const snapshotId = await insertAISnapshot({
+        message_id: messageId,
+        conversation_id: conversationId,
+        channel,
+        relevant: classification.relevant,
+        relevance_confidence: classification.relevanceConfidence,
+        relevance_reason: classification.relevanceReason || null,
+        intent: classification.intent || null,
+        intent_confidence: classification.intentConfidence || null,
+        model: classification.model,
+      });
+      return { snapshotId, draftGenerated: false };
+    }
+    case 'ai_reply':
+      break;
+  }
+
+  // Step 4: Apply confidence policy (ai_reply path only)
   const decision = decideByConfidence({
     relevanceConfidence: classification.relevanceConfidence,
     intentConfidence: classification.intentConfidence || 0,
@@ -126,7 +163,7 @@ export async function orchestrateInboundDraft(
     reason: decision.reason,
   });
 
-  // Step 6: Persist AI snapshot
+  // Step 6: Persist AI snapshot (classification only; no decision fields)
   const snapshotId = await insertAISnapshot({
     message_id: messageId,
     conversation_id: conversationId,
@@ -137,10 +174,6 @@ export async function orchestrateInboundDraft(
     intent: classification.intent || null,
     intent_confidence: classification.intentConfidence || null,
     model: classification.model,
-    decision: decision.decision,
-    reason: decision.reason,
-    allow_draft: gate.allowDraft,
-    require_escalation: gate.requireEscalation,
   });
 
   // Step 7: Generate draft only if allowed
@@ -182,12 +215,5 @@ export async function orchestrateInboundDraft(
     }
   }
 
-  return {
-    snapshotId,
-    draftGenerated,
-    decision: decision.decision,
-    reason: decision.reason,
-    allowDraft: gate.allowDraft,
-    requireEscalation: gate.requireEscalation,
-  };
+  return { snapshotId, draftGenerated };
 }

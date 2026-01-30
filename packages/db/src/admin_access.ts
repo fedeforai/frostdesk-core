@@ -34,37 +34,44 @@ export class AuthenticationRequiredError extends Error {
  * 1. profiles.is_admin = true (preferred)
  * 2. users.role = 'admin' (fallback)
  * 
+ * If profiles/users tables are missing or any query fails, returns false
+ * (so caller gets 403 ADMIN_ONLY, not 500 INTERNAL_ERROR).
+ * 
  * @param userId - User ID to check
  * @returns true if user is admin, false otherwise
- * @throws Error if database query fails
  */
 export async function isAdmin(userId: string): Promise<boolean> {
-  // First check profiles.is_admin (preferred)
-  const profileResult = await sql<Array<{ is_admin: boolean }>>`
-    SELECT is_admin
-    FROM profiles
-    WHERE id = ${userId}
-    LIMIT 1
-  `;
+  try {
+    // First check profiles.is_admin (preferred)
+    const profileResult = await sql<Array<{ is_admin: boolean }>>`
+      SELECT is_admin
+      FROM profiles
+      WHERE id = ${userId}
+      LIMIT 1
+    `;
 
-  if (profileResult.length > 0) {
-    return profileResult[0].is_admin === true;
+    if (profileResult.length > 0) {
+      return profileResult[0].is_admin === true;
+    }
+
+    // Fallback to users.role if profiles table doesn't have the user
+    const userResult = await sql<Array<{ role: string }>>`
+      SELECT role
+      FROM users
+      WHERE id = ${userId}
+      LIMIT 1
+    `;
+
+    if (userResult.length > 0) {
+      return userResult[0].role === 'admin';
+    }
+
+    return false;
+  } catch (err) {
+    // Tables missing or query failed: treat as not admin (403, not 500)
+    console.error('[admin_access] isAdmin query failed:', err instanceof Error ? err.message : String(err));
+    return false;
   }
-
-  // Fallback to users.role if profiles table doesn't have the user
-  const userResult = await sql<Array<{ role: string }>>`
-    SELECT role
-    FROM users
-    WHERE id = ${userId}
-    LIMIT 1
-  `;
-
-  if (userResult.length > 0) {
-    return userResult[0].role === 'admin';
-  }
-
-  // User not found
-  return false;
 }
 
 /**
