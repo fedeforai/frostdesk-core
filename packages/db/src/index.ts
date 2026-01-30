@@ -176,3 +176,10 @@ export type {
 // Instructor guardrails (repository)
 export { getInstructorGuardrails, updateInstructorGuardrails } from './instructor_guardrails_repository.js';
 export type { InstructorGuardrails, UpdateInstructorGuardrailsPatch } from './instructor_guardrails_repository.js';
+
+// Instructor WhatsApp (repository — linking only)
+export {
+  getInstructorWhatsappAccount,
+  connectInstructorWhatsappAccount,
+} from './instructor_whatsapp_repository.js';
+export type { InstructorWhatsappAccount } from './instructor_whatsapp_repository.js';
