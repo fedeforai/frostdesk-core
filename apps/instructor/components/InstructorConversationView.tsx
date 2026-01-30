@@ -121,6 +121,13 @@ export default function InstructorConversationView({
     ? outboundMessages[outboundMessages.length - 1].id
     : null;
 
+  const formatChannel = (channel: string): string => {
+    if (channel.toLowerCase() === 'whatsapp') return 'WhatsApp';
+    return channel.charAt(0).toUpperCase() + channel.slice(1);
+  };
+
+  const channelLabel = inboxItem ? formatChannel(inboxItem.channel) : 'Unknown';
+
   return (
     <div style={{ padding: '1.5rem', maxWidth: '720px', margin: '0 auto' }}>
       <Link
@@ -141,6 +148,17 @@ export default function InstructorConversationView({
       <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
         Reply to the latest message. Status is local (simulated).
       </p>
+
+      <div
+        style={{
+          fontSize: '0.75rem',
+          color: '#6b7280',
+          marginBottom: '0.75rem',
+          padding: '0.5rem 0',
+        }}
+      >
+        {channelLabel} • Guest message
+      </div>
 
       <div
         style={{
