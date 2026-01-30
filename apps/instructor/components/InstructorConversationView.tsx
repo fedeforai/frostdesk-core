@@ -152,9 +152,21 @@ export default function InstructorConversationView({
         }}
       >
         {messages.length === 0 ? (
-          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
-            No messages yet.
-          </p>
+          <div
+            style={{
+              padding: '2rem 1rem',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ fontSize: '0.875rem', color: '#111827', fontWeight: 500, margin: '0 0 0.5rem 0' }}>
+              This conversation hasn't started yet.
+            </p>
+            <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+              You'll be able to reply
+              <br />
+              as soon as the guest sends a message.
+            </p>
+          </div>
         ) : (
           messages.map((msg) => (
             <MessageBubble
@@ -194,6 +206,8 @@ export default function InstructorConversationView({
         onSend={handleSend}
         onTypingStart={handleTypingStart}
         onTypingStop={handleTypingStop}
+        disabled={messages.length === 0}
+        isEmpty={messages.length === 0}
       />
     </div>
   );

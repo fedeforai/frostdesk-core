@@ -8,6 +8,7 @@ export interface ReplyInputProps {
   replyStatus: ReplyStatus;
   onSend: (text: string) => Promise<void>;
   disabled?: boolean;
+  isEmpty?: boolean;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
 }
@@ -17,6 +18,7 @@ export default function ReplyInput({
   replyStatus,
   onSend,
   disabled = false,
+  isEmpty = false,
   onTypingStart,
   onTypingStop,
 }: ReplyInputProps) {
@@ -72,7 +74,7 @@ export default function ReplyInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
           disabled={isDisabled}
-          placeholder="Type your reply..."
+          placeholder={isEmpty ? 'Waiting for the guest to write…' : 'Type your reply...'}
           rows={3}
           style={{
             width: '100%',

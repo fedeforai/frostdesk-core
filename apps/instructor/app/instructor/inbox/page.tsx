@@ -36,7 +36,24 @@ export default async function InstructorInboxPage() {
         Conversations (read-only list). Open one to reply.
       </p>
       {items.length === 0 ? (
-        <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No conversations yet.</p>
+        <div
+          style={{
+            padding: '3rem 2rem',
+            textAlign: 'center',
+            border: '1px solid #e5e7eb',
+            borderRadius: '0.5rem',
+            backgroundColor: '#fafafa',
+          }}
+        >
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>
+            No conversations yet
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+            When a guest contacts you,
+            <br />
+            their messages will appear here.
+          </p>
+        </div>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {items.map((item) => (
