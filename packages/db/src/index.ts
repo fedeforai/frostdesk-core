@@ -181,5 +181,9 @@ export type { InstructorGuardrails, UpdateInstructorGuardrailsPatch } from './in
 export {
   getInstructorWhatsappAccount,
   connectInstructorWhatsappAccount,
+  verifyInstructorWhatsappAccount,
 } from './instructor_whatsapp_repository.js';
-export type { InstructorWhatsappAccount } from './instructor_whatsapp_repository.js';
+export type {
+  InstructorWhatsappAccount,
+  VerifyInstructorWhatsappParams,
+} from './instructor_whatsapp_repository.js';

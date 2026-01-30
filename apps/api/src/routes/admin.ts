@@ -336,4 +336,8 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // Register conversation AI mode routes
   const { adminConversationAIModeRoutes } = await import('./admin/conversation_ai_mode.js');
   await adminConversationAIModeRoutes(fastify);
+
+  // Register admin instructor WhatsApp (manual verify)
+  const { adminInstructorWhatsappRoutes } = await import('./admin/instructor_whatsapp.js');
+  await adminInstructorWhatsappRoutes(fastify);
 }

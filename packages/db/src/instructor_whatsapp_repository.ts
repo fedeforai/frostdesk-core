@@ -91,3 +91,41 @@ export async function connectInstructorWhatsappAccount(
   `;
   return result[0];
 }
+
+export type VerifyInstructorWhatsappParams = {
+  instructorId: string;
+};
+
+/**
+ * Sets instructor WhatsApp account to verified (admin-only). Sets status='verified', connected_at=NOW().
+ * No webhook, no Meta API — state only.
+ *
+ * @param instructorId - Instructor ID (instructor_profiles.id)
+ * @returns Updated account row
+ */
+export async function verifyInstructorWhatsappAccount(
+  instructorId: string
+): Promise<InstructorWhatsappAccount> {
+  const result = await sql<InstructorWhatsappAccount[]>`
+    UPDATE instructor_whatsapp_accounts
+    SET
+      status = 'verified',
+      connected_at = NOW(),
+      updated_at = NOW()
+    WHERE instructor_id = ${instructorId}
+    RETURNING
+      instructor_id,
+      phone_number,
+      provider,
+      status,
+      connected_at,
+      created_at,
+      updated_at
+  `;
+
+  if (result.length === 0) {
+    throw new Error('INSTRUCTOR_WHATSAPP_NOT_FOUND');
+  }
+
+  return result[0];
+}
