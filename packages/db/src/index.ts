@@ -159,3 +159,16 @@ export type {
   CreateInstructorAvailabilityParams,
   UpdateInstructorAvailabilityParams,
 } from './instructor_availability_repository.js';
+
+// Instructor services (repository)
+export {
+  getInstructorServices,
+  listInstructorServices,
+  createInstructorService,
+  updateInstructorService,
+} from './instructor_services_repository.js';
+export type {
+  InstructorService,
+  CreateInstructorServiceParams,
+  UpdateInstructorServiceParams,
+} from './instructor_services_repository.js';

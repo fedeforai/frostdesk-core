@@ -32,16 +32,16 @@ export interface UpdateInstructorServiceParams {
 }
 
 /**
- * Lists all instructor services (active and inactive).
- * 
+ * Gets all instructor services (active and inactive) for an instructor.
+ *
  * @param instructorId - Instructor ID
  * @returns Array of instructor services
  */
-export async function listInstructorServices(
+export async function getInstructorServices(
   instructorId: string
 ): Promise<InstructorService[]> {
   const result = await sql<InstructorService[]>`
-    SELECT 
+    SELECT
       id,
       instructor_id,
       discipline,
@@ -52,10 +52,19 @@ export async function listInstructorServices(
       notes
     FROM instructor_services
     WHERE instructor_id = ${instructorId}
-    ORDER BY created_at DESC
+    ORDER BY created_at ASC
   `;
-
   return result;
+}
+
+/**
+ * Lists all instructor services (active and inactive).
+ * Alias for getInstructorServices for backward compatibility.
+ */
+export async function listInstructorServices(
+  instructorId: string
+): Promise<InstructorService[]> {
+  return getInstructorServices(instructorId);
 }
 
 /**
