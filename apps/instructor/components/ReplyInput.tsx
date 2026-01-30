@@ -8,6 +8,8 @@ export interface ReplyInputProps {
   replyStatus: ReplyStatus;
   onSend: (text: string) => Promise<void>;
   disabled?: boolean;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
 }
 
 export default function ReplyInput({
@@ -15,6 +17,8 @@ export default function ReplyInput({
   replyStatus,
   onSend,
   disabled = false,
+  onTypingStart,
+  onTypingStop,
 }: ReplyInputProps) {
   const [text, setText] = useState('');
   const isSending = replyStatus === 'sending';
@@ -22,11 +26,32 @@ export default function ReplyInput({
   const trimmed = text.trim();
   const canSend = trimmed.length > 0 && !isSending;
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+    if (newText.trim().length > 0) {
+      onTypingStart?.();
+    } else {
+      onTypingStop?.();
+    }
+  };
+
+  const handleFocus = () => {
+    if (text.trim().length > 0) {
+      onTypingStart?.();
+    }
+  };
+
+  const handleBlur = () => {
+    onTypingStop?.();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSend) return;
     const toSend = trimmed;
     setText('');
+    onTypingStop?.();
     await onSend(toSend);
   };
 
@@ -43,7 +68,9 @@ export default function ReplyInput({
       <form onSubmit={handleSubmit}>
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           disabled={isDisabled}
           placeholder="Type your reply..."
           rows={3}

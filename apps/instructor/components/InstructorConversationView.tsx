@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import MessageBubble, { type ReplyStatus } from './MessageBubble';
 import ReplyInput from './ReplyInput';
+import TypingIndicator from './TypingIndicator';
 import { sendInstructorReply } from '@/lib/instructorApi';
 import type { InstructorInboxItem } from '@/lib/instructorApi';
 
@@ -48,6 +49,7 @@ export default function InstructorConversationView({
   const [messages, setMessages] = useState<DisplayMessage[]>(() => getInitialMessages(inboxItem));
   const [replyStatus, setReplyStatus] = useState<ReplyStatus>('idle');
   const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [typingState, setTypingState] = useState<'idle' | 'typing'>('idle');
   const deliveredTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((message: string) => {
     setErrorToast(message);
@@ -64,6 +66,7 @@ export default function InstructorConversationView({
   useEffect(() => {
     setMessages(getInitialMessages(inboxItem));
     setReplyStatus('idle');
+    setTypingState('idle');
     clearDeliveredTimeout();
   }, [conversationId, inboxItem?.conversation_id, clearDeliveredTimeout]);
 
@@ -79,6 +82,7 @@ export default function InstructorConversationView({
       if (!trimmed) return;
 
       clearDeliveredTimeout();
+      setTypingState('idle');
       const optimisticId = `opt-${Date.now()}`;
       const now = new Date().toISOString();
       setMessages((prev) => [
@@ -103,6 +107,14 @@ export default function InstructorConversationView({
     },
     [conversationId, onToast, showToast, clearDeliveredTimeout]
   );
+
+  const handleTypingStart = useCallback(() => {
+    setTypingState('typing');
+  }, []);
+
+  const handleTypingStop = useCallback(() => {
+    setTypingState('idle');
+  }, []);
 
   const outboundMessages = messages.filter((m) => m.direction === 'outbound');
   const latestOutboundId = outboundMessages.length > 0
@@ -156,6 +168,7 @@ export default function InstructorConversationView({
             />
           ))
         )}
+        <TypingIndicator visible={typingState === 'typing'} />
       </div>
 
       {errorToast && (
@@ -179,6 +192,8 @@ export default function InstructorConversationView({
         conversationId={conversationId}
         replyStatus={replyStatus}
         onSend={handleSend}
+        onTypingStart={handleTypingStart}
+        onTypingStop={handleTypingStop}
       />
     </div>
   );
