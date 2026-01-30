@@ -4,6 +4,7 @@ import {
   getInstructorAvailability,
   upsertInstructorAvailability,
   toggleInstructorAvailability,
+  InstructorAvailabilityNotFoundError,
 } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -187,6 +188,13 @@ export async function instructorAvailabilityRoutes(app: FastifyInstance): Promis
         availability: toApiAvailability(row),
       });
     } catch (error) {
+      if (error instanceof InstructorAvailabilityNotFoundError) {
+        return reply.status(404).send({
+          ok: false,
+          error: { code: ERROR_CODES.NOT_FOUND },
+          message: 'Availability not found',
+        });
+      }
       const normalized = normalizeError(error);
       const httpStatus = mapErrorToHttp(normalized.error);
       return reply.status(httpStatus).send({
