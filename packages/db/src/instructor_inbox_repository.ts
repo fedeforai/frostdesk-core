@@ -5,6 +5,8 @@ import { sql } from './client.js';
  *
  * Returns conversations for a single instructor with last message and needs_human signal.
  * Same data shape as human inbox; filtered by instructor_id. No writes, no side effects.
+ * needs_human: true only when latest ai_snapshot says escalation AND no outbound message
+ * after that snapshot (FEATURE 2.8: instructor reply closes the loop).
  */
 
 export type InstructorInboxItem = {
@@ -73,7 +75,13 @@ export async function getInstructorInbox(
       ca.last_activity_at,
       COALESCE((
         SELECT (s.relevant = true AND s.intent IN ('NEW_BOOKING', 'RESCHEDULE')
-          AND (s.intent_confidence < 0.7 OR s.relevance_confidence < 0.7))
+          AND (s.intent_confidence < 0.7 OR s.relevance_confidence < 0.7)
+          AND NOT EXISTS (
+            SELECT 1 FROM messages m
+            WHERE m.conversation_id = ca.conversation_id
+              AND m.direction = 'outbound'
+              AND m.created_at > s.created_at
+          ))
         FROM ai_snapshots s
         WHERE s.conversation_id = ca.conversation_id
         ORDER BY s.created_at DESC

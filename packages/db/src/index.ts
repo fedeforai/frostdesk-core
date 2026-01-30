@@ -191,3 +191,13 @@ export type {
 // Instructor inbox (repository — read-only)
 export { getInstructorInbox } from './instructor_inbox_repository.js';
 export type { InstructorInboxItem } from './instructor_inbox_repository.js';
+
+// Instructor reply (FEATURE 2.8 — manual reply v1)
+export {
+  insertInstructorReply,
+  markConversationHumanHandled,
+} from './instructor_reply_repository.js';
+export type {
+  InstructorReplyMessage,
+  InsertInstructorReplyParams,
+} from './instructor_reply_repository.js';
