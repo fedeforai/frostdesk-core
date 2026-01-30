@@ -1691,3 +1691,134 @@ export async function fetchBookingLifecycleById(
 
   return await res.json();
 }
+
+// --- Instructor Inbox & Reply (FEATURE 2.8 / 2.9) ---
+
+export interface InstructorInboxItem {
+  conversation_id: string;
+  channel: string;
+  status: string;
+  last_message: {
+    direction: 'inbound' | 'outbound';
+    text: string;
+    created_at: string;
+  } | null;
+  last_activity_at: string;
+  needs_human: boolean;
+}
+
+export interface InstructorInboxResponse {
+  ok: boolean;
+  items: InstructorInboxItem[];
+}
+
+/**
+ * Fetches instructor inbox (conversations for this instructor).
+ * GET /instructor/inbox
+ */
+export async function fetchInstructorInbox(): Promise<InstructorInboxItem[]> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    const err = new Error('No session found');
+    (err as any).status = 401;
+    throw err;
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const url = `${baseUrl}/instructor/inbox`.replace(/([^:]\/)\/+/g, '$1');
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  if (res.status === 401) {
+    const err = new Error('UNAUTHENTICATED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err = new Error('NOT_FOUND');
+    (err as any).status = 404;
+    throw err;
+  }
+  if (!res.ok) {
+    const err = new Error('FAILED_TO_LOAD_INBOX');
+    (err as any).status = res.status;
+    throw err;
+  }
+
+  const data: InstructorInboxResponse = await res.json();
+  return data.ok && data.items ? data.items : [];
+}
+
+export interface SendInstructorReplyResponse {
+  ok: boolean;
+  message?: { id: string; conversation_id: string; direction: string; text: string; status?: string; created_at: string };
+}
+
+/**
+ * Sends instructor reply. POST /instructor/inbox/:conversation_id/reply
+ */
+export async function sendInstructorReply(
+  conversationId: string,
+  body: { text: string }
+): Promise<SendInstructorReplyResponse> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    const err = new Error('No session found');
+    (err as any).status = 401;
+    throw err;
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const url = `${baseUrl}/instructor/inbox/${encodeURIComponent(conversationId)}/reply`.replace(/([^:]\/)\/+/g, '$1');
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ text: body.text.trim() }),
+  });
+
+  if (res.status === 201) {
+    return await res.json();
+  }
+  if (res.status === 401) {
+    const err = new Error('UNAUTHENTICATED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err = new Error('NOT_FOUND');
+    (err as any).status = 404;
+    throw err;
+  }
+  if (res.status === 400) {
+    const err = new Error('INVALID_PAYLOAD');
+    (err as any).status = 400;
+    throw err;
+  }
+  const err = new Error('FAILED_TO_SEND_REPLY');
+  (err as any).status = res.status;
+  throw err;
+}
