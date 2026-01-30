@@ -124,3 +124,38 @@ export type { GetHumanInboxParams, HumanInboxItem } from './human_inbox_service.
 export { getConversationTimelineReadModel } from './conversation_timeline_service.js';
 export { getSystemDegradationSignalsReadModel } from './system_degradation_service.js';
 export { getSystemHealth } from './system_health_service.js';
+
+// Instructor profile (repository)
+export {
+  getInstructorProfile,
+  getInstructorProfileByUserId,
+  createInstructorProfile,
+  updateInstructorProfile,
+  updateInstructorProfileByUserId,
+  completeInstructorOnboarding,
+} from './instructor_profile_repository.js';
+export type {
+  InstructorProfile,
+  UpdateInstructorProfileParams,
+  CreateInstructorProfileParams,
+  UpdateInstructorProfileByUserIdParams,
+} from './instructor_profile_repository.js';
+
+// Instructor availability (repository)
+export {
+  getInstructorAvailability,
+  listInstructorAvailability,
+  upsertInstructorAvailability,
+  createInstructorAvailability,
+  updateInstructorAvailability,
+  deactivateInstructorAvailability,
+  findInstructorAvailabilityBySlot,
+  toggleInstructorAvailability,
+} from './instructor_availability_repository.js';
+export { InstructorAvailabilityNotFoundError } from './instructor_availability_repository.js';
+export type {
+  InstructorAvailability,
+  UpsertInstructorAvailabilityParams,
+  CreateInstructorAvailabilityParams,
+  UpdateInstructorAvailabilityParams,
+} from './instructor_availability_repository.js';
