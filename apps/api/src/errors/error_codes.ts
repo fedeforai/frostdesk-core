@@ -43,6 +43,7 @@ export const ERROR_CODES = {
 
   // Internal Errors
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  INVARIANT_FAILED: 'INVARIANT_FAILED',
   DATABASE_ERROR: 'database_error',
 } as const;
 

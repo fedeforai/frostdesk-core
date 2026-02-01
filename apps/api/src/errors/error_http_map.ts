@@ -20,6 +20,7 @@ export const ERROR_HTTP_MAP: Record<ErrorCode, number> = {
   [ERROR_CODES.WHATSAPP_SEND_FAILED]: 502,
   [ERROR_CODES.DATABASE_ERROR]: 500,
   [ERROR_CODES.INTERNAL_ERROR]: 500,
+  [ERROR_CODES.INVARIANT_FAILED]: 500,
 } as const;
 
 export function mapErrorToHttp(error: ErrorCode): number {
