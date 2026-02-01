@@ -6,21 +6,22 @@ import {
   resolveConversationByChannel,
   persistInboundMessageWithInboxBridge,
   orchestrateInboundDraft,
-  isValidUUID,
 } from '@frostdesk/db';
-import { randomUUID } from 'crypto';
 
 /**
- * WhatsApp Webhook Routes (Pilot, READ-ONLY)
- * 
+ * WhatsApp Webhook Routes (Pilot)
+ *
  * WHAT IT DOES:
  * - Exposes POST /webhook/whatsapp endpoint
  * - Parses and validates WhatsApp webhook payloads
- * - Returns acknowledgment
- * 
+ * - Resolves conversation via channel identity mapping
+ * - Persists inbound message (inbound_messages + messages)
+ * - Triggers AI draft orchestration (classification + optional draft)
+ * - Idempotent on external_message_id
+ *
  * WHAT IT DOES NOT DO:
- * - No persistence (read-only validation)
- * - No processing
+ * - No autonomous outbound send
+ * - No booking creation
  */
 
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
@@ -158,35 +159,28 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       };
 
       // Resolve conversation by channel and customer identifier
-      console.log('[DEBUG STEP 1] Before resolveConversationByChannel - sender:', normalizedMessage.sender_identifier);
       const conversation = await resolveConversationByChannel(
         'whatsapp',
         normalizedMessage.sender_identifier,
         1 // Default instructor_id
       );
-      console.log('[DEBUG STEP 2] After resolveConversationByChannel - conversation:', JSON.stringify(conversation, null, 2));
-      console.log('[DEBUG STEP 2.1] conversation.id type:', typeof conversation?.id, 'value:', conversation?.id);
 
-      // Ensure conversationId is always a valid UUID
-      // Handle edge cases where conversation.id might be undefined/null
-      const conversationId =
-        conversation?.id ??
-        randomUUID();
-      console.log('[DEBUG STEP 3] After fallback - conversationId type:', typeof conversationId, 'value:', conversationId);
-
-      // HARD DEBUG BLOCK: Intercept conversationId before DB insert
-      // This catches runtime bugs where conversationId might be "1" or non-UUID
-      if (typeof conversationId !== 'string') {
-        console.error('[FATAL] conversationId is not string:', conversationId, typeof conversationId);
-        throw new Error(`conversationId is not string: ${conversationId}`);
+      // Fail-fast: resolved conversation must have a valid UUID id
+      const conversationId = conversation?.id;
+      if (
+        typeof conversationId !== 'string' ||
+        !conversationId.match(/^[0-9a-fA-F-]{36}$/)
+      ) {
+        const normalized = normalizeError({ code: ERROR_CODES.INVARIANT_FAILED });
+        const httpStatus = mapErrorToHttp(normalized.error);
+        return reply.status(httpStatus).send({
+          ok: false,
+          error: {
+            code: normalized.error,
+            message: normalized.message || 'Resolved conversation has no valid id',
+          },
+        });
       }
-
-      if (!conversationId.match(/^[0-9a-fA-F-]{36}$/)) {
-        console.error('[FATAL] conversationId is not UUID:', conversationId);
-        throw new Error(`conversationId is not UUID: ${conversationId}`);
-      }
-
-      console.log('[DEBUG] conversationId FINAL before DB insert:', conversationId);
 
       // PILOT MODE v1: message_type intentionally removed. Direction + channel are sufficient.
       // Persist message with inbox bridge (idempotent: checks external_id before insert)
@@ -219,13 +213,9 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         // Orchestration failure should not break webhook response
         // Log error but return 200 OK (message was persisted)
         console.error('[WEBHOOK WHATSAPP] Draft orchestration failed:', error);
-        // Continue to return success - message is persisted, snapshot/draft can be retried
       }
 
-      // Payload processed and persisted
-      return reply.status(200).send({
-        ok: true,
-      });
+      return reply.status(200).send({ ok: true });
     } catch (error) {
       // Normalize any unexpected errors
       const normalized = normalizeError(error);
