@@ -18,31 +18,19 @@
 interface AIDebugPanelProps {
   relevant: boolean;
   relevance_confidence: number;
+  relevance_reason?: string | null;
   intent: string | null;
   intent_confidence: number | null;
-  decision?: string | null;
-  reason?: string | null;
-  allow_draft?: boolean | null;
-  require_escalation?: boolean | null;
-  draft_generated?: boolean | null;
-  draft_blocked?: boolean | null;
-  draft_present?: boolean | null;
-  violations?: string[] | null;
+  model?: string | null;
 }
 
 export default function AIDebugPanel({
   relevant,
   relevance_confidence,
+  relevance_reason,
   intent,
   intent_confidence,
-  decision,
-  reason,
-  allow_draft,
-  require_escalation,
-  draft_generated,
-  draft_blocked,
-  draft_present,
-  violations,
+  model,
 }: AIDebugPanelProps) {
   const formatConfidence = (value: number | null): string => {
     if (value === null) return '—';
@@ -137,6 +125,35 @@ export default function AIDebugPanel({
           </span>
         </div>
 
+        {/* Relevance Reason */}
+        {relevance_reason != null && relevance_reason !== '' && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0.75rem',
+            backgroundColor: '#f9fafb',
+            borderRadius: '0.375rem',
+            border: '1px solid #e5e7eb',
+          }}>
+            <span style={{ 
+              color: '#6b7280', 
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}>
+              Relevance reason
+            </span>
+            <span style={{ 
+              color: '#111827', 
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              fontFamily: 'monospace',
+            }}>
+              {relevance_reason}
+            </span>
+          </div>
+        )}
+
         {/* Intent */}
         <div style={{
           display: 'flex',
@@ -190,37 +207,9 @@ export default function AIDebugPanel({
             {formatConfidence(intent_confidence)}
           </span>
         </div>
-      </div>
 
-      {/* AI Decision Section */}
-      <div style={{ 
-        marginTop: '1.5rem',
-        paddingTop: '1.5rem',
-        borderTop: '1px solid #e5e7eb',
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '1rem',
-          borderBottom: '1px solid #e5e7eb',
-          paddingBottom: '0.75rem',
-        }}>
-          <h2 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: '600',
-            color: '#111827',
-          }}>
-            AI Decision
-          </h2>
-        </div>
-
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '1rem',
-        }}>
-          {/* Decision */}
+        {/* Model */}
+        {model != null && model !== '' && (
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -235,7 +224,7 @@ export default function AIDebugPanel({
               fontSize: '0.875rem',
               fontWeight: '500',
             }}>
-              Decision
+              Model
             </span>
             <span style={{ 
               color: '#111827', 
@@ -243,364 +232,11 @@ export default function AIDebugPanel({
               fontWeight: '600',
               fontFamily: 'monospace',
             }}>
-              {decision || '—'}
+              {model}
             </span>
           </div>
-
-          {/* Reason */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <span style={{ 
-              color: '#6b7280', 
-              fontSize: '0.875rem',
-              fontWeight: '500',
-            }}>
-              Reason
-            </span>
-            <span style={{ 
-              color: '#111827', 
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              fontFamily: 'monospace',
-            }}>
-              {reason || '—'}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* AI Permissions Section */}
-      <div style={{ 
-        marginTop: '1.5rem',
-        paddingTop: '1.5rem',
-        borderTop: '1px solid #e5e7eb',
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '1rem',
-          borderBottom: '1px solid #e5e7eb',
-          paddingBottom: '0.75rem',
-        }}>
-          <h2 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: '600',
-            color: '#111827',
-          }}>
-            AI Permissions
-          </h2>
-        </div>
-
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '1rem',
-        }}>
-          {/* Allow Draft */}
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '0.5rem',
-            }}>
-              <span style={{ 
-                color: '#6b7280', 
-                fontSize: '0.875rem',
-                fontWeight: '500',
-              }}>
-                Allow draft
-              </span>
-              <span style={{ 
-                color: '#111827', 
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'monospace',
-              }}>
-                {allow_draft === null ? '—' : allow_draft ? 'true' : 'false'}
-              </span>
-            </div>
-            <p style={{
-              color: '#6b7280',
-              fontSize: '0.75rem',
-              margin: 0,
-              fontStyle: 'italic',
-            }}>
-              AI is permitted to generate a draft reply.
-            </p>
-          </div>
-
-          {/* Require Escalation */}
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '0.5rem',
-            }}>
-              <span style={{ 
-                color: '#6b7280', 
-                fontSize: '0.875rem',
-                fontWeight: '500',
-              }}>
-                Require escalation
-              </span>
-              <span style={{ 
-                color: '#111827', 
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'monospace',
-              }}>
-                {require_escalation === null ? '—' : require_escalation ? 'true' : 'false'}
-              </span>
-            </div>
-            <p style={{
-              color: '#6b7280',
-              fontSize: '0.75rem',
-              margin: 0,
-              fontStyle: 'italic',
-            }}>
-              Human review is required before any action.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Draft Outcome Section */}
-      <div style={{ 
-        marginTop: '1.5rem',
-        paddingTop: '1.5rem',
-        borderTop: '1px solid #e5e7eb',
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '1rem',
-          borderBottom: '1px solid #e5e7eb',
-          paddingBottom: '0.75rem',
-        }}>
-          <h2 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: '600',
-            color: '#111827',
-          }}>
-            Draft Outcome
-          </h2>
-        </div>
-
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '1rem',
-        }}>
-          {/* Draft Generated */}
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '0.5rem',
-            }}>
-              <span style={{ 
-                color: '#6b7280', 
-                fontSize: '0.875rem',
-                fontWeight: '500',
-              }}>
-                Draft generated
-              </span>
-              <span style={{ 
-                color: '#111827', 
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'monospace',
-              }}>
-                {draft_generated === null ? '—' : draft_generated ? 'yes' : 'no'}
-              </span>
-            </div>
-            <p style={{
-              color: '#6b7280',
-              fontSize: '0.75rem',
-              margin: 0,
-              fontStyle: 'italic',
-            }}>
-              A draft reply was created and stored.
-            </p>
-          </div>
-
-          {/* Draft Blocked */}
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '0.5rem',
-            }}>
-              <span style={{ 
-                color: '#6b7280', 
-                fontSize: '0.875rem',
-                fontWeight: '500',
-              }}>
-                Draft blocked
-              </span>
-              <span style={{ 
-                color: '#111827', 
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'monospace',
-              }}>
-                {draft_blocked === null ? '—' : draft_blocked ? 'yes' : 'no'}
-              </span>
-            </div>
-            <p style={{
-              color: '#6b7280',
-              fontSize: '0.75rem',
-              margin: 0,
-              fontStyle: 'italic',
-            }}>
-              A draft was not stored due to guardrail rules.
-            </p>
-          </div>
-
-          {/* Draft Present (Optional) */}
-          {draft_present !== undefined && (
-            <div style={{
-              padding: '0.75rem',
-              backgroundColor: '#f9fafb',
-              borderRadius: '0.375rem',
-              border: '1px solid #e5e7eb',
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.5rem',
-              }}>
-                <span style={{ 
-                  color: '#6b7280', 
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                }}>
-                  Draft present
-                </span>
-                <span style={{ 
-                  color: '#111827', 
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  fontFamily: 'monospace',
-                }}>
-                  {draft_present === null ? '—' : draft_present ? 'yes' : 'no'}
-                </span>
-              </div>
-              <p style={{
-                color: '#6b7280',
-                fontSize: '0.75rem',
-                margin: 0,
-                fontStyle: 'italic',
-              }}>
-                A draft exists in storage for this message.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Guardrail Violations Section - Only show if violations exist */}
-      {violations && violations.length > 0 && (
-        <div style={{ 
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
-          borderTop: '1px solid #e5e7eb',
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '1rem',
-            borderBottom: '1px solid #e5e7eb',
-            paddingBottom: '0.75rem',
-          }}>
-            <h2 style={{ 
-              fontSize: '1.25rem', 
-              fontWeight: '600',
-              color: '#111827',
-            }}>
-              Guardrail Violations
-            </h2>
-          </div>
-
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#fef2f2',
-            borderRadius: '0.375rem',
-            border: '1px solid #fecaca',
-            marginBottom: '1rem',
-          }}>
-            <p style={{
-              color: '#991b1b',
-              fontSize: '0.875rem',
-              margin: 0,
-              fontWeight: '500',
-            }}>
-              Draft blocked due to safety guardrails.
-            </p>
-          </div>
-
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '0.75rem',
-          }}>
-            {violations.map((violation, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '0.375rem',
-                  border: '1px solid #e5e7eb',
-                }}
-              >
-                <span style={{ 
-                  color: '#111827', 
-                  fontSize: '0.875rem',
-                  fontFamily: 'monospace',
-                }}>
-                  {violation}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

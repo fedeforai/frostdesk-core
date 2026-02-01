@@ -57,7 +57,7 @@ export interface AIDecision {
   >;
 }
 
-/** AI snapshot row as returned by GET /admin/human-inbox/:conversationId (read-only). */
+/** AI snapshot row as returned by GET /admin/human-inbox/:conversationId (read-only). Aligned with ai_snapshots table. */
 export interface AISnapshotForMessage {
   id: string;
   message_id: string;
@@ -65,12 +65,9 @@ export interface AISnapshotForMessage {
   channel: string;
   relevant: boolean;
   relevance_confidence: number;
+  relevance_reason: string | null;
   intent: string | null;
   intent_confidence: number | null;
-  decision: string | null;
-  reason: string | null;
-  allow_draft: boolean | null;
-  require_escalation: boolean | null;
   model: string;
   created_at: string;
 }
@@ -81,6 +78,72 @@ export interface FetchHumanInboxDetailResponse {
   ai_decision: AIDecision;
   /** AI snapshots keyed by message_id (F2.5.7). Present only when snapshots exist. */
   ai_snapshots_by_message_id?: Record<string, AISnapshotForMessage>;
+}
+
+/** Human inbox list item (GET /admin/human-inbox). Read-only; values from API only. */
+export interface HumanInboxItem {
+  conversation_id: string;
+  channel: string;
+  status: string;
+  last_message: {
+    direction: 'inbound' | 'outbound' | null;
+    text: string | null;
+    created_at: string | null;
+  };
+  last_activity_at: string;
+  /** true iff conversation needs human (from API; no UI logic). */
+  needs_human: boolean;
+  /** Audit/debug only; from API. No inference, no thresholds. */
+  intent_confidence?: number | null;
+  /** Audit/debug only; from API. No inference, no thresholds. */
+  relevance_confidence?: number | null;
+}
+
+export interface FetchHumanInboxResponse {
+  ok: true;
+  items: HumanInboxItem[];
+}
+
+/**
+ * Fetches human inbox list from the Fastify API (READ-ONLY).
+ * Uses existing needs_human from API; no new logic.
+ */
+export async function fetchHumanInbox(params?: {
+  status?: string;
+  channel?: string;
+}): Promise<FetchHumanInboxResponse> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('No session found');
+  }
+
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const queryParams = new URLSearchParams({ userId: session.user.id });
+  if (params?.status) queryParams.append('status', params.status);
+  if (params?.channel) queryParams.append('channel', params.channel);
+
+  const url = `${apiBaseUrl}/admin/human-inbox?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': session.user.id,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: {} }));
+    const errorObj = new Error(errorData.error?.message || 'Failed to fetch human inbox');
+    (errorObj as any).status = response.status;
+    (errorObj as any).message = errorData.error?.message || '';
+    throw errorObj;
+  }
+
+  const data = await response.json();
+  return data;
 }
 
 /**
@@ -1359,6 +1422,38 @@ export async function sendOutboundMessage(params: {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: {} }));
     const errorObj = new Error(errorData.error?.message || 'Failed to send outbound message');
+    (errorObj as any).status = response.status;
+    (errorObj as any).message = errorData.error?.message || '';
+    throw errorObj;
+  }
+}
+
+// --- AI Draft Approval ---
+// MVP v1: Admin approves AI-generated draft and sends it via WhatsApp
+// Backend already exists: POST /admin/conversations/:conversationId/send-ai-draft
+
+export async function sendAIDraftApproval(conversationId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('No session found');
+  }
+
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const url = `${apiBaseUrl}/admin/conversations/${conversationId}/send-ai-draft?userId=${session.user.id}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': session.user.id,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: {} }));
+    const errorObj = new Error(errorData.error?.message || 'Failed to approve AI draft');
     (errorObj as any).status = response.status;
     (errorObj as any).message = errorData.error?.message || '';
     throw errorObj;

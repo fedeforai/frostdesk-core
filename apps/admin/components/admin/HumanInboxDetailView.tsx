@@ -7,20 +7,14 @@ import ConversationMessages from '@/components/admin/ConversationMessages';
 import Badge from '@/components/ui/badge';
 import AIDebugPanel from '@/components/admin/AIDebugPanel';
 
-/** Props for AIDebugPanel built from existing data (read adapter). */
+/** Props for AIDebugPanel built from existing data (read adapter). Aligned with AISnapshotForMessage / API schema. */
 interface AISnapshotPropsForPanel {
   relevant: boolean;
   relevance_confidence: number;
+  relevance_reason?: string | null;
   intent: string | null;
   intent_confidence: number | null;
-  decision?: string | null;
-  reason?: string | null;
-  allow_draft?: boolean | null;
-  require_escalation?: boolean | null;
-  draft_generated?: boolean | null;
-  draft_blocked?: boolean | null;
-  draft_present?: boolean | null;
-  violations?: string[] | null;
+  model?: string | null;
 }
 
 interface HumanInboxDetailViewProps {
@@ -67,16 +61,10 @@ function buildSnapshotPropsForActiveMessage(
   return {
     relevant: activeMessage.intent != null,
     relevance_confidence: activeMessage.confidence ?? 0,
+    relevance_reason: null,
     intent: activeMessage.intent ?? null,
     intent_confidence: activeMessage.confidence ?? null,
-    decision: null,
-    reason: null,
-    allow_draft: ai_decision?.eligible ?? null,
-    require_escalation: ai_decision?.blockers && ai_decision.blockers.length > 0 ? true : (ai_decision?.eligible === false ? true : null),
-    draft_generated: hasAIDraft,
-    draft_blocked: null,
-    draft_present: hasAIDraft,
-    violations: null,
+    model: activeMessage.model ?? null,
   };
 }
 
@@ -250,16 +238,10 @@ export default function HumanInboxDetailView({
         <AIDebugPanel
           relevant={snapshotProps.relevant}
           relevance_confidence={snapshotProps.relevance_confidence}
+          relevance_reason={snapshotProps.relevance_reason ?? null}
           intent={snapshotProps.intent}
           intent_confidence={snapshotProps.intent_confidence}
-          decision={snapshotProps.decision ?? null}
-          reason={snapshotProps.reason ?? null}
-          allow_draft={snapshotProps.allow_draft ?? null}
-          require_escalation={snapshotProps.require_escalation ?? null}
-          draft_generated={snapshotProps.draft_generated ?? null}
-          draft_blocked={snapshotProps.draft_blocked ?? null}
-          draft_present={snapshotProps.draft_present ?? null}
-          violations={snapshotProps.violations ?? null}
+          model={snapshotProps.model ?? null}
         />
       )}
 
