@@ -194,18 +194,59 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
           {getBookingStateCopy(booking.status)}
         </p>
       )}
-      {booking.status === 'confirmed' && (
-        <div style={{ marginTop: '0.75rem' }}>
-          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-            What happens next
+      {(booking.status === 'pending' || booking.status === 'draft') && (
+        <div style={{ marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+            Reserved
           </div>
-          <div style={{ fontSize: '0.875rem', color: '#374151' }}>
-            You can now collect payment and add this booking to your calendar.
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            Payment and calendar sync are handled manually for now.
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+            This lesson is reserved, not confirmed yet. You can confirm when ready; payment can be collected afterward and will finalize the booking.
           </div>
         </div>
+      )}
+      {booking.status === 'confirmed' && (
+        <div style={{ marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+            Confirmed — pending payment
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+            Payment completion will finalize the booking.
+          </div>
+        </div>
+      )}
+      {booking.status === 'confirmed' && (
+        <>
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+              What happens next
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#374151' }}>
+              You can now collect payment and add this booking to your calendar.
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+              Payment and calendar sync are handled manually for now.
+            </div>
+          </div>
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+              Payment
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+              Payment is handled outside FrostDesk for now. You can collect payment directly and mark it as completed later.
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+              <div style={{ fontWeight: 600 }}>Payment status</div>
+              <div style={{ marginTop: '0.25rem' }}>Not collected yet</div>
+              <div style={{ marginTop: '0.25rem' }}>You will be able to track payment status here.</div>
+            </div>
+          </div>
+          <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+            This lesson has been confirmed by the instructor. Payment completion will finalize the booking.
+          </div>
+          <div style={{ fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4, marginTop: '0.5rem' }}>
+            Available with subscription
+          </div>
+        </>
       )}
       <div style={{ fontSize: '0.75rem', color: '#374151' }}>
         <div>Dates: {empty(booking.date)}</div>
@@ -215,6 +256,9 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
       </div>
       <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: '#6b7280' }}>
         Last updated: {new Date(booking.updated_at).toLocaleDateString()}
+      </p>
+      <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4 }}>
+        Available during pilot access
       </p>
       <div className="mt-3 text-sm">
         <a

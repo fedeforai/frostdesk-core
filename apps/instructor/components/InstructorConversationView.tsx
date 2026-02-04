@@ -5,13 +5,20 @@ import Link from 'next/link';
 import MessageBubble, { type ReplyStatus } from './MessageBubble';
 import ReplyInput from './ReplyInput';
 import TypingIndicator from './TypingIndicator';
+import DecisionTransparencyNote from './DecisionTransparencyNote';
 import { sendInstructorReply } from '@/lib/instructorApi';
 import type { InstructorInboxItem } from '@/lib/instructorApi';
+
+type BookingStatusForNote = 'draft' | 'pending' | 'confirmed' | null;
 
 interface InstructorConversationViewProps {
   conversationId: string;
   inboxItem: InstructorInboxItem | null;
   onToast?: (message: string) => void;
+  /** STEP 6.0 — When true, show "Why you're seeing this" (only when SuggestedReplyBox is present). */
+  showTransparencyNote?: boolean;
+  /** STEP 6.0 — Booking status for transparency copy. If not provided, derived from inboxItem.status. */
+  bookingStatus?: BookingStatusForNote;
 }
 
 type DisplayMessage = {
@@ -41,11 +48,20 @@ function randomDelay(): number {
   return DELIVERED_DELAY_MS_MIN + Math.random() * (DELIVERED_DELAY_MS_MAX - DELIVERED_DELAY_MS_MIN);
 }
 
+function deriveBookingStatus(status: string | undefined): BookingStatusForNote {
+  if (status === 'draft' || status === 'pending' || status === 'confirmed') return status;
+  return null;
+}
+
 export default function InstructorConversationView({
   conversationId,
   inboxItem,
   onToast,
+  showTransparencyNote = false,
+  bookingStatus: bookingStatusProp,
 }: InstructorConversationViewProps) {
+  const bookingStatus: BookingStatusForNote =
+    bookingStatusProp ?? deriveBookingStatus(inboxItem?.status);
   const [messages, setMessages] = useState<DisplayMessage[]>(() => getInitialMessages(inboxItem));
   const [replyStatus, setReplyStatus] = useState<ReplyStatus>('idle');
   const [errorToast, setErrorToast] = useState<string | null>(null);
@@ -217,6 +233,26 @@ export default function InstructorConversationView({
           {errorToast}
         </div>
       )}
+
+      <DecisionTransparencyNote
+        bookingStatus={bookingStatus}
+        showNote={showTransparencyNote}
+      />
+
+      {bookingStatus != null && (
+        <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Payment & confirmation</div>
+          <div>
+            You confirm the lesson; payment is handled separately and finalizes the booking. You can share the payment link when you're ready.
+          </div>
+          <div style={{ marginTop: '0.25rem' }}>
+            Until then, this booking should be considered a reservation.
+          </div>
+        </div>
+      )}
+      <div style={{ fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4, marginBottom: '1rem' }}>
+        Some features shown here may require an active subscription.
+      </div>
 
       <ReplyInput
         conversationId={conversationId}
