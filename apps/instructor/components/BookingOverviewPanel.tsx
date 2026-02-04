@@ -237,7 +237,7 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
             <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
               <div style={{ fontWeight: 600 }}>Payment status</div>
               <div style={{ marginTop: '0.25rem' }}>Not collected yet</div>
-              <div style={{ marginTop: '0.25rem' }}>You will be able to track payment status here.</div>
+              <div style={{ marginTop: '0.25rem' }}>Payment status is shown here when payment features are available.</div>
             </div>
           </div>
           <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
