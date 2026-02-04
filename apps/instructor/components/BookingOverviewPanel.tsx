@@ -244,7 +244,7 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
             This lesson has been confirmed by the instructor. Payment completion will finalize the booking.
           </div>
           <div style={{ fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4, marginTop: '0.5rem' }}>
-            Available with subscription
+            May be available with a subscription.
           </div>
         </>
       )}
