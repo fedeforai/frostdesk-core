@@ -200,7 +200,7 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
             Reserved
           </div>
           <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
-            This lesson is reserved, not confirmed yet. You can confirm when ready; payment can be collected afterward and will finalize the booking.
+            This lesson is reserved, not finalized yet. You can confirm when ready; payment completion will finalize the booking.
           </div>
         </div>
       )}
@@ -237,7 +237,7 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
             <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
               <div style={{ fontWeight: 600 }}>Payment status</div>
               <div style={{ marginTop: '0.25rem' }}>Not collected yet</div>
-              <div style={{ marginTop: '0.25rem' }}>Payment status is shown here when payment features are available.</div>
+              <div style={{ marginTop: '0.25rem' }}>Payment status is shown here when available.</div>
             </div>
           </div>
           <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
