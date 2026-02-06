@@ -6,6 +6,7 @@ import {
   resolveConversationByChannel,
   persistInboundMessageWithInboxBridge,
   orchestrateInboundDraft,
+  insertAuditEvent,
 } from '@frostdesk/db';
 
 /**
@@ -200,6 +201,28 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         },
       });
 
+      // Phase C1: inbound message audit (metadata only, fail-open)
+      try {
+        await insertAuditEvent({
+          actor_type: 'system',
+          actor_id: null,
+          action: 'inbound_message_received',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          severity: 'info',
+          request_id: request.id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: {
+            channel: 'whatsapp',
+            direction: 'inbound',
+            message_type: message.type ?? 'text',
+          },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (inbound_message_received)');
+      }
+
       // F2.4.1: Orchestrate AI classification and draft generation (idempotent)
       try {
         await orchestrateInboundDraft({
@@ -208,6 +231,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           messageText: normalizedMessage.text,
           channel: normalizedMessage.channel,
           language: 'it', // TODO: detect from message or payload
+          requestId: request.id ?? null,
         });
       } catch (error) {
         // Orchestration failure should not break webhook response

@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { approveAndSendAIDraft, DraftNotFoundError } from '@frostdesk/db';
+import { approveAndSendAIDraft, insertAuditEvent, DraftNotFoundError } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { sendWhatsAppText } from '../../integrations/whatsapp_cloud_api.js';
 import { resolveWhatsAppTargetPhone, TARGET_NOT_FOUND } from '../../integrations/whatsapp_target_resolution.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -13,17 +14,9 @@ function safeErrorMessage(err: Error): string {
 }
 
 export async function adminSendAIDraftRoutes(app: FastifyInstance) {
-  const getUserId = (request: any): string => {
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.post('/admin/conversations/:conversationId/send-ai-draft', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const conversationId = (request.params as any).conversationId;
 
       if (!conversationId || typeof conversationId !== 'string') {
@@ -47,6 +40,71 @@ export async function adminSendAIDraftRoutes(app: FastifyInstance) {
         text: result.text,
         context: { conversationId, messageId: result.message_id },
       });
+
+      try {
+        await insertAuditEvent({
+          actor_type: 'admin',
+          actor_id: userId,
+          action: 'admin_send_ai_draft',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          request_id: (request as any).id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: { message_id: result.message_id },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (admin send AI draft)');
+      }
+      try {
+        await insertAuditEvent({
+          actor_type: 'admin',
+          actor_id: userId ?? null,
+          action: 'ai_draft_approved',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          severity: 'info',
+          request_id: request.id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: {
+            draft_id: null,
+            outbound_message_id: result.message_id,
+          },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (ai_draft_approved)');
+      }
+      try {
+        await insertAuditEvent({
+          actor_type: 'admin',
+          actor_id: userId,
+          action: 'ai_draft_decision',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          request_id: (request as any).id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: { decision: 'approved' },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (ai_draft_decision)');
+      }
+      try {
+        await insertAuditEvent({
+          actor_type: 'system',
+          actor_id: null,
+          action: 'ai_draft_sent',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          request_id: (request as any).id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: null,
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (ai_draft_sent)');
+      }
 
       return reply.send({
         ok: true,

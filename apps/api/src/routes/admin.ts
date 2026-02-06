@@ -5,6 +5,8 @@ import {
   adminOverrideBookingStatus,
   getAdminBookingDetail,
   getAdminMessages,
+  insertAuditEvent,
+  listAuditLog,
   UnauthorizedError,
   isAdmin,
   getUserRole,
@@ -22,6 +24,7 @@ import { adminSendAIDraftRoutes } from './admin/send_ai_draft.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
+import { getUserIdFromJwt, InstructorAuthError, requireAdminUser } from '../lib/auth_instructor.js';
 
 export interface AdminListResponse<T> {
   items: T[];
@@ -35,27 +38,25 @@ export interface AdminError {
 }
 
 export async function adminRoutes(fastify: FastifyInstance) {
-  // Helper to extract userId from request
-  const getUserId = (request: any): string => {
-    // Try header first, then query param
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
-  // GET /admin/check - Lightweight endpoint to check if user is admin
+  // GET /admin/check - JWT-based; backend validates token, then checks DB. No trust of client-provided userId.
   fastify.get('/admin/check', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await getUserIdFromJwt(request);
       const admin = await isAdmin(userId);
-      return { ok: true, isAdmin: admin };
+      return reply.send({ ok: true, isAdmin: admin });
     } catch (error) {
+      if (error instanceof InstructorAuthError) {
+        return reply.status(401).send({
+          ok: false,
+          isAdmin: false,
+          error: { code: 'UNAUTHENTICATED' },
+        });
+      }
       const normalized = normalizeError(error);
       const httpStatus = mapErrorToHttp(normalized.error);
       return reply.status(httpStatus).send({
         ok: false,
+        isAdmin: false,
         error: normalized.error,
         ...(normalized.message ? { message: normalized.message } : {}),
       });
@@ -65,7 +66,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // GET /admin/user-role - Get authenticated user's role
   fastify.get('/admin/user-role', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const role = await getUserRole(userId);
       return { ok: true, role };
     } catch (error) {
@@ -83,7 +84,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // Ordered by created_at DESC (newest first)
   fastify.get('/admin/conversations', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const query = request.query as {
         limit?: string;
         offset?: string;
@@ -125,7 +126,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // dateFrom/dateTo: ISO 8601 date strings (YYYY-MM-DD or full ISO datetime)
   fastify.get('/admin/bookings', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const query = request.query as {
         limit?: string;
         offset?: string;
@@ -169,7 +170,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // POST /admin/bookings/:id/override-status
   fastify.post('/admin/bookings/:id/override-status', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const bookingId = (request.params as any).id;
       const body = request.body as {
         newStatus: string;
@@ -193,6 +194,22 @@ export async function adminRoutes(fastify: FastifyInstance) {
         reason: body.reason,
       });
 
+      try {
+        await insertAuditEvent({
+          actor_type: 'admin',
+          actor_id: userId,
+          action: 'admin_override_booking_status',
+          entity_type: 'booking',
+          entity_id: bookingId,
+          request_id: (request as any).id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: { new_status: result.status, reason: body.reason ?? undefined },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (admin override booking status)');
+      }
+
       return { ok: true, data: result };
     } catch (error) {
       const normalized = normalizeError(error);
@@ -208,7 +225,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // GET /admin/bookings/:id
   fastify.get('/admin/bookings/:id', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const bookingId = (request.params as any).id;
 
       const result = await getAdminBookingDetail({
@@ -233,7 +250,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // dateFrom/dateTo: ISO 8601 date strings (YYYY-MM-DD or full ISO datetime)
   fastify.get('/admin/messages', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const query = request.query as {
         limit?: string;
         offset?: string;
@@ -265,6 +282,36 @@ export async function adminRoutes(fastify: FastifyInstance) {
       };
 
       return { ok: true, data: response };
+    } catch (error) {
+      const normalized = normalizeError(error);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
+    }
+  });
+
+  // GET /admin/audit — read-only, cursor pagination, raw audit rows
+  fastify.get('/admin/audit', async (request, reply) => {
+    try {
+      await requireAdminUser(request);
+      const query = request.query as {
+        entity_type?: string;
+        entity_id?: string;
+        limit?: string;
+        cursor?: string;
+      };
+      const limitRaw = query.limit != null ? Number(query.limit) : 20;
+      const limit = Math.min(Math.max(1, limitRaw), 100);
+      const { items, next_cursor } = await listAuditLog({
+        entity_type: query.entity_type ?? undefined,
+        entity_id: query.entity_id ?? undefined,
+        limit,
+        cursor: query.cursor ?? null,
+      });
+      return { ok: true, data: { items, next_cursor, limit } };
     } catch (error) {
       const normalized = normalizeError(error);
       const httpStatus = mapErrorToHttp(normalized.error);

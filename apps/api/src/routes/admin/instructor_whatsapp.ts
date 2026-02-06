@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { assertAdminAccess, verifyInstructorWhatsappAccount } from '@frostdesk/db';
-import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
+import { verifyInstructorWhatsappAccount, insertAuditEvent } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -13,8 +13,7 @@ import { ERROR_CODES } from '../../errors/error_codes.js';
 export async function adminInstructorWhatsappRoutes(app: FastifyInstance): Promise<void> {
   app.post('/admin/instructor/whatsapp/verify', async (request, reply) => {
     try {
-      const userId = await getUserIdFromJwt(request);
-      await assertAdminAccess(userId);
+      const userId = await requireAdminUser(request);
 
       const body = request.body as { instructor_id?: string };
       const instructor_id = body?.instructor_id;
@@ -27,6 +26,22 @@ export async function adminInstructorWhatsappRoutes(app: FastifyInstance): Promi
       }
 
       const account = await verifyInstructorWhatsappAccount(instructor_id.trim());
+
+      try {
+        await insertAuditEvent({
+          actor_type: 'admin',
+          actor_id: userId,
+          action: 'verify_instructor_whatsapp',
+          entity_type: 'whatsapp_account',
+          entity_id: account.instructor_id,
+          request_id: (request as any).id ?? null,
+          ip: request.ip ?? null,
+          user_agent: request.headers['user-agent'] ?? null,
+          payload: { phone_number: account.phone_number, status: account.status },
+        });
+      } catch (auditErr) {
+        request.log.error({ err: auditErr }, 'Audit write failed (verify instructor WhatsApp)');
+      }
 
       return reply.send({
         ok: true,
