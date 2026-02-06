@@ -24,7 +24,7 @@ import { adminSendAIDraftRoutes } from './admin/send_ai_draft.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
-import { getUserIdFromJwt, InstructorAuthError, requireAdminUser } from '../lib/auth_instructor.js';
+import { requireAdminUser } from '../lib/auth_instructor.js';
 
 export interface AdminListResponse<T> {
   items: T[];
@@ -38,20 +38,12 @@ export interface AdminError {
 }
 
 export async function adminRoutes(fastify: FastifyInstance) {
-  // GET /admin/check - JWT-based; backend validates token, then checks DB. No trust of client-provided userId.
+  // GET /admin/check - JWT-based; uses requireAdminUser so client gets 401/403/200. Error shape: error as string (ErrorCode).
   fastify.get('/admin/check', async (request, reply) => {
     try {
-      const userId = await getUserIdFromJwt(request);
-      const admin = await isAdmin(userId);
-      return reply.send({ ok: true, isAdmin: admin });
+      await requireAdminUser(request);
+      return reply.send({ ok: true, isAdmin: true });
     } catch (error) {
-      if (error instanceof InstructorAuthError) {
-        return reply.status(401).send({
-          ok: false,
-          isAdmin: false,
-          error: { code: 'UNAUTHENTICATED' },
-        });
-      }
       const normalized = normalizeError(error);
       const httpStatus = mapErrorToHttp(normalized.error);
       return reply.status(httpStatus).send({

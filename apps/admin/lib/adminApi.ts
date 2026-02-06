@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,6 +11,25 @@ function getSupabaseClient() {
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+/** Admin requests: identity from Bearer only; no x-user-id or userId query. */
+function getAdminFetchOptions(session: { access_token: string }) {
+  return {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+  };
+}
+
+/** Parse API error body: { ok: false, error: string, message?: string }. */
+function parseAdminErrorBody(data: any, fallback: string): { message: string; status?: number } {
+  const message =
+    (typeof data?.message === 'string' && data.message) ||
+    (typeof data?.error === 'string' ? data.error : '') ||
+    fallback;
+  return { message };
 }
 
 export interface IntentConfidenceBucket {
@@ -119,26 +140,23 @@ export async function fetchHumanInbox(params?: {
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  const queryParams = new URLSearchParams({ userId: session.user.id });
+  const queryParams = new URLSearchParams();
   if (params?.status) queryParams.append('status', params.status);
   if (params?.channel) queryParams.append('channel', params.channel);
-
-  const url = `${apiBaseUrl}/admin/human-inbox?${queryParams.toString()}`;
+  const qs = queryParams.toString();
+  const url = `${API_BASE_URL}/admin/human-inbox${qs ? `?${qs}` : ''}`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch human inbox');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch human inbox');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -174,32 +192,23 @@ export async function fetchIntentConfidence(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   const queryParams = new URLSearchParams();
-  
-  if (params?.from) {
-    queryParams.append('from', params.from);
-  }
-  if (params?.to) {
-    queryParams.append('to', params.to);
-  }
-  queryParams.append('userId', session.user.id);
-
-  const url = `${apiBaseUrl}/admin/intent-confidence?${queryParams.toString()}`;
+  if (params?.from) queryParams.append('from', params.from);
+  if (params?.to) queryParams.append('to', params.to);
+  const qs = queryParams.toString();
+  const url = `${API_BASE_URL}/admin/intent-confidence${qs ? `?${qs}` : ''}`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch intent confidence');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch intent confidence');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -277,22 +286,19 @@ export async function fetchConversationTimelineEvents(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/conversations/${conversationId}/timeline?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/conversations/${conversationId}/timeline`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch conversation timeline');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch conversation timeline');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -335,22 +341,19 @@ export async function fetchKPISnapshot(): Promise<FetchKPISnapshotResponse> {
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/kpi?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/kpi`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch KPI snapshot');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch KPI snapshot');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -443,22 +446,19 @@ export async function fetchDashboardMetrics(): Promise<FetchDashboardMetricsResp
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/dashboard?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/dashboard`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch dashboard metrics');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch dashboard metrics');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -618,34 +618,25 @@ export async function fetchHumanInboxDetail(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/human-inbox/${conversationId}?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/human-inbox/${conversationId}`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch human inbox detail');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch human inbox detail');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
   const data = await response.json();
   return data;
 }
-
-/**
- * Fetches conversation timeline and transforms events to include payload.
- * 
- * Maps the existing API structure to the UI-friendly format with payload.
- */
 
 export interface TimelineEvent {
   type:
@@ -665,29 +656,6 @@ export interface FetchConversationTimelineEventsResponse {
   ok: true;
   events: TimelineEvent[];
 }
-
-/**
- * Fetches conversation timeline events from the Fastify API.
- * 
- * WHAT IT DOES:
- * - Fetches timeline events from GET /admin/conversations/:conversationId/timeline
- * - Returns chronological events (messages, drafts, approvals, bookings)
- * - READ-ONLY operation
- * 
- * WHAT IT DOES NOT DO:
- * - No mutations
- * - No side effects
- * - No caching
- * 
- * @param conversationId - UUID of the conversation
- * @returns Timeline events
- */
-
-/**
- * Fetches conversation timeline and transforms events to include payload.
- * 
- * Maps the existing API structure to the UI-friendly format with payload.
- */
 
 export interface AdminKPISnapshot {
   conversations_today: number;
@@ -956,22 +924,19 @@ export async function fetchAIDraft(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/conversations/${conversationId}/ai-draft?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/conversations/${conversationId}/ai-draft`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch AI draft');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch AI draft');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -1291,22 +1256,19 @@ export async function fetchAIFeatureFlags(): Promise<FetchAIFeatureFlagsResponse
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/ai-feature-flags?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/ai-feature-flags`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch AI feature flags');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch AI feature flags');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -1352,22 +1314,19 @@ export async function fetchBookingLifecycle(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/bookings/${bookingId}/lifecycle?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/bookings/${bookingId}/lifecycle`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch booking lifecycle');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch booking lifecycle');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -1404,15 +1363,11 @@ export async function sendOutboundMessage(params: {
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/messages/outbound?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/messages/outbound`;
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
     body: JSON.stringify({
       conversation_id: params.conversationId,
       text: params.text,
@@ -1420,10 +1375,11 @@ export async function sendOutboundMessage(params: {
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to send outbound message');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to send outbound message');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 }
@@ -1440,22 +1396,19 @@ export async function sendAIDraftApproval(conversationId: string): Promise<void>
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/conversations/${conversationId}/send-ai-draft?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/conversations/${conversationId}/send-ai-draft`;
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to approve AI draft');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to approve AI draft');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 }
@@ -1488,25 +1441,22 @@ export async function setConversationAIMode(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/conversations/${conversationId}/ai-mode?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/conversations/${conversationId}/ai-mode`;
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
     body: JSON.stringify({
       enabled,
     }),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to update AI mode');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to update AI mode');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 }
@@ -1544,22 +1494,19 @@ export async function fetchConversationById(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/human-inbox/${conversationId}?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/human-inbox/${conversationId}`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch conversation');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch conversation');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 
@@ -1632,22 +1579,19 @@ export async function fetchAdminBookingDetail(
     throw new Error('No session found');
   }
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const url = `${apiBaseUrl}/admin/bookings/${bookingId}?userId=${session.user.id}`;
+  const url = `${API_BASE_URL}/admin/bookings/${bookingId}`;
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': session.user.id,
-    },
+    ...getAdminFetchOptions(session),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: {} }));
-    const errorObj = new Error(errorData.error?.message || 'Failed to fetch booking detail');
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch booking detail');
+    const errorObj = new Error(message);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = errorData.error?.message || '';
+    (errorObj as any).message = message;
     throw errorObj;
   }
 

@@ -1,11 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+/**
+ * Shared headers for admin API calls. Pass the Supabase session access_token.
+ * Use this so every admin request sends Bearer and avoids relying on query params for identity.
+ */
+export function getAdminHeaders(accessToken: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  };
+}
+
 export interface AdminCheckResponse {
   ok: boolean;
   isAdmin: boolean;
-  error?: {
-    code: string;
-  };
+  error?: string;
+  message?: string;
 }
 
 export interface ConversationSummary {
@@ -31,9 +41,8 @@ export interface AdminListResponse<T> {
 export interface AdminApiResponse<T> {
   ok: boolean;
   data?: T;
-  error?: {
-    code: string;
-  };
+  error?: string;
+  message?: string;
 }
 
 export interface GetConversationsParams {
@@ -46,29 +55,23 @@ export interface GetConversationsParams {
 export async function checkAdminStatus(accessToken: string): Promise<boolean> {
   const response = await fetch(`${API_BASE_URL}/admin/check`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: getAdminHeaders(accessToken),
   });
 
   const data: AdminCheckResponse = await response.json();
 
-  if (!data.ok || data.error) {
-    return false;
-  }
-
-  return data.isAdmin;
+  if (!data.ok) return false;
+  if (data.error) return false;
+  return data.isAdmin === true;
 }
 
 export async function getAdminConversations(
-  userId: string,
+  accessToken: string,
   params: GetConversationsParams = {}
 ): Promise<AdminListResponse<ConversationSummary>> {
   const { limit = 50, offset = 0, instructorId, status } = params;
   
   const queryParams = new URLSearchParams({
-    userId,
     limit: limit.toString(),
     offset: offset.toString(),
   });
@@ -83,15 +86,14 @@ export async function getAdminConversations(
 
   const response = await fetch(`${API_BASE_URL}/admin/conversations?${queryParams.toString()}`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAdminHeaders(accessToken),
   });
 
   const data: AdminApiResponse<AdminListResponse<ConversationSummary>> = await response.json();
 
   if (!data.ok || !data.data || data.error) {
-    throw new Error(data.error?.code || 'Failed to fetch conversations');
+    const msg = data.error && data.message ? `${data.error}: ${data.message}` : (data.error ?? 'Failed to fetch conversations');
+    throw new Error(msg);
   }
 
   return data.data;

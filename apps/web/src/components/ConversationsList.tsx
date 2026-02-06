@@ -8,31 +8,29 @@ export default function ConversationsList() {
   const [error, setError] = useState<string | null>(null);
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchUserId() {
+    async function fetchToken() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
+      if (session?.access_token) {
+        setAccessToken(session.access_token);
       }
     }
-    fetchUserId();
+    fetchToken();
   }, []);
 
   useEffect(() => {
-    if (!userId) {
+    if (!accessToken) {
       setLoading(false);
       return;
     }
-
-    const currentUserId = userId; // Capture for closure
 
     async function fetchConversations() {
       setLoading(true);
       setError(null);
       try {
-        const data: AdminListResponse<ConversationSummary> = await getAdminConversations(currentUserId, {
+        const data: AdminListResponse<ConversationSummary> = await getAdminConversations(accessToken, {
           limit,
           offset,
         });
@@ -45,7 +43,7 @@ export default function ConversationsList() {
     }
 
     fetchConversations();
-  }, [userId, limit, offset]);
+  }, [accessToken, limit, offset]);
 
   const handleRowClick = (conversationId: string) => {
     // Placeholder for future detail page

@@ -3,15 +3,12 @@ import { UnauthorizedError, BookingNotFoundError, InvalidBookingTransitionError 
 
 /**
  * Unified error envelope format.
- * All error responses must follow this shape.
+ * All error responses use flat shape: error is ErrorCode string, no nested { code }.
  */
 export interface ErrorEnvelope {
   ok: false;
-  error: {
-    code: string;        // MACHINE-READABLE
-    message?: string;    // OPTIONAL (safe)
-    details?: unknown;   // OPTIONAL (debug only)
-  };
+  error: string;         // ErrorCode string (e.g. 'UNAUTHENTICATED', 'ADMIN_ONLY')
+  message?: string;
 }
 
 /**
@@ -79,36 +76,21 @@ function normalizeError(error: unknown): { statusCode: number; payload: ErrorEnv
   if (error instanceof UnauthorizedError) {
     return {
       statusCode: 403,
-      payload: {
-        ok: false,
-        error: {
-          code: 'ADMIN_ONLY',
-        },
-      },
+      payload: { ok: false, error: 'ADMIN_ONLY' },
     };
   }
 
   if (error instanceof BookingNotFoundError) {
     return {
       statusCode: 404,
-      payload: {
-        ok: false,
-        error: {
-          code: 'BOOKING_NOT_FOUND',
-        },
-      },
+      payload: { ok: false, error: 'BOOKING_NOT_FOUND' },
     };
   }
 
   if (error instanceof InvalidBookingTransitionError) {
     return {
       statusCode: 409,
-      payload: {
-        ok: false,
-        error: {
-          code: 'INVALID_BOOKING_TRANSITION',
-        },
-      },
+      payload: { ok: false, error: 'INVALID_BOOKING_TRANSITION' },
     };
   }
 
@@ -116,77 +98,60 @@ function normalizeError(error: unknown): { statusCode: number; payload: ErrorEnv
   if (error && typeof error === 'object' && 'code' in error) {
     const code = String(error.code);
     const statusCode = ERROR_CODE_TO_STATUS[code] || 500;
+    const message = 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : undefined;
     return {
       statusCode,
-      payload: {
-        ok: false,
-        error: {
-          code,
-        },
-      },
+      payload: message !== undefined ? { ok: false, error: code, message } : { ok: false, error: code },
     };
   }
 
-  // Handle string errors (legacy format)
+  // Handle string errors
   if (typeof error === 'string') {
     const statusCode = ERROR_CODE_TO_STATUS[error] || 500;
     return {
       statusCode,
-      payload: {
-        ok: false,
-        error: {
-          code: error,
-        },
-      },
+      payload: { ok: false, error },
     };
   }
 
   // Handle Error objects
   if (error instanceof Error) {
-    // Try to extract code from error name or message
     const code = (error as any).code || error.name || 'INTERNAL_ERROR';
     const statusCode = ERROR_CODE_TO_STATUS[code] || 500;
+    const message = error.message?.trim() ? error.message : undefined;
     return {
       statusCode,
-      payload: {
-        ok: false,
-        error: {
-          code,
-        },
-      },
+      payload: message !== undefined ? { ok: false, error: code, message } : { ok: false, error: code },
     };
   }
 
   // Fallback for unknown errors
   return {
     statusCode: 500,
-    payload: {
-      ok: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-      },
-    },
+    payload: { ok: false, error: 'INTERNAL_ERROR' },
   };
 }
 
 /**
- * Normalizes error response payload to unified format.
- * Handles both string errors and object errors.
+ * Normalizes error response payload to flat format: { ok: false, error: string, message?: string }.
  */
 function normalizeErrorResponse(payload: any): ErrorEnvelope | null {
-  // Already in correct format
-  if (payload && typeof payload === 'object' && payload.ok === false && payload.error && typeof payload.error === 'object' && 'code' in payload.error) {
-    return payload as ErrorEnvelope;
-  }
+  if (!payload || typeof payload !== 'object' || payload.ok !== false) return null;
 
-  // Legacy format: { ok: false, error: 'string' }
-  if (payload && typeof payload === 'object' && payload.ok === false && typeof payload.error === 'string') {
+  // Already flat: { ok: false, error: string, message?: string }
+  if (typeof payload.error === 'string') {
     return {
       ok: false,
-      error: {
-        code: payload.error,
-      },
+      error: payload.error,
+      ...(payload.message != null && typeof payload.message === 'string' ? { message: payload.message } : {}),
     };
+  }
+
+  // Legacy: { ok: false, error: { code, message? } }
+  if (payload.error && typeof payload.error === 'object' && 'code' in payload.error) {
+    const code = String(payload.error.code);
+    const message = typeof payload.error.message === 'string' ? payload.error.message : undefined;
+    return { ok: false, error: code, ...(message !== undefined ? { message } : {}) };
   }
 
   return null;
@@ -221,8 +186,7 @@ export async function registerErrorHandler(app: FastifyInstance): Promise<void> 
         const normalized = normalizeErrorResponse(parsed);
         
         if (normalized) {
-          // Update status code based on error code if needed
-          const statusCode = ERROR_CODE_TO_STATUS[normalized.error.code] || reply.statusCode;
+          const statusCode = ERROR_CODE_TO_STATUS[normalized.error] ?? reply.statusCode;
           reply.statusCode = statusCode;
           return JSON.stringify(normalized);
         }

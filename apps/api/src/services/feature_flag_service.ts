@@ -1,5 +1,4 @@
-import { getFeatureFlag } from '@frostdesk/db';
-import { assertAdminAccess } from '../lib/assertAdminAccess.js';
+import { getFeatureFlag, assertAdminAccess } from '@frostdesk/db';
 
 type Env = 'dev' | 'staging' | 'prod';
 
@@ -11,24 +10,18 @@ interface GetFeatureFlagStatusParams {
 
 /**
  * Gets feature flag status (admin-only).
- * 
- * Rules:
- * - Admin guard always first
- * - Errors bubble up
- * - No silent fallbacks
- * - Minimal output
- * 
+ * Caller must pass a validated admin userId (e.g. from requireAdminUser).
+ *
  * @param params - Feature flag parameters
- * @param request - Request context for admin check (optional, can extract userId from elsewhere)
+ * @param userId - Validated admin user id (from JWT + DB check)
  * @returns Feature flag status
  * @throws UnauthorizedError if user is not an admin
  */
 export async function getFeatureFlagStatus(
   params: GetFeatureFlagStatusParams,
-  request?: any
+  userId: string
 ): Promise<{ enabled: boolean }> {
-  // 🔐 admin guard upfront
-  await assertAdminAccess(request);
+  await assertAdminAccess(userId);
 
   const { key, env, tenantId } = params;
 

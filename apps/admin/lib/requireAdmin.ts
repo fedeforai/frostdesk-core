@@ -14,22 +14,22 @@ function getSupabaseClient() {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export interface AdminCheckError {
-  code: 'ADMIN_ONLY';
+  code: 'UNAUTHENTICATED' | 'ADMIN_ONLY';
 }
 
 /**
  * Requires admin access. Throws if user is not admin.
- * 
+ *
  * DEV-SAFE: In development, bypasses auth check for faster iteration.
  * PROD: Full authentication and authorization checks.
- * 
+ *
  * Flow:
  * 1. DEV: Return immediately (bypass)
  * 2. PROD: Get Supabase session
  * 3. PROD: Call admin check endpoint
- * 4. PROD: Throw if not admin
- * 
- * @throws {AdminCheckError} If user is not admin (production only)
+ * 4. PROD: Throw with correct code (UNAUTHENTICATED or ADMIN_ONLY)
+ *
+ * @throws {AdminCheckError} If session missing, 401, 403, or !ok/!isAdmin (production only)
  */
 export async function requireAdmin(): Promise<void> {
   // DEV-SAFE: Bypass auth in development for faster iteration
@@ -42,21 +42,27 @@ export async function requireAdmin(): Promise<void> {
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError || !session?.user) {
-    const error: AdminCheckError = { code: 'ADMIN_ONLY' };
-    throw error;
+    throw { code: 'UNAUTHENTICATED' as const };
   }
 
-  const response = await fetch(`${API_BASE_URL}/admin/check?userId=${session.user.id}`, {
+  const response = await fetch(`${API_BASE_URL}/admin/check`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token ?? ''}`,
     },
   });
+
+  if (response.status === 401) {
+    throw { code: 'UNAUTHENTICATED' as const };
+  }
+  if (response.status === 403) {
+    throw { code: 'ADMIN_ONLY' as const };
+  }
 
   const data = await response.json();
 
   if (!data.ok || !data.isAdmin || data.error) {
-    const error: AdminCheckError = { code: 'ADMIN_ONLY' };
-    throw error;
+    throw { code: (data.error ?? 'ADMIN_ONLY') as 'UNAUTHENTICATED' | 'ADMIN_ONLY' };
   }
 }

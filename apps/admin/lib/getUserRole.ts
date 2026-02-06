@@ -42,10 +42,11 @@ export async function getUserRole(): Promise<string | null> {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/user-role?userId=${session.user.id}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/user-role`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       },
     });
 
