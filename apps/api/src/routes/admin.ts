@@ -204,7 +204,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
           request_id: (request as any).id ?? null,
           ip: request.ip ?? null,
           user_agent: request.headers['user-agent'] ?? null,
-          payload: { new_status: result.status, reason: body.reason ?? undefined },
+          payload: { new_status: result.status },
         });
       } catch (auditErr) {
         request.log.error({ err: auditErr }, 'Audit write failed (admin override booking status)');
@@ -304,7 +304,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
         cursor?: string;
       };
       const limitRaw = query.limit != null ? Number(query.limit) : 20;
-      const limit = Math.min(Math.max(1, limitRaw), 100);
+      const limit = Math.min(100, Math.max(1, Number.isFinite(limitRaw) ? limitRaw : 20));
       const { items, next_cursor } = await listAuditLog({
         entity_type: query.entity_type ?? undefined,
         entity_id: query.entity_id ?? undefined,

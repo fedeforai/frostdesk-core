@@ -37,7 +37,7 @@ export async function adminInstructorWhatsappRoutes(app: FastifyInstance): Promi
           request_id: (request as any).id ?? null,
           ip: request.ip ?? null,
           user_agent: request.headers['user-agent'] ?? null,
-          payload: { phone_number: account.phone_number, status: account.status },
+          payload: { status: account.status },
         });
       } catch (auditErr) {
         request.log.error({ err: auditErr }, 'Audit write failed (verify instructor WhatsApp)');
