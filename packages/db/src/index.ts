@@ -192,6 +192,18 @@ export type {
 export { getInstructorInbox } from './instructor_inbox_repository.js';
 export type { InstructorInboxItem } from './instructor_inbox_repository.js';
 
+// Audit log (append-only)
+export { insertAuditEvent, listAuditLog } from './audit_log_repository.js';
+export type {
+  InsertAuditEventParams,
+  AuditLogRow,
+  ListAuditLogParams,
+  ListAuditLogResult,
+  AuditEventActorType,
+  AuditEventEntityType,
+  AuditEventSeverity,
+} from './audit_log_repository.js';
+
 // Instructor reply (FEATURE 2.8 — manual reply v1)
 export {
   insertInstructorReply,
