@@ -32,6 +32,24 @@ export interface DraftViolation {
 export interface DraftQualityOutput {
   safeDraftText: string | null;
   violations: DraftViolation[];
+  /** True when MAX_SENTENCES rule truncated the draft. */
+  was_truncated: boolean;
+  /** Total number of violations (blocking + warning). No PII. */
+  violations_count: number;
+}
+
+/**
+ * Max sentences allowed in draft (pilot guardrail: short, operational replies only).
+ */
+const MAX_SENTENCES = 2;
+
+/**
+ * Splits text into sentences (by . ! ?) and returns first n.
+ */
+function firstSentences(text: string, max: number): string {
+  const parts = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (parts.length <= max) return text.trim();
+  return parts.slice(0, max).join(' ').trim();
 }
 
 /**
@@ -41,7 +59,8 @@ export interface DraftQualityOutput {
  * 1. No commitments (blocking)
  * 2. No invented data (blocking)
  * 3. Tone check - no assertive statements (blocking)
- * 4. Mandatory disclaimer (warning, auto-fixed)
+ * 4. Max 2 sentences (auto-truncate)
+ * 5. Mandatory disclaimer (warning, auto-fixed)
  * 
  * @param input - Draft text and context
  * @returns Sanitized text or null if blocked, with violations list
@@ -50,6 +69,19 @@ export function sanitizeDraftText(input: DraftQualityInput): DraftQualityOutput 
   const { rawDraftText, intent, language = 'en' } = input;
   const violations: DraftViolation[] = [];
   let text = rawDraftText.trim();
+  let was_truncated = false;
+
+  // Rule: Max 2 sentences (draft brevi e operativi — truncate if longer)
+  const sentenceCount = text.split(/(?<=[.!?])\s+/).filter(Boolean).length;
+  if (sentenceCount > MAX_SENTENCES) {
+    text = firstSentences(text, MAX_SENTENCES);
+    was_truncated = true;
+    violations.push({
+      rule: 'MAX_SENTENCES',
+      reason: `Draft truncated to ${MAX_SENTENCES} sentences`,
+      severity: 'warning',
+    });
+  }
 
   // Rule 1: No Commitment Detection
   const commitmentPatterns = language === 'it' 
@@ -166,6 +198,8 @@ export function sanitizeDraftText(input: DraftQualityInput): DraftQualityOutput 
     return {
       safeDraftText: null,
       violations,
+      was_truncated,
+      violations_count: violations.length,
     };
   }
 
@@ -183,5 +217,7 @@ export function sanitizeDraftText(input: DraftQualityInput): DraftQualityOutput 
   return {
     safeDraftText: text,
     violations,
+    was_truncated,
+    violations_count: violations.length,
   };
 }

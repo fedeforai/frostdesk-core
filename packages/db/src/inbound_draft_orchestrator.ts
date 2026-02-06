@@ -9,6 +9,7 @@ import {
 } from '@frostdesk/ai';
 import { insertAISnapshot, findAISnapshotByMessageId } from './ai_snapshot_repository.js';
 import { insertDraftOnce, findDraftByMessageId } from './ai_draft_repository.js';
+import { insertAuditEvent } from './audit_log_repository.js';
 
 /**
  * Helper: Finds message_id from messages table by conversation_id and external_message_id.
@@ -31,6 +32,13 @@ async function findMessageIdByExternalId(
 }
 
 /**
+ * Intents for which we allow draft generation (operative only).
+ * No draft for CANCEL or other intents — reduces noise and increases trust.
+ */
+const OPERATIVE_INTENTS = ['NEW_BOOKING', 'RESCHEDULE', 'INFO_REQUEST'] as const;
+const DRAFT_MIN_CONFIDENCE = 0.6;
+
+/**
  * Inbound Draft Orchestrator (PILOT-SAFE)
  * 
  * Orchestrates AI classification, decision, and optional draft generation
@@ -40,7 +48,7 @@ async function findMessageIdByExternalId(
  * - Classifies relevance and intent
  * - Applies confidence policy
  * - Persists audit snapshot
- * - Generates draft only if policy allows (allowDraft=true)
+ * - Generates draft only if policy allows (allowDraft=true), intent is operative, and confidence ≥ threshold
  * 
  * WHAT THIS DOES NOT DO:
  * - No outbound messaging
@@ -55,6 +63,8 @@ export interface InboundDraftOrchestratorParams {
   messageText: string;
   channel: 'whatsapp';
   language?: string;
+  /** Optional request id for audit correlation (from API layer). */
+  requestId?: string | null;
 }
 
 export interface InboundDraftOrchestratorResult {
@@ -80,7 +90,7 @@ export interface InboundDraftOrchestratorResult {
 export async function orchestrateInboundDraft(
   params: InboundDraftOrchestratorParams
 ): Promise<InboundDraftOrchestratorResult> {
-  const { conversationId, externalMessageId, messageText, channel, language } = params;
+  const { conversationId, externalMessageId, messageText, channel, language, requestId } = params;
 
   // Step 1: Find message_id from messages table
   const messageId = await findMessageIdByExternalId(conversationId, externalMessageId);
@@ -176,9 +186,17 @@ export async function orchestrateInboundDraft(
     model: classification.model,
   });
 
-  // Step 7: Generate draft only if allowed
+  // Step 7: Generate draft only if allowed, intent is operative, and confidence ≥ threshold
   let draftGenerated = false;
-  if (gate.allowDraft) {
+  let skipReason: string | null = null;
+  const intentOperative = classification.intent && OPERATIVE_INTENTS.includes(classification.intent as any);
+  const confidenceOk = (classification.intentConfidence ?? 0) >= DRAFT_MIN_CONFIDENCE;
+
+  if (!gate.allowDraft) skipReason = 'gate_denied';
+  else if (!intentOperative) skipReason = 'intent_non_operative';
+  else if (!confidenceOk) skipReason = 'confidence_low';
+
+  if (gate.allowDraft && intentOperative && confidenceOk) {
     try {
       const draft = generateAIReply({
         lastMessageText: messageText,
@@ -202,16 +220,52 @@ export async function orchestrateInboundDraft(
         });
 
         draftGenerated = true;
+
+        try {
+          await insertAuditEvent({
+            actor_type: 'system',
+            actor_id: null,
+            action: 'ai_draft_generated',
+            entity_type: 'conversation',
+            entity_id: conversationId,
+            severity: 'info',
+            request_id: requestId ?? null,
+            payload: {
+              draft_id: messageId,
+              model: process.env.AI_MODEL ?? 'unknown',
+              confidence_intent: classification.intentConfidence ?? null,
+              was_truncated: qualityCheck.was_truncated,
+              violations_count: qualityCheck.violations_count,
+            },
+          });
+        } catch {
+          // Fail-open: do not block draft flow
+        }
       } else {
         // Guardrails failed: do not save draft
-        // Log violations for observability
+        skipReason = 'quality_blocked';
         console.warn('[INBOUND DRAFT ORCHESTRATOR] Draft quality guardrails failed:', qualityCheck.violations);
-        // draftGenerated remains false
       }
     } catch (error) {
-      // Draft generation failed, but snapshot is already saved
-      // Log error but don't fail the entire orchestration
+      skipReason = 'error';
       console.error('[INBOUND DRAFT ORCHESTRATOR] Draft generation failed:', error);
+    }
+  }
+
+  if (!draftGenerated && skipReason !== null) {
+    try {
+      await insertAuditEvent({
+        actor_type: 'system',
+        actor_id: null,
+        action: 'ai_draft_skipped',
+        entity_type: 'conversation',
+        entity_id: conversationId,
+        severity: 'info',
+        request_id: requestId ?? null,
+        payload: { reason: skipReason },
+      });
+    } catch {
+      // Fail-open: audit best-effort only
     }
   }
 
