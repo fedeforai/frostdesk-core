@@ -6,10 +6,12 @@ import { webhookWhatsAppRoutes } from './routes/webhook_whatsapp.js';
 import { adminRoutes } from './routes/admin.js';
 import { registerRateLimit } from './middleware/rate_limit.js';
 import { registerErrorHandler } from './middleware/error_handler.js';
+import { registerRequestId } from './middleware/request_id.js';
 
 export async function buildServer() {
   const fastify = Fastify({
     logger: true,
+    requestIdLogLabel: 'request_id',
   });
 
   // Register error handler first (catches all errors)
@@ -17,6 +19,9 @@ export async function buildServer() {
 
   // Register rate limiting middleware before routes
   await registerRateLimit(fastify);
+
+  // Request ID propagation (x-request-id or generated UUID) for audit and tracing
+  await registerRequestId(fastify);
 
   await fastify.register(healthRoutes);
   await fastify.register(inboundRoutes);
