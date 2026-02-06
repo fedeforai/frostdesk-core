@@ -1,20 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { getAIQuotaStatus } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 
 export async function adminAIQuotaRoutes(app: FastifyInstance) {
-  const getUserId = (request: any): string => {
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.get('/admin/ai-quota', async (request, reply) => {
     try {
-      getUserId(request);
+      await requireAdminUser(request);
 
       const query = request.query as {
         channel?: string;

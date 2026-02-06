@@ -1,20 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { getSystemDegradationSignalsReadModel } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 
 export async function adminSystemDegradationRoutes(app: FastifyInstance) {
-  const getUserId = (request: any): string => {
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.get('/admin/system-degradation', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
 
       const snapshot = await getSystemDegradationSignalsReadModel({ userId });
 

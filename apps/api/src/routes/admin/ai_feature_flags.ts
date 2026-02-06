@@ -3,26 +3,20 @@
  * 
  * This route is commented out to unblock API startup.
  * It will be re-enabled when AI feature flags are needed.
+ * When re-enabled, uses requireAdminUser (JWT + DB admin check).
  */
 
 /*
 import { FastifyInstance } from 'fastify';
 import { isFeatureEnabled, isAIEnvDisabled } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 
 export async function adminAIFeatureFlagsRoutes(app: FastifyInstance) {
-  const getUserId = (request: any): string => {
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.get('/admin/ai-feature-flags', async (request, reply) => {
     try {
-      getUserId(request);
+      await requireAdminUser(request);
 
       const envDisabled = isAIEnvDisabled();
       const aiEnabled = await isFeatureEnabled('ai_enabled');

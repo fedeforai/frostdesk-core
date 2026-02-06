@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { getBookingLifecycleAdmin, BookingNotFoundError, isValidUUID } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -20,19 +21,9 @@ import { ERROR_CODES } from '../../errors/error_codes.js';
  */
 
 export async function adminBookingLifecycleRoutes(app: FastifyInstance) {
-  // Helper to extract userId from request
-  const getUserId = (request: any): string => {
-    // Try header first, then query param
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.get('/admin/bookings/:bookingId/lifecycle', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const { bookingId } = request.params as { bookingId?: string };
 
       // Validate bookingId parameter

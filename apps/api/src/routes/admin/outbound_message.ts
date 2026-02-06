@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { assertAdminAccess, persistOutboundMessage, isValidUUID } from '@frostdesk/db';
+import { persistOutboundMessage, isValidUUID } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { sendWhatsAppText } from '../../integrations/whatsapp_cloud_api.js';
 import { resolveWhatsAppTargetPhone, TARGET_NOT_FOUND } from '../../integrations/whatsapp_target_resolution.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -29,19 +30,9 @@ function safeErrorMessage(err: Error): string {
  */
 
 export async function adminOutboundMessageRoutes(app: FastifyInstance) {
-  // Helper to extract userId from request
-  const getUserId = (request: any): string => {
-    // Try header first, then query param
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.post('/admin/messages/outbound', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      await requireAdminUser(request);
       const body = request.body as {
         conversation_id?: string;
         text?: string;
@@ -84,9 +75,6 @@ export async function adminOutboundMessageRoutes(app: FastifyInstance) {
           },
         });
       }
-
-      // Guard: admin access required
-      await assertAdminAccess(userId);
 
       // Persist outbound message (source of truth)
       const result = await persistOutboundMessage({

@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { getFeatureFlagStatus } from '../../services/feature_flag_service.js';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -9,6 +10,7 @@ type Env = 'dev' | 'staging' | 'prod';
 export async function adminFeatureFlagsRoutes(app: FastifyInstance) {
   app.get('/admin/feature-flags/:key', async (request, reply) => {
     try {
+      const userId = await requireAdminUser(request);
       const { key } = request.params as { key?: string };
       const { env, tenantId } = request.query as {
         env?: Env;
@@ -41,7 +43,7 @@ export async function adminFeatureFlagsRoutes(app: FastifyInstance) {
           env,
           tenantId
         },
-        request
+        userId
       );
 
       return reply.send({

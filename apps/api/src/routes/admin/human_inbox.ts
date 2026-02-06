@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { getHumanInbox } from '@frostdesk/db';
+import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -20,35 +21,18 @@ import { ERROR_CODES } from '../../errors/error_codes.js';
  */
 
 export async function adminHumanInboxRoutes(app: FastifyInstance) {
-  // Helper to extract userId from request
-  const getUserId = (request: any): string => {
-    // Try header first, then query param
-    const userId = (request.headers['x-user-id'] as string) || (request.query as any)?.userId;
-    if (!userId || typeof userId !== 'string') {
-      throw new Error('User ID required');
-    }
-    return userId;
-  };
-
   app.get('/admin/human-inbox', async (request, reply) => {
     try {
-      const userId = getUserId(request);
+      const userId = await requireAdminUser(request);
       const { status, channel } = request.query as {
         status?: string;
         channel?: string;
       };
 
-      // Pilot/local: skip admin check when ALLOW_DEBUG_USER=1|true and userId=debug-user (env read only in API layer)
-      const ALLOW_DEBUG_USER = process.env.ALLOW_DEBUG_USER;
-      const skip =
-        (ALLOW_DEBUG_USER === '1' || ALLOW_DEBUG_USER === 'true') && userId === 'debug-user';
-      console.log('🧪 ADMIN INBOX DEBUG', { userId, ALLOW_DEBUG_USER, skip });
-
       const items = await getHumanInbox({
         userId,
         status,
         channel,
-        _skipAdminCheck: skip,
       });
 
       return reply.send({
