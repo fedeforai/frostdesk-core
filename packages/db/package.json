@@ -6,10 +6,10 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --watch"
   },
   "dependencies": {
-    "@frostdesk/ai": "*",
+    "@frostdesk/ai": "workspace:*",
     "postgres": "^3.4.8",
     "@supabase/supabase-js": "^2.39.0"
   },
