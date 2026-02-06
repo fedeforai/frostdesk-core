@@ -6,10 +6,27 @@ export interface InstructorProfile {
   base_resort: string;
   working_language: string;
   contact_email: string;
+  onboarding_completed_at?: string | null;
 }
 
 export interface UpdateInstructorProfileParams {
   instructorId: string;
+  full_name: string;
+  base_resort: string;
+  working_language: string;
+  contact_email: string;
+}
+
+export interface CreateInstructorProfileParams {
+  id: string;
+  full_name: string;
+  base_resort: string;
+  working_language: string;
+  contact_email: string;
+}
+
+export interface UpdateInstructorProfileByUserIdParams {
+  userId: string;
   full_name: string;
   base_resort: string;
   working_language: string;
@@ -25,13 +42,14 @@ export interface UpdateInstructorProfileParams {
 export async function getInstructorProfile(
   instructorId: string
 ): Promise<InstructorProfile | null> {
-  const result = await sql<InstructorProfile[]>`
+  const result = await sql<(InstructorProfile & { onboarding_completed_at: string | null })[]>`
     SELECT 
       id,
       full_name,
       base_resort,
       working_language,
-      contact_email
+      contact_email,
+      onboarding_completed_at
     FROM instructor_profiles
     WHERE id = ${instructorId}
     LIMIT 1
@@ -77,4 +95,55 @@ export async function updateInstructorProfile(
   }
 
   return result[0];
+}
+
+/**
+ * Retrieves instructor profile by auth user ID (instructor_profiles.id = userId).
+ */
+export async function getInstructorProfileByUserId(
+  userId: string
+): Promise<InstructorProfile | null> {
+  return getInstructorProfile(userId);
+}
+
+/**
+ * Creates an instructor profile. Minimal insert for export alignment.
+ */
+export async function createInstructorProfile(
+  params: CreateInstructorProfileParams
+): Promise<InstructorProfile> {
+  const { id, full_name, base_resort, working_language, contact_email } = params;
+  const result = await sql<InstructorProfile[]>`
+    INSERT INTO instructor_profiles (id, full_name, base_resort, working_language, contact_email)
+    VALUES (${id}::uuid, ${full_name}, ${base_resort}, ${working_language}, ${contact_email})
+    RETURNING id, full_name, base_resort, working_language, contact_email
+  `;
+  if (result.length === 0) throw new Error('Insert failed');
+  return result[0];
+}
+
+/**
+ * Updates instructor profile by auth user ID (instructor_profiles.id = userId).
+ */
+export async function updateInstructorProfileByUserId(
+  params: UpdateInstructorProfileByUserIdParams
+): Promise<InstructorProfile> {
+  return updateInstructorProfile({
+    instructorId: params.userId,
+    full_name: params.full_name,
+    base_resort: params.base_resort,
+    working_language: params.working_language,
+    contact_email: params.contact_email,
+  });
+}
+
+/**
+ * Marks onboarding as completed for the given instructor.
+ */
+export async function completeInstructorOnboarding(instructorId: string): Promise<void> {
+  await sql`
+    UPDATE instructor_profiles
+    SET onboarding_completed_at = NOW(), updated_at = NOW()
+    WHERE id = ${instructorId}::uuid
+  `;
 }

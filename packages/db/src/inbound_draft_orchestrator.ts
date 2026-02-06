@@ -116,11 +116,11 @@ export async function orchestrateInboundDraft(
     language,
   });
 
-  // BookingDecision v1 gate (frozen)
-  const intentForBooking =
+  // BookingDecision v1 gate (frozen): map to 'booking' | 'info' for decideBooking
+  const intentForBooking: 'booking' | 'info' =
     classification.intent === 'NEW_BOOKING' || classification.intent === 'RESCHEDULE'
       ? 'booking'
-      : (classification.intent ?? 'info');
+      : 'info';
   const bookingDecision = decideBooking({
     relevance: classification.relevant,
     relevanceConfidence: classification.relevanceConfidence,
