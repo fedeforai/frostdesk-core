@@ -6,5 +6,6 @@ export { classifyIntent, type IntentResult, type IntentType } from './intentClas
 export { classifyRelevanceAndIntent, type RelevanceAndIntentSnapshot } from './relevanceAndIntentClassifier.js';
 export { RELEVANCE_MIN, INTENT_MIN_DRAFT, INTENT_MIN_NO_ESCALATION, DecisionType, ReasonCode } from './confidencePolicy.js';
 export { decideByConfidence, type ConfidenceDecisionInput, type ConfidenceDecisionOutput } from './confidenceDecisionEngine.js';
+export { decideBooking, type DecideBookingInput, type DecideBookingOutput, type DecideBookingAction } from './bookingDecision.js';
 export { escalationGate, type EscalationGateInput, type EscalationGateOutput } from './escalationGate.js';
 export { resolveDraftEligibility, type DraftEligibilityInput, type DraftEligibilityOutput } from './draftEligibilityResolver.js';
