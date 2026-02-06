@@ -7,13 +7,17 @@ vi.mock('../../../services/feature_flag_service.js', () => ({
   getFeatureFlagStatus: vi.fn()
 }));
 
-// Mock JWT admin auth (requireAdminUser)
-vi.mock('../../../lib/auth_instructor.js', () => ({
-  requireAdminUser: vi.fn()
-}));
+// Mock JWT admin auth (requireAdminUser); keep AdminOnlyError for not-admin case
+vi.mock('../../../lib/auth_instructor.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../lib/auth_instructor.js')>();
+  return {
+    ...actual,
+    requireAdminUser: vi.fn(),
+  };
+});
 
 import { getFeatureFlagStatus } from '../../../services/feature_flag_service.js';
-import { requireAdminUser } from '../../../lib/auth_instructor.js';
+import { requireAdminUser, AdminOnlyError } from '../../../lib/auth_instructor.js';
 
 // Minimal test app builder
 function buildTestApp(options: { admin: boolean }) {
@@ -21,10 +25,7 @@ function buildTestApp(options: { admin: boolean }) {
 
   (requireAdminUser as any).mockImplementation(async () => {
     if (!options.admin) {
-      const error: any = new Error('Admin access required');
-      error.code = 'UNAUTHENTICATED';
-      error.name = 'InstructorAuthError';
-      throw error;
+      throw new AdminOnlyError('Admin access required');
     }
     return 'test-admin-user-id';
   });
@@ -89,7 +90,7 @@ describe('GET /admin/feature-flags/:key', () => {
     await app.close();
   });
 
-  it('returns 401 if not admin', async () => {
+  it('returns 403 if not admin', async () => {
     const app = buildTestApp({ admin: false });
 
     const res = await app.inject({
@@ -97,10 +98,10 @@ describe('GET /admin/feature-flags/:key', () => {
       url: '/admin/feature-flags/whatsapp_inbound?env=dev'
     });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
     const body = res.json();
     expect(body).toHaveProperty('ok', false);
-    expect(body).toHaveProperty('error', 'UNAUTHENTICATED');
+    expect(body).toHaveProperty('error', 'ADMIN_ONLY');
 
     await app.close();
   });
