@@ -1,9 +1,9 @@
 import { createDbClient } from '@frostdesk/db';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
-let db: SupabaseClient | null = null;
+type DbClient = ReturnType<typeof createDbClient>;
+let db: DbClient | null = null;
 
-export function getDb(): SupabaseClient {
+export function getDb(): DbClient {
   if (!db) {
     db = createDbClient();
   }
