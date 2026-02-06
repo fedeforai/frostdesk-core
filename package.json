@@ -8,9 +8,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @frostdesk/db && npm run build -w @frostdesk/api",
-    "dev": "npm run dev -w @frostdesk/db & npm run dev -w @frostdesk/api",
-    "test": "echo 'Add test scripts'"
+    "build": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r run build",
+    "dev": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r --parallel run dev",
+    "test": "echo 'Add test scripts'",
+    "dev:web": "pnpm -C apps/web dev",
+    "verify:pnpm": "bash scripts/verify_repo.sh"
   },
   "engines": {
     "node": ">=18.0.0"
