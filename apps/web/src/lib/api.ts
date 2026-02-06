@@ -43,11 +43,12 @@ export interface GetConversationsParams {
   status?: string;
 }
 
-export async function checkAdminStatus(userId: string): Promise<boolean> {
-  const response = await fetch(`${API_BASE_URL}/admin/check?userId=${userId}`, {
+export async function checkAdminStatus(accessToken: string): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/admin/check`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 

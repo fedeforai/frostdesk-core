@@ -22,7 +22,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
           return;
         }
 
-        const admin = await checkAdminStatus(session.user.id);
+        const admin = await checkAdminStatus(session.access_token);
         setIsAdmin(admin);
       } catch (error) {
         console.error('Admin check failed:', error);

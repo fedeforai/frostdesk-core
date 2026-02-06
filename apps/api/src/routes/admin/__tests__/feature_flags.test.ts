@@ -7,30 +7,30 @@ vi.mock('../../../services/feature_flag_service.js', () => ({
   getFeatureFlagStatus: vi.fn()
 }));
 
-// Mock admin access
-vi.mock('../../../lib/assertAdminAccess.js', () => ({
-  assertAdminAccess: vi.fn()
+// Mock JWT admin auth (requireAdminUser)
+vi.mock('../../../lib/auth_instructor.js', () => ({
+  requireAdminUser: vi.fn()
 }));
 
 import { getFeatureFlagStatus } from '../../../services/feature_flag_service.js';
-import { assertAdminAccess } from '../../../lib/assertAdminAccess.js';
+import { requireAdminUser } from '../../../lib/auth_instructor.js';
 
 // Minimal test app builder
 function buildTestApp(options: { admin: boolean }) {
   const app = Fastify();
-  
-  // Mock admin access based on options
-  (assertAdminAccess as any).mockImplementation(async (request: any) => {
+
+  (requireAdminUser as any).mockImplementation(async () => {
     if (!options.admin) {
       const error: any = new Error('Admin access required');
-      error.code = 'ADMIN_ONLY';
-      error.name = 'UnauthorizedError';
+      error.code = 'UNAUTHENTICATED';
+      error.name = 'InstructorAuthError';
       throw error;
     }
+    return 'test-admin-user-id';
   });
 
   app.register(adminFeatureFlagsRoutes);
-  
+
   return app;
 }
 
@@ -89,7 +89,7 @@ describe('GET /admin/feature-flags/:key', () => {
     await app.close();
   });
 
-  it('returns 403 if not admin', async () => {
+  it('returns 401 if not admin', async () => {
     const app = buildTestApp({ admin: false });
 
     const res = await app.inject({
@@ -97,10 +97,10 @@ describe('GET /admin/feature-flags/:key', () => {
       url: '/admin/feature-flags/whatsapp_inbound?env=dev'
     });
 
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
     const body = res.json();
     expect(body).toHaveProperty('ok', false);
-    expect(body).toHaveProperty('error', 'ADMIN_ONLY');
+    expect(body).toHaveProperty('error', 'UNAUTHENTICATED');
 
     await app.close();
   });
