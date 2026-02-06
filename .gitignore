@@ -58,3 +58,4 @@ coverage/
 .cache/
 .turbo/
 .vercel
+.pnpm-store/
