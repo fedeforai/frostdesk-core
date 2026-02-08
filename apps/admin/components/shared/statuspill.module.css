@@ -1,0 +1,31 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #e6ebf2;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.success .dot {
+  background: #16a34a;
+}
+
+.danger .dot {
+  background: #dc2626;
+}
+
+.muted .dot {
+  background: #94a3b8;
+}

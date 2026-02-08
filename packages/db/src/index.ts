@@ -213,3 +213,34 @@ export type {
   InstructorReplyMessage,
   InsertInstructorReplyParams,
 } from './instructor_reply_repository.js';
+
+// Instructor draft lifecycle (STEP 4.1 — ai_drafts + events)
+export {
+  upsertProposedDraft,
+  getDraftById,
+  getActiveDraftForConversation,
+  markDraftUsed,
+  markDraftIgnored,
+  computeEffectiveState,
+} from './instructor_draft_repository.js';
+export { DraftNotFoundError as InstructorDraftNotFoundError } from './instructor_draft_repository.js';
+export type { AiDraftRow, AiDraftState } from './instructor_draft_repository.js';
+export {
+  insertInstructorDraftEvent,
+  getInstructorDraftKpiSummary,
+} from './instructor_draft_events_repository.js';
+export type {
+  InsertInstructorDraftEventParams,
+  KpiWindow,
+  InstructorDraftKpiSummary,
+} from './instructor_draft_events_repository.js';
+
+// Instructor approval (admin)
+export {
+  listPendingInstructors,
+  setInstructorApprovalStatus,
+} from './instructor_approval_repository.js';
+export type {
+  PendingInstructor,
+  InstructorApprovalRow,
+} from './instructor_approval_repository.js';

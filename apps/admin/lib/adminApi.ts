@@ -1384,6 +1384,75 @@ export async function sendOutboundMessage(params: {
   }
 }
 
+// --- Instructor approval (admin) ---
+
+export interface PendingInstructorItem {
+  id: string;
+  email: string | null;
+  created_at: string;
+}
+
+export interface FetchPendingInstructorsResponse {
+  ok: true;
+  items: PendingInstructorItem[];
+}
+
+export async function fetchPendingInstructors(): Promise<FetchPendingInstructorsResponse> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('No session found');
+  }
+
+  const url = `${API_BASE_URL}/admin/instructors/pending`;
+  const response = await fetch(url, {
+    method: 'GET',
+    ...getAdminFetchOptions(session),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch pending instructors');
+    const errorObj = new Error(message);
+    (errorObj as any).status = response.status;
+    (errorObj as any).message = message;
+    throw errorObj;
+  }
+
+  return response.json();
+}
+
+export async function approveInstructor(
+  instructorId: string,
+  status: 'approved' | 'rejected'
+): Promise<{ ok: true; instructor: { id: string; email: string | null; approval_status: string; created_at: string } }> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('No session found');
+  }
+
+  const url = `${API_BASE_URL}/admin/instructors/${instructorId}/approve`;
+  const response = await fetch(url, {
+    method: 'POST',
+    ...getAdminFetchOptions(session),
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to update instructor approval');
+    const errorObj = new Error(message);
+    (errorObj as any).status = response.status;
+    (errorObj as any).message = message;
+    throw errorObj;
+  }
+
+  return response.json();
+}
+
 // --- AI Draft Approval ---
 // MVP v1: Admin approves AI-generated draft and sends it via WhatsApp
 // Backend already exists: POST /admin/conversations/:conversationId/send-ai-draft

@@ -1694,6 +1694,163 @@ export async function fetchBookingLifecycleById(
 
 // --- Instructor Inbox & Reply (FEATURE 2.8 / 2.9) ---
 
+function getApiBaseUrl(): string {
+  const base =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://127.0.0.1:3001';
+  return base.replace(/([^:]\/)\/+/g, '$1');
+}
+
+export interface InstructorConversation {
+  id: string;
+  customerName: string;
+  channel: 'whatsapp' | 'instagram' | 'web';
+  lastMessagePreview: string;
+  updatedAt: string;
+  status: 'hot' | 'waiting' | 'resolved';
+  unreadCount: number;
+}
+
+export interface InstructorMessage {
+  id: string;
+  role: 'customer' | 'instructor';
+  text: string;
+  createdAt: string;
+}
+
+export interface GetConversationsResponse {
+  ok: boolean;
+  conversations: InstructorConversation[];
+}
+
+export interface GetMessagesResponse {
+  ok: boolean;
+  messages: InstructorMessage[];
+}
+
+/**
+ * Pure helper: hot leads from conversations (top N by updatedAt).
+ * Dashboard-ready, no fetch.
+ */
+export function getHotLeads(
+  conversations: InstructorConversation[],
+  limit = 6
+): InstructorConversation[] {
+  return conversations
+    .filter((c) => c.status === 'hot')
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, limit);
+}
+
+/**
+ * Pure helper: single latest conversation by updatedAt.
+ * Dashboard-ready, no fetch.
+ */
+export function getLatestConversation(
+  conversations: InstructorConversation[]
+): InstructorConversation | null {
+  if (conversations.length === 0) return null;
+  return [...conversations].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )[0] ?? null;
+}
+
+/**
+ * Fetches instructor conversations (STEP 1 contract).
+ * GET /instructor/conversations
+ */
+export async function getConversations(): Promise<InstructorConversation[]> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    const err = new Error('No session found');
+    (err as any).status = 401;
+    throw err;
+  }
+
+  const url = `${getApiBaseUrl()}/instructor/conversations`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  if (res.status === 401) {
+    const err = new Error('UNAUTHENTICATED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error('NOT_AUTHORIZED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = body?.message ?? body?.error?.message ?? 'Failed to load conversations';
+    const err = new Error(msg);
+    (err as any).status = res.status;
+    throw err;
+  }
+
+  const data: GetConversationsResponse = await res.json();
+  return data.ok && data.conversations ? data.conversations : [];
+}
+
+/**
+ * Fetches messages for a conversation (STEP 1 contract).
+ * GET /instructor/conversations/:id/messages
+ */
+export async function getMessages(conversationId: string): Promise<InstructorMessage[]> {
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    const err = new Error('No session found');
+    (err as any).status = 401;
+    throw err;
+  }
+
+  const url = `${getApiBaseUrl()}/instructor/conversations/${encodeURIComponent(conversationId)}/messages`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  if (res.status === 401) {
+    const err = new Error('UNAUTHENTICATED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error('NOT_AUTHORIZED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err = new Error('NOT_FOUND');
+    (err as any).status = 404;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = body?.message ?? body?.error?.message ?? 'Failed to load messages';
+    const err = new Error(msg);
+    (err as any).status = res.status;
+    throw err;
+  }
+
+  const data: GetMessagesResponse = await res.json();
+  return data.ok && data.messages ? data.messages : [];
+}
+
 export interface InstructorInboxItem {
   conversation_id: string;
   channel: string;
@@ -1762,63 +1919,280 @@ export async function fetchInstructorInbox(): Promise<InstructorInboxItem[]> {
   return data.ok && data.items ? data.items : [];
 }
 
-export interface SendInstructorReplyResponse {
-  ok: boolean;
-  message?: { id: string; conversation_id: string; direction: string; text: string; status?: string; created_at: string };
-}
-
 /**
  * Sends instructor reply. POST /instructor/inbox/:conversation_id/reply
+ * Uses getApiBaseUrl() (same as getConversations/getMessages).
  */
 export async function sendInstructorReply(
   conversationId: string,
   body: { text: string }
-): Promise<SendInstructorReplyResponse> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+): Promise<{
+  ok: boolean;
+  message: {
+    id: string;
+    conversation_id: string;
+    direction: 'outbound';
+    text: string;
+    created_at: string;
+  };
+}> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/inbox/${conversationId}/reply`;
 
-  if (!session) {
-    const err = new Error('No session found');
-    (err as any).status = 401;
+  const supabase = getSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
     throw err;
   }
-
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-  const url = `${baseUrl}/instructor/inbox/${encodeURIComponent(conversationId)}/reply`.replace(/([^:]\/)\/+/g, '$1');
 
   const res = await fetch(url, {
     method: 'POST',
     headers: {
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ text: body.text.trim() }),
+    body: JSON.stringify(body),
   });
 
-  if (res.status === 201) {
-    return await res.json();
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch {
+    json = null;
   }
+
+  if (!res.ok) {
+    const err: any = new Error(json?.message || json?.error || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.body = json;
+    throw err;
+  }
+
+  return json;
+}
+
+// --- Instructor Draft Lifecycle (STEP 4.1 / 4.2) ---
+
+export type DraftEffectiveState = 'proposed' | 'used' | 'ignored' | 'expired';
+
+export interface ConversationDraft {
+  id: string;
+  conversationId: string;
+  state: string;
+  effectiveState: DraftEffectiveState;
+  text: string;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+export interface GetConversationDraftResponse {
+  ok: boolean;
+  draft: ConversationDraft | null;
+}
+
+/**
+ * Fetches the active draft for a conversation.
+ * GET /instructor/conversations/:id/draft
+ */
+export async function getConversationDraft(
+  conversationId: string
+): Promise<ConversationDraft | null> {
+  const baseUrl = getApiBaseUrl();
+  const supabase = getSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/draft`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
   if (res.status === 401) {
-    const err = new Error('UNAUTHENTICATED');
-    (err as any).status = 401;
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
     throw err;
   }
   if (res.status === 403) {
-    const err = new Error('ONBOARDING_REQUIRED');
-    (err as any).status = 403;
+    const err: any = new Error('ONBOARDING_REQUIRED');
+    err.status = 403;
     throw err;
   }
   if (res.status === 404) {
-    const err = new Error('NOT_FOUND');
-    (err as any).status = 404;
+    const err: any = new Error('NOT_FOUND');
+    err.status = 404;
     throw err;
   }
-  if (res.status === 400) {
-    const err = new Error('INVALID_PAYLOAD');
-    (err as any).status = 400;
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
     throw err;
   }
-  const err = new Error('FAILED_TO_SEND_REPLY');
-  (err as any).status = res.status;
-  throw err;
+  const data: GetConversationDraftResponse = await res.json();
+  return data.ok ? data.draft ?? null : null;
+}
+
+/**
+ * Marks draft as used (trace only; does not send message).
+ * POST /instructor/drafts/:draftId/use
+ */
+export async function useDraft(
+  draftId: string,
+  params: { edited: boolean; finalText: string }
+): Promise<void> {
+  const baseUrl = getApiBaseUrl();
+  const supabase = getSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/drafts/${encodeURIComponent(draftId)}/use`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ edited: params.edited, finalText: params.finalText }),
+  });
+  if (res.status === 401) {
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err: any = new Error('ONBOARDING_REQUIRED');
+    err.status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err: any = new Error('NOT_FOUND');
+    err.status = 404;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+}
+
+/**
+ * Marks draft as ignored.
+ * POST /instructor/drafts/:draftId/ignore
+ */
+export async function ignoreDraft(draftId: string): Promise<void> {
+  const baseUrl = getApiBaseUrl();
+  const supabase = getSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/drafts/${encodeURIComponent(draftId)}/ignore`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (res.status === 401) {
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err: any = new Error('ONBOARDING_REQUIRED');
+    err.status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err: any = new Error('NOT_FOUND');
+    err.status = 404;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+}
+
+export interface KpiSummaryDrafts {
+  generated: number;
+  usedExact: number;
+  usedEdited: number;
+  used: number;
+  ignored: number;
+  expired: number;
+  usageRate: number;
+}
+
+export interface GetKpiSummaryResponse {
+  ok: boolean;
+  window: '7d' | '30d';
+  drafts: KpiSummaryDrafts;
+}
+
+/**
+ * Fetches draft KPI summary for dashboard.
+ * GET /instructor/kpis/summary?window=7d|30d
+ */
+export async function getKpiSummary(
+  window: '7d' | '30d' = '7d'
+): Promise<GetKpiSummaryResponse> {
+  const baseUrl = getApiBaseUrl();
+  const supabase = getSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/kpis/summary?window=${window}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (res.status === 401) {
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err: any = new Error('ONBOARDING_REQUIRED');
+    err.status = 403;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
 }

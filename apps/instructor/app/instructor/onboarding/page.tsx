@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { redirect } from 'next/navigation';
+import { getSupabaseServer, getServerSession } from '@/lib/supabaseServer';
 import CompleteOnboardingButton from '@/components/CompleteOnboardingButton';
 
 type InstructorRow = {
@@ -8,6 +9,7 @@ type InstructorRow = {
   created_at: string | null;
   onboarding_status: string | null;
   whatsapp_connected: boolean | null;
+  approval_status: string | null;
 };
 
 /**
@@ -20,19 +22,14 @@ export default async function InstructorOnboardingPage() {
   let errorMessage: string | null = null;
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseAnonKey) {
+    session = await getServerSession();
+    const supabase = await getSupabaseServer();
+    if (!supabase) {
       errorMessage = 'Configuration error';
-    } else {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: sessionData } = await supabase.auth.getSession();
-      session = sessionData.session;
-
-      if (session?.user?.id) {
+    } else if (session?.user?.id) {
         const { data: row, error: fetchError } = await supabase
           .from('instructors')
-          .select('id, email, created_at, onboarding_status, whatsapp_connected')
+          .select('id, email, created_at, onboarding_status, whatsapp_connected, approval_status')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -54,12 +51,12 @@ export default async function InstructorOnboardingPage() {
               created_at: new Date().toISOString(),
               onboarding_status: 'pending',
               whatsapp_connected: false,
+              approval_status: 'pending',
             };
           }
         } else {
           instructor = row as InstructorRow;
         }
-      }
     }
   } catch {
     errorMessage = errorMessage ?? 'An error occurred';
@@ -98,7 +95,39 @@ export default async function InstructorOnboardingPage() {
   const id = instructor?.id ?? session.user?.id ?? '—';
   const email = instructor?.email ?? session.user?.email ?? '—';
   const status = instructor?.onboarding_status ?? 'pending';
+  const approvalStatus = instructor?.approval_status ?? 'pending';
   const whatsapp = instructor?.whatsapp_connected === true;
+
+  if (status === 'completed') {
+    redirect('/instructor/dashboard');
+  }
+
+  if (approvalStatus === 'pending') {
+    return (
+      <div style={{ padding: '2rem', maxWidth: '600px' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+          Instructor onboarding
+        </h1>
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '1rem',
+            backgroundColor: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+          }}
+        >
+          Il tuo profilo è in attesa di approvazione. Potrai completare l&apos;onboarding quando un amministratore avrà approvato il tuo account.
+        </div>
+        <p style={{ marginTop: '0.5rem' }}>
+          <Link href="/login" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+            Esci
+          </Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '2rem', maxWidth: '600px' }}>

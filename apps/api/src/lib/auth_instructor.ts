@@ -17,8 +17,8 @@ export class AdminOnlyError extends Error {
 }
 
 /**
- * Extracts the instructor user ID from the request by verifying the Supabase JWT
- * in the Authorization header.
+ * Extracts the instructor user ID by verifying the Supabase JWT in the Authorization header.
+ * Uses createDbClient() so the same Supabase project (URL + key from env) as the token issuer is used; set SUPABASE_URL + SUPABASE_ANON_KEY or NEXT_PUBLIC_* in API env to avoid "Invalid API key".
  */
 export async function getUserIdFromJwt(request: {
   headers?: { authorization?: string };
@@ -40,6 +40,11 @@ export async function getUserIdFromJwt(request: {
   } = await supabase.auth.getUser(token);
 
   if (error) {
+    if (error.message && /invalid\s*api\s*key/i.test(error.message)) {
+      const e = new Error('Server misconfigured');
+      (e as any).code = 'INTERNAL_ERROR';
+      throw e;
+    }
     throw new InstructorAuthError(error.message || 'Invalid or expired token');
   }
   if (!user?.id) {

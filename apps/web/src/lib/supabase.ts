@@ -8,3 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// TEMP: debug token from DevTools
+// @ts-ignore
+window.supabase = supabase;

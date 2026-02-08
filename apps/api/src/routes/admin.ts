@@ -21,6 +21,7 @@ import { adminIntentConfidenceRoutes } from './admin/intent_confidence.js';
 import { adminAIGatingRoutes } from './admin/ai_gating.js';
 import { adminAIDraftRoutes } from './admin/ai_draft.js';
 import { adminSendAIDraftRoutes } from './admin/send_ai_draft.js';
+import { adminInstructorApprovalRoutes } from './admin/instructor_approval.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
@@ -379,4 +380,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // Register admin instructor WhatsApp (manual verify)
   const { adminInstructorWhatsappRoutes } = await import('./admin/instructor_whatsapp.js');
   await adminInstructorWhatsappRoutes(fastify);
+
+  // Register admin instructor approval (pending list + approve/reject)
+  await adminInstructorApprovalRoutes(fastify);
 }

@@ -1,0 +1,120 @@
+.sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e6ebf2;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e6ebf2;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navItem {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.navItem:hover {
+  background: #f2f6ff;
+  border-color: #e3ebff;
+}
+
+.active {
+  background: #0b7bd6;
+  color: white;
+}
+
+/* Product-ready sidebar sections (dark theme) */
+.sidebar {
+  background: #0f172a;
+  border-right-color: rgba(148, 163, 184, 0.2);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.section {
+  margin-top: 14px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+  padding: 0 10px;
+  margin-bottom: 8px;
+}
+
+.sidebar .nav {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar .navItem {
+  display: block;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 12px;
+  padding: 10px 10px;
+  text-decoration: none;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.sidebar .navItem:hover {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.sidebar .navItem.active {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(30, 58, 138, 0.16);
+}
+
+.navLabel {
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.navDesc {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.92);
+}
+
+.brand {
+  padding: 10px 10px 6px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  margin-bottom: 10px;
+}
+
+.brandTop {
+  font-weight: 950;
+  letter-spacing: 0.2px;
+  font-size: 16px;
+}
+
+.brandSub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.sidebar .footer {
+  margin-top: auto;
+  padding: 12px 10px 10px 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}

@@ -1,0 +1,14 @@
+.card {
+  background: var(--panel, #ffffff);
+  border: 1px solid var(--border, #e6ebf2);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+  min-height: 120px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+}

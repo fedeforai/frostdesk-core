@@ -11,6 +11,7 @@ import { sql } from './client.js';
 
 export type InstructorInboxItem = {
   conversation_id: string;
+  customer_identifier: string;
   channel: string;
   status: string;
   last_message: {
@@ -24,6 +25,7 @@ export type InstructorInboxItem = {
 
 type InstructorInboxRow = {
   conversation_id: string;
+  customer_identifier: string;
   channel: string;
   status: string;
   last_message_direction: 'inbound' | 'outbound' | null;
@@ -58,15 +60,17 @@ export async function getInstructorInbox(
       SELECT
         c.id AS conversation_id,
         c.instructor_id,
+        c.customer_identifier,
         c.channel,
         c.status,
         COALESCE(MAX(m.created_at), c.created_at) AS last_activity_at
       FROM conversations c
       LEFT JOIN messages m ON m.conversation_id = c.id
-      GROUP BY c.id, c.instructor_id, c.channel, c.status, c.created_at
+      GROUP BY c.id, c.instructor_id, c.customer_identifier, c.channel, c.status, c.created_at
     )
     SELECT
       ca.conversation_id,
+      ca.customer_identifier,
       ca.channel,
       ca.status,
       lm.last_message_direction,
@@ -95,6 +99,7 @@ export async function getInstructorInbox(
 
   return result.map((row) => ({
     conversation_id: row.conversation_id,
+    customer_identifier: row.customer_identifier ?? '',
     channel: row.channel,
     status: row.status,
     last_message:

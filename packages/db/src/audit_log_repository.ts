@@ -6,7 +6,8 @@ export type AuditEventEntityType =
   | 'conversation'
   | 'message'
   | 'whatsapp_account'
-  | 'feature_flag';
+  | 'feature_flag'
+  | 'instructor';
 export type AuditEventSeverity = 'info' | 'warn' | 'error';
 
 export interface InsertAuditEventParams {

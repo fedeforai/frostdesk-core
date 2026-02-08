@@ -6,6 +6,8 @@ import { instructorGuardrailsRoutes } from './instructor/guardrails.js';
 import { instructorWhatsappRoutes } from './instructor/whatsapp.js';
 import { instructorInboxRoutes } from './instructor/inbox.js';
 import { instructorReplyRoutes } from './instructor/reply.js';
+import { instructorConversationsRoutes } from './instructor/conversations.js';
+import { instructorDraftRoutes } from './instructor/drafts.js';
 
 /**
  * Instructor routes (authenticated by JWT, no admin).
@@ -17,5 +19,7 @@ export async function instructorRoutes(fastify: FastifyInstance): Promise<void> 
   await fastify.register(instructorGuardrailsRoutes);
   await fastify.register(instructorWhatsappRoutes);
   await fastify.register(instructorInboxRoutes);
+  await fastify.register(instructorConversationsRoutes);
+  await fastify.register(instructorDraftRoutes);
   await fastify.register(instructorReplyRoutes);
 }

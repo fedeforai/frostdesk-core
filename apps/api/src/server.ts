@@ -4,6 +4,7 @@ import { inboundRoutes } from './routes/inbound.js';
 import { webhookRoutes } from './routes/webhook.js';
 import { webhookWhatsAppRoutes } from './routes/webhook_whatsapp.js';
 import { adminRoutes } from './routes/admin.js';
+import { instructorRoutes } from './routes/instructor.js';
 import { registerRateLimit } from './middleware/rate_limit.js';
 import { registerErrorHandler } from './middleware/error_handler.js';
 import { registerRequestId } from './middleware/request_id.js';
@@ -28,6 +29,7 @@ export async function buildServer() {
   await fastify.register(webhookRoutes);
   await fastify.register(webhookWhatsAppRoutes);
   await fastify.register(adminRoutes);
+  await fastify.register(instructorRoutes);
 
   return fastify;
 }

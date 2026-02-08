@@ -1,5 +1,5 @@
 import './loadEnv.js';
-import 'dotenv/config';
+import { getLoadedEnvPath } from './loadEnv.js';
 import { buildServer } from './server.js';
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -21,6 +21,15 @@ async function start() {
     console.log(`📡 Webhook endpoint: POST http://${HOST}:${PORT}/webhook`);
     console.log(`❤️  Health check: GET http://${HOST}:${PORT}/health`);
     console.log(`🗄️  DATABASE_URL: ${maskUrl(process.env.DATABASE_URL)}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📁 loadedEnvPath: ${getLoadedEnvPath() ?? 'none'}`);
+      console.log(`🔑 SUPABASE_URL present? ${!!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)}`);
+      console.log(`🔑 SUPABASE_ANON_KEY present? ${!!(process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)}`);
+      console.log('🔎 SUPABASE_ANON_KEY len:', (process.env.SUPABASE_ANON_KEY ?? '').length);
+      console.log('🔎 NEXT_PUBLIC_SUPABASE_ANON_KEY len:', (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').length);
+      console.log('🔎 SUPABASE_SERVICE_ROLE_KEY len:', (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').length);
+      console.log('🔎 SUPABASE_URL:', process.env.SUPABASE_URL);
+    }
     server.log.info(`Server listening on http://${HOST}:${PORT}`);
   } catch (err) {
     server.log.error(err);

@@ -29,46 +29,22 @@ export class AuthenticationRequiredError extends Error {
 
 /**
  * Determines if a user is an admin.
- * 
- * Checks in order:
- * 1. profiles.is_admin = true (preferred)
- * 2. users.role = 'admin' (fallback)
- * 
- * If profiles/users tables are missing or any query fails, returns false
- * (so caller gets 403 ADMIN_ONLY, not 500 INTERNAL_ERROR).
- * 
- * @param userId - User ID to check
- * @returns true if user is admin, false otherwise
+ * Uses public.admin_users (user_id = auth user id). Table created by migration add_admin_users_table.
+ * If the table is missing or query fails, returns false (403 ADMIN_ONLY, not 500).
+ *
+ * @param userId - Auth user ID (auth.users.id)
+ * @returns true if user is admin
  */
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
-    // First check profiles.is_admin (preferred)
-    const profileResult = await sql<Array<{ is_admin: boolean }>>`
-      SELECT is_admin
-      FROM profiles
-      WHERE id = ${userId}
+    const rows = await sql<Array<{ user_id: string }>>`
+      SELECT user_id
+      FROM public.admin_users
+      WHERE user_id = ${userId}
       LIMIT 1
     `;
-
-    if (profileResult.length > 0) {
-      return profileResult[0].is_admin === true;
-    }
-
-    // Fallback to users.role if profiles table doesn't have the user
-    const userResult = await sql<Array<{ role: string }>>`
-      SELECT role
-      FROM users
-      WHERE id = ${userId}
-      LIMIT 1
-    `;
-
-    if (userResult.length > 0) {
-      return userResult[0].role === 'admin';
-    }
-
-    return false;
+    return rows.length > 0;
   } catch (err) {
-    // Tables missing or query failed: treat as not admin (403, not 500)
     console.error('[admin_access] isAdmin query failed:', err instanceof Error ? err.message : String(err));
     return false;
   }
@@ -87,38 +63,25 @@ export async function assertAuthenticated(userId: string | null | undefined): Pr
 }
 
 /**
- * Gets the user's role from profiles or users table.
- * 
- * @param userId - User ID to check
- * @returns User role or null if not found
+ * Gets the user's role for admin UI (system_admin, human_approver, etc.).
+ * Uses public.admin_users: if present, returns 'system_admin'.
+ *
+ * @param userId - Auth user ID
+ * @returns Role string or null if not found
  */
 export async function getUserRole(userId: string): Promise<string | null> {
-  // First check profiles.role (preferred)
-  const profileResult = await sql<Array<{ role: string }>>`
-    SELECT role
-    FROM profiles
-    WHERE id = ${userId}
-    LIMIT 1
-  `;
-
-  if (profileResult.length > 0) {
-    return profileResult[0].role;
+  try {
+    const rows = await sql<Array<{ user_id: string }>>`
+      SELECT user_id
+      FROM public.admin_users
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+    return rows.length > 0 ? 'system_admin' : null;
+  } catch (err) {
+    console.error('[admin_access] getUserRole query failed:', err instanceof Error ? err.message : String(err));
+    return null;
   }
-
-  // Fallback to users.role if profiles table doesn't have the user
-  const userResult = await sql<Array<{ role: string | null }>>`
-    SELECT role
-    FROM users
-    WHERE id = ${userId}
-    LIMIT 1
-  `;
-
-  if (userResult.length > 0) {
-    return userResult[0].role;
-  }
-
-  // User not found
-  return null;
 }
 
 /**

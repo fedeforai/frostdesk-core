@@ -9,6 +9,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', roles: ['system_admin', 'human_approver', 'human_operator'] },
+  { label: 'Instructor approvals', href: '/admin/instructor-approvals', roles: ['system_admin', 'human_approver', 'human_operator'] },
   { label: 'Pilot', href: '/admin/pilot', roles: ['system_admin', 'human_approver', 'human_operator'] },
   { label: 'Inbox', href: '/admin/human-inbox', roles: ['system_admin', 'human_approver', 'human_operator'] },
   { label: 'Bookings', href: '/admin/bookings', roles: ['system_admin', 'human_approver', 'human_operator'] },

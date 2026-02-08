@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:3002": "node ../../scripts/kill-port.mjs 3002 && PORT=3002 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -12,6 +13,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "next": "^14.0.4",
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.38.4"
   },
   "devDependencies": {
