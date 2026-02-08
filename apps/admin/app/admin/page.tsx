@@ -34,6 +34,16 @@ export default async function AdminPage() {
             → Dashboard
           </Link>
           <Link 
+            href="/admin/instructor-approvals" 
+            style={{ 
+              color: '#2563eb', 
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+            }}
+          >
+            → Instructor approvals
+          </Link>
+          <Link 
             href="/admin/pilot" 
             style={{ 
               color: '#2563eb', 

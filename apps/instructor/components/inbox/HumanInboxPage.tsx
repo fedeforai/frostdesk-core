@@ -268,7 +268,7 @@ export default function HumanInboxPage() {
       : undefined;
   const draft = currentDraft ?? null;
   // Only proposed can be used/dismissed; expired is display-only (no /use).
-  const draftActionable = draft && draft.effectiveState === 'proposed';
+  const draftActionable = draft?.effectiveState === 'proposed';
 
   const handleUseDraft = useCallback(async () => {
     if (!selectedId || !draft || !draftActionable) return;
