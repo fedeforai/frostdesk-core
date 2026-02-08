@@ -267,9 +267,8 @@ export default function HumanInboxPage() {
       ? draftsByConversationId[selectedId]
       : undefined;
   const draft = currentDraft ?? null;
-  const draftActionable =
-    draft &&
-    (draft.effectiveState === 'proposed' || draft.effectiveState === 'expired');
+  // Only proposed can be used/dismissed; expired is display-only (no /use).
+  const draftActionable = draft && draft.effectiveState === 'proposed';
 
   const handleUseDraft = useCallback(async () => {
     if (!selectedId || !draft || !draftActionable) return;
@@ -606,7 +605,7 @@ export default function HumanInboxPage() {
                       <div className={styles.draftHeaderRow}>
                         <span
                           className={
-                            draft.effectiveState === 'proposed' || draft.effectiveState === 'expired'
+                            draft.effectiveState === 'proposed'
                               ? styles.activeBadge
                               : styles.usedBadge
                           }
@@ -641,6 +640,11 @@ export default function HumanInboxPage() {
                       <div className={styles.draftText} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {draft.text}
                       </div>
+                      {draft.effectiveState === 'expired' && (
+                        <div className={styles.draftFootnote} style={{ marginTop: 6 }}>
+                          Draft expired, request a new one.
+                        </div>
+                      )}
                       {draftError && (
                         <div className={styles.draftFootnote} style={{ color: '#b91c1c' }}>
                           {draftError}
