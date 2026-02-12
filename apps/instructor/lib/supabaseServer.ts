@@ -14,7 +14,15 @@ export async function getSupabaseServer() {
   return createServerClient(url, key, {
     cookies: {
       get(name: string) {
-        return cookieStore.get(name)?.value;
+        let value = cookieStore.get(name)?.value;
+        if (value && typeof value === 'string' && value.startsWith('base64-')) {
+          try {
+            value = Buffer.from(value.slice(7), 'base64').toString('utf8');
+          } catch {
+            // leave unchanged on decode error
+          }
+        }
+        return value;
       },
       set(name: string, value: string, options: CookieOptions) {
         try {
