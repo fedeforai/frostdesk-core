@@ -8,15 +8,20 @@ export interface PendingInstructor {
 
 /**
  * Lists instructors with approval_status = 'pending' for admin approval UI.
+ * Uses instructor_profiles (id, user_id, full_name, created_at); no contact_email in reconciled schema.
  */
 export async function listPendingInstructors(): Promise<PendingInstructor[]> {
-  const rows = await sql<PendingInstructor[]>`
-    SELECT id, email, created_at
-    FROM instructors
+  const rows = await sql<{ id: string; user_id: string | null; full_name: string | null; created_at: string }[]>`
+    SELECT id, user_id, full_name, created_at
+    FROM instructor_profiles
     WHERE approval_status = 'pending'
     ORDER BY created_at ASC
   `;
-  return rows;
+  return rows.map((r) => ({
+    id: r.user_id ?? r.id,
+    email: r.full_name ?? null,
+    created_at: r.created_at,
+  }));
 }
 
 export interface InstructorApprovalRow {
@@ -28,17 +33,24 @@ export interface InstructorApprovalRow {
 
 /**
  * Sets approval_status for an instructor. Only 'approved' and 'rejected' are allowed.
- * Returns the updated row or null if not found.
+ * instructorId can be user_id (auth user) or profile id. Returns the updated row or null if not found.
  */
 export async function setInstructorApprovalStatus(
   instructorId: string,
   status: 'approved' | 'rejected'
 ): Promise<InstructorApprovalRow | null> {
-  const result = await sql<InstructorApprovalRow[]>`
-    UPDATE instructors
+  const result = await sql<{ id: string; full_name: string | null; approval_status: string; created_at: string }[]>`
+    UPDATE instructor_profiles
     SET approval_status = ${status}
-    WHERE id = ${instructorId}
-    RETURNING id, email, approval_status, created_at
+    WHERE id = ${instructorId}::uuid OR user_id = ${instructorId}::uuid
+    RETURNING id, full_name, approval_status, created_at
   `;
-  return result.length > 0 ? result[0] : null;
+  if (result.length === 0) return null;
+  const r = result[0];
+  return {
+    id: r.id,
+    email: r.full_name,
+    approval_status: r.approval_status,
+    created_at: r.created_at,
+  };
 }

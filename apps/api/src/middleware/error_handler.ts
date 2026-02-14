@@ -33,10 +33,13 @@ const ERROR_CODE_TO_STATUS: Record<string, number> = {
 
   // 401 Unauthorized
   'UNAUTHENTICATED': 401,
+  // 402 Payment Required (pilot gating)
+  'PILOT_ONLY': 402,
   // 403 Forbidden
   'ADMIN_ONLY': 403,
   'ONBOARDING_REQUIRED': 403,
-  
+  'FORBIDDEN': 403,
+
   // 404 Not Found
   'NOT_FOUND': 404,
   'BOOKING_NOT_FOUND': 404,

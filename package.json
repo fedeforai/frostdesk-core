@@ -10,6 +10,8 @@
   "scripts": {
     "build": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r run build",
     "dev": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r --parallel run dev",
+    "dev:instructor": "bash scripts/dev-instructor.sh",
+    "dev:admin": "bash scripts/dev-admin.sh",
     "test": "echo 'Add test scripts'",
     "dev:web": "pnpm -C apps/web dev",
     "verify:pnpm": "bash scripts/verify_repo.sh"

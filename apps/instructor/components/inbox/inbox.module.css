@@ -3,6 +3,9 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  --panel: rgba(30, 41, 59, 0.95);
+  --border: rgba(148, 163, 184, 0.25);
+  --muted: rgba(148, 163, 184, 0.92);
 }
 
 .topRow {
@@ -15,8 +18,16 @@
 }
 
 .title {
-  font-size: 22px;
+  font-size: 1.5rem;
   font-weight: 800;
+  margin: 0 0 0.25rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
 }
 
 .twoCol {
@@ -25,10 +36,10 @@
   gap: 0;
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--panel, #ffffff);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
@@ -42,20 +53,26 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-right: 1px solid var(--border, #e6ebf2);
+  border-right: 1px solid var(--border);
 }
 
 .searchWrap {
   padding: 10px 14px;
-  border-bottom: 1px solid var(--border, #e6ebf2);
+  border-bottom: 1px solid var(--border);
 }
 
 .searchInput {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.searchInput::placeholder {
+  color: var(--muted);
 }
 
 .conversationList {
@@ -78,21 +95,23 @@
 }
 
 .convItem:hover {
-  background: #f8fafc;
+  background: rgba(148, 163, 184, 0.15);
 }
 
 .convItemSelected {
-  background: #f1f5f9;
+  background: rgba(59, 130, 246, 0.2);
+  border-left: 3px solid rgba(59, 130, 246, 0.8);
 }
 
 .convName {
   font-weight: 800;
   font-size: 14px;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .convPreview {
   font-size: 12px;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   margin-top: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -105,7 +124,7 @@
   gap: 8px;
   margin-top: 6px;
   font-size: 11px;
-  color: var(--muted, #64748b);
+  color: var(--muted);
 }
 
 .channelTag {
@@ -147,17 +166,18 @@
 
 .detailHeader {
   padding: 14px 18px;
-  border-bottom: 1px solid var(--border, #e6ebf2);
+  border-bottom: 1px solid var(--border);
 }
 
 .detailName {
   font-size: 18px;
   font-weight: 800;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .detailMeta {
   font-size: 12px;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   margin-top: 4px;
 }
 
@@ -180,15 +200,16 @@
 
 .messageCustomer {
   align-self: flex-start;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border);
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .messageInstructor {
   align-self: flex-end;
-  background: #0f172a;
+  background: rgba(59, 130, 246, 0.35);
   color: #fff;
-  border: 1px solid #0f172a;
+  border: 1px solid rgba(59, 130, 246, 0.5);
 }
 
 .messageRole {
@@ -201,13 +222,13 @@
 
 .messageTime {
   font-size: 11px;
-  color: var(--muted, #94a3b8);
+  color: var(--muted);
   margin-top: 6px;
 }
 
 .composerWrap {
   padding: 14px 18px;
-  border-top: 1px solid var(--border, #e6ebf2);
+  border-top: 1px solid var(--border);
   display: flex;
   gap: 10px;
   align-items: flex-end;
@@ -218,17 +239,23 @@
   min-height: 44px;
   max-height: 120px;
   padding: 10px 14px;
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid var(--border);
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
   resize: none;
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.composerTextarea::placeholder {
+  color: var(--muted);
 }
 
 .sendBtn {
   padding: 10px 18px;
   border-radius: 12px;
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid rgba(59, 130, 246, 0.5);
   background: #0f172a;
   color: #fff;
   font-weight: 800;
@@ -236,12 +263,16 @@
   cursor: pointer;
 }
 
+.sendBtn:hover:not(:disabled) {
+  background: rgba(30, 58, 138, 0.9);
+}
+
 .emptyDetail {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   font-size: 14px;
   padding: 24px;
 }
@@ -291,13 +322,13 @@
 .listLoading,
 .detailLoading {
   padding: 24px 16px;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   font-size: 14px;
 }
 
 .emptyList {
   padding: 24px 16px;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -306,7 +337,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   font-size: 14px;
   padding: 24px;
 }

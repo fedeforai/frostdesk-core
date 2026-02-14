@@ -165,10 +165,7 @@ export async function getInstructorDashboardData(
     lastSyncAt: calendarConnectionResult.length > 0 ? calendarConnectionResult[0].updated_at : null,
   };
 
-  // 7. Get upcoming bookings
-  // Note: Since instructor_id in bookings is INTEGER and instructor_profiles uses UUID,
-  // and we cannot do complex joins, we query all upcoming bookings.
-  // In a production system, this would need a mapping table or schema alignment.
+  // 7. Get upcoming bookings (scoped to this instructor)
   const now = new Date().toISOString();
   const upcomingBookings = await sql<DashboardBooking[]>`
     SELECT 
@@ -179,7 +176,8 @@ export async function getInstructorDashboardData(
       NULL::text as service,
       status
     FROM bookings
-    WHERE start_time >= ${now}
+    WHERE instructor_id = ${instructorId}
+      AND start_time >= ${now}
     ORDER BY start_time ASC
     LIMIT 10
   `;

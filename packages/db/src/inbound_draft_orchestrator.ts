@@ -198,7 +198,7 @@ export async function orchestrateInboundDraft(
 
   if (gate.allowDraft && intentOperative && confidenceOk) {
     try {
-      const draft = generateAIReply({
+      const draft = await generateAIReply({
         lastMessageText: messageText,
         language,
       });

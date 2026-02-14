@@ -1,4 +1,5 @@
-export { generateAIReply } from './ai_reply_stub.js';
+export { generateAIReply, type GenerateAIReplyInput, type GenerateAIReplyOutput } from './ai_reply_stub.js';
+export { generateAIReplyOpenAI } from './openai_reply.js';
 export { sanitizeDraftText } from './draftQualityGuardrails.js';
 export type { DraftQualityInput, DraftQualityOutput, DraftViolation, IntentType as DraftIntentType } from './draftQualityGuardrails.js';
 export { classifyRelevance, type RelevanceResult, type RelevanceReason } from './relevanceClassifier.js';

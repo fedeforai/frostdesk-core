@@ -1,0 +1,55 @@
+{
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": [
+        "components/**/*.tsx",
+        "components/**/*.ts",
+        "app/instructor/(pre)/**/*.tsx",
+        "app/instructor/(pre)/**/*.ts",
+        "app/login/**/*.tsx",
+        "app/login/**/*.ts",
+        "app/auth/**/*.tsx",
+        "app/auth/**/*.ts",
+        "app/signup/**/*.tsx",
+        "app/signup/**/*.ts",
+        "app/layout.tsx",
+        "app/page.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@/lib/instructorApiServer",
+                "message": "❌ instructorApiServer.ts is server-only. Do not import it in client components."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["app/**/*.tsx", "app/**/*.ts"],
+      "excludedFiles": [
+        "**/*client*",
+        "**/*.client.ts",
+        "**/*.client.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@/lib/instructorApi",
+                "message": "❌ instructorApi.ts is browser-only. Do not import it in Server Components. Use @/lib/instructorApiServer."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

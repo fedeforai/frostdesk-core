@@ -123,6 +123,16 @@
   font-weight: 900;
 }
 
+.integrationCheck.muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.integrationCheck.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
 .integrationName {
   font-weight: 800;
   font-size: 14px;

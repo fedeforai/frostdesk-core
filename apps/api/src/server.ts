@@ -31,5 +31,18 @@ export async function buildServer() {
   await fastify.register(adminRoutes);
   await fastify.register(instructorRoutes);
 
+  // Se qualcuno apre l'API (3001) su path /admin/* vede un messaggio chiaro invece di pagina bianca
+  fastify.setNotFoundHandler((request, reply) => {
+    const path = request.url.split('?')[0];
+    const accept = (request.headers.accept ?? '').toLowerCase();
+    if (path.startsWith('/admin') && (accept.includes('text/html') || accept.includes('*/*'))) {
+      reply.type('text/html').status(404).send(
+        `<!DOCTYPE html><html><head><meta charset="utf-8"><title>API</title></head><body style="font-family:sans-serif;padding:2rem;max-width:32rem;margin:0 auto;"><h1>Questa è l'API (porta 3001)</h1><p>L'interfaccia admin è su un'altra porta.</p><p><strong>Apri <a href="http://localhost:3000">http://localhost:3000</a></strong> per il login admin e la dashboard.</p><p>Login: <a href="http://localhost:3000/login">http://localhost:3000/login</a></p></body></html>`
+      );
+      return;
+    }
+    reply.status(404).send({ ok: false, error: 'NOT_FOUND' });
+  });
+
   return fastify;
 }

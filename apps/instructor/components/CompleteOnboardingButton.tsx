@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
 /**
  * Button to mark instructor onboarding as completed.
@@ -18,24 +18,23 @@ export default function CompleteOnboardingButton() {
     setSuccess(false);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseAnonKey) {
+      const supabase = getSupabaseBrowser();
+      if (!supabase) {
         setErrorMessage('Configuration error');
         return;
       }
 
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         setErrorMessage('Not signed in');
         return;
       }
 
+      const uid = session.user.id;
       const { error } = await supabase
-        .from('instructors')
-        .update({ onboarding_status: 'completed' })
-        .eq('id', session.user.id);
+        .from('instructor_profiles')
+        .update({ onboarding_status: 'completed', profile_status: 'active' })
+        .or(`user_id.eq.${uid},id.eq.${uid}`);
 
       if (error) {
         setErrorMessage(error.message ?? 'Update failed');

@@ -217,7 +217,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             // Generate and persist AI reply for WhatsApp text messages
             if (channel === 'whatsapp' && messageType === 'text' && textBody) {
               try {
-                const aiReply = generateAIReply({
+                const aiReply = await generateAIReply({
                   lastMessageText: textBody,
                 });
                 await sendAIReply({

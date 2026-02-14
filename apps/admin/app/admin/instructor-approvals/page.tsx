@@ -105,6 +105,24 @@ export default function InstructorApprovalsPage() {
           }}
         >
           {error}
+          {(error.includes('Missing session') || error.includes('No session found') || error.includes('UNAUTHENTICATED')) && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <Link href="/login?next=/admin/instructor-approvals" style={{ color: '#2563eb', fontWeight: 600 }}>
+                Accedi come admin →
+              </Link>
+            </div>
+          )}
+          {(error.includes('Avvia l\'API') || error.includes('Verifica che l\'API') || error.includes('Impossibile contattare') || error.includes('Endpoint non trovato') || error.includes('NEXT_PUBLIC_API_URL')) && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => { setError(null); load(); }}
+                style={{ color: '#2563eb', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+              >
+                Riprova
+              </button>
+            </div>
+          )}
         </div>
       )}
 

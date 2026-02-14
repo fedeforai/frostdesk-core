@@ -34,8 +34,11 @@ const MOCK_INTEGRATIONS = [
   { name: 'Google Calendar', status: 'Connected' },
 ];
 
+/** Same-origin proxy; browser never calls 3001 directly (CORS). */
+const HEALTH_URL = '/api/health';
+
 export default function HomeDashboard() {
-  const health = useApiHealth('http://127.0.0.1:3001/health');
+  const health = useApiHealth(HEALTH_URL);
   const kpis = useKpis();
   const [automationOn, setAutomationOn] = useState(true);
 

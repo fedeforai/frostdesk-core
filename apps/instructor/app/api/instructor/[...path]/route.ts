@@ -1,48 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/supabaseServer';
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof process.env.NEXT_PUBLIC_API_BASE_URL === 'string' ? process.env.NEXT_PUBLIC_API_BASE_URL : null) ||
-  'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-/**
- * Same-origin proxy: reads Supabase session (cookies) on the server and forwards
- * the request to the Fastify API with Authorization Bearer token.
- * Browser never calls Fastify directly.
- */
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
-) {
+const AUTH_TRACE = process.env.AUTH_TRACE === '1';
+
+function trace(msg: string, extra?: Record<string, unknown>) {
+  if (!AUTH_TRACE) return;
+  const tail = extra ? ` ${JSON.stringify(extra)}` : '';
+  console.log(`[auth-proxy] ${msg}${tail}`);
+}
+
+export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxy(request, context, 'GET');
 }
-
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
-) {
+export async function POST(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxy(request, context, 'POST');
 }
-
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
-) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxy(request, context, 'PATCH');
 }
-
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
-) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxy(request, context, 'PUT');
 }
-
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
-) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxy(request, context, 'DELETE');
 }
 
@@ -51,32 +32,49 @@ async function proxy(
   context: { params: Promise<{ path: string[] }> },
   method: string
 ) {
-  const session = await getServerSession();
+  const url = new URL(request.url);
 
-  if (process.env.NODE_ENV !== 'production' && session?.access_token) {
-    const t = session.access_token;
-    const dotCount = (t.match(/\./g) ?? []).length;
-    console.log('[PROXY] token length:', t.length, 'dot count:', dotCount);
+  const authHeader = request.headers.get('authorization');
+  const hasAuthHeader = !!(authHeader && authHeader.startsWith('Bearer '));
+  const allCookies = request.cookies.getAll();
+  const hasSbAuthCookie = allCookies.some(
+    (c) => c.name.startsWith('sb-') && c.name.includes('auth-token')
+  );
+
+  const session = await getServerSession();
+  const token = session?.access_token;
+
+  if (AUTH_TRACE) {
+    trace('session-check', {
+      method,
+      path: url.pathname,
+      hasAuthHeader,
+      hasSbAuthCookie,
+      cookieNames: allCookies.map((c) => c.name),
+      tokenPresent: !!token,
+      hasSession: !!session,
+    });
   }
 
   if (!session?.access_token) {
     return NextResponse.json(
-      { ok: false, error: 'UNAUTHENTICATED', message: 'Missing or invalid Authorization header' },
+      { ok: false, error: 'UNAUTHENTICATED', message: 'Missing session' },
       { status: 401 }
     );
   }
 
-  const { path } = await context.params;
-  const pathSegments = Array.isArray(path) ? path : path ? [path] : [];
+  const { path: pathParams } = await context.params;
+  const pathSegments = Array.isArray(pathParams) ? pathParams : [];
   const backendPath = `/instructor/${pathSegments.join('/')}`;
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.toString();
+  const query = url.searchParams.toString();
   const backendUrl = `${API_BASE.replace(/\/$/, '')}${backendPath}${query ? `?${query}` : ''}`;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    Accept: 'application/json',
     Authorization: `Bearer ${session.access_token}`,
   };
+  const ifMatch = request.headers.get('if-match');
+  if (ifMatch) headers['If-Match'] = ifMatch;
 
   let body: string | undefined;
   if (method !== 'GET' && method !== 'HEAD') {
@@ -85,21 +83,33 @@ async function proxy(
     } catch {
       body = undefined;
     }
+    if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(backendUrl, {
-    method,
-    headers,
-    body: body ?? undefined,
-  });
-
-  const text = await res.text();
-  let data: unknown;
+  let upstream: Response;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { raw: text };
+    upstream = await fetch(backendUrl, {
+      method,
+      headers,
+      body: body ?? undefined,
+    });
+  } catch (e) {
+    trace('upstream-fetch-failed', { backendUrl });
+    return NextResponse.json(
+      { ok: false, error: 'UPSTREAM_DOWN' },
+      { status: 502 }
+    );
   }
 
-  return NextResponse.json(data, { status: res.status });
+  trace('upstream-status', { status: upstream.status, upstreamStatus: upstream.status });
+
+  const text = await upstream.text();
+  let payload: unknown;
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    payload = { raw: text };
+  }
+
+  return NextResponse.json(payload, { status: upstream.status });
 }

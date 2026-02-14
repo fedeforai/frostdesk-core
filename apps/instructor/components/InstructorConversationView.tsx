@@ -6,8 +6,9 @@ import MessageBubble, { type ReplyStatus } from './MessageBubble';
 import ReplyInput from './ReplyInput';
 import TypingIndicator from './TypingIndicator';
 import DecisionTransparencyNote from './DecisionTransparencyNote';
-import { sendInstructorReply } from '@/lib/instructorApi';
+import { sendInstructorReply, patchConversationAiState } from '@/lib/instructorApi';
 import type { InstructorInboxItem } from '@/lib/instructorApi';
+import type { ConversationAiState } from '@/lib/instructorApi';
 
 type BookingStatusForNote = 'draft' | 'pending' | 'confirmed' | null;
 
@@ -66,6 +67,9 @@ export default function InstructorConversationView({
   const [replyStatus, setReplyStatus] = useState<ReplyStatus>('idle');
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [typingState, setTypingState] = useState<'idle' | 'typing'>('idle');
+  const [aiState, setAiState] = useState<ConversationAiState | null>(null);
+  const [aiStateLoading, setAiStateLoading] = useState(false);
+  const [aiStateError, setAiStateError] = useState<string | null>(null);
   const deliveredTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((message: string) => {
     setErrorToast(message);
@@ -132,6 +136,34 @@ export default function InstructorConversationView({
     setTypingState('idle');
   }, []);
 
+  const handleTakeOver = useCallback(async () => {
+    setAiStateError(null);
+    setAiStateLoading(true);
+    try {
+      await patchConversationAiState(conversationId, { ai_state: 'ai_paused_by_human' });
+      setAiState('ai_paused_by_human');
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setAiStateError(err?.message ?? 'Failed to pause AI');
+    } finally {
+      setAiStateLoading(false);
+    }
+  }, [conversationId]);
+
+  const handleResumeAi = useCallback(async () => {
+    setAiStateError(null);
+    setAiStateLoading(true);
+    try {
+      await patchConversationAiState(conversationId, { ai_state: 'ai_on' });
+      setAiState('ai_on');
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setAiStateError(err?.message ?? 'Failed to resume AI');
+    } finally {
+      setAiStateLoading(false);
+    }
+  }, [conversationId]);
+
   const outboundMessages = messages.filter((m) => m.direction === 'outbound');
   const latestOutboundId = outboundMessages.length > 0
     ? outboundMessages[outboundMessages.length - 1].id
@@ -174,6 +206,45 @@ export default function InstructorConversationView({
         }}
       >
         {channelLabel} • Guest message
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: '1rem' }}>
+        <span style={{ fontSize: 12, color: '#6b7280' }}>
+          {aiState === 'ai_paused_by_human' ? 'AI paused' : aiState === 'ai_on' ? 'AI on' : 'AI: —'}
+        </span>
+        <button
+          type="button"
+          style={{
+            padding: '4px 10px',
+            fontSize: 12,
+            border: '1px solid #d1d5db',
+            borderRadius: 4,
+            background: '#fff',
+            cursor: aiStateLoading ? 'not-allowed' : 'pointer',
+          }}
+          disabled={aiStateLoading}
+          onClick={() => void handleTakeOver()}
+        >
+          {aiStateLoading ? '…' : 'Take over'}
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: '4px 10px',
+            fontSize: 12,
+            border: '1px solid #d1d5db',
+            borderRadius: 4,
+            background: '#fff',
+            cursor: aiStateLoading ? 'not-allowed' : 'pointer',
+          }}
+          disabled={aiStateLoading}
+          onClick={() => void handleResumeAi()}
+        >
+          Resume AI
+        </button>
+        {aiStateError && (
+          <span style={{ fontSize: 12, color: '#b91c1c' }}>{aiStateError}</span>
+        )}
       </div>
 
       <div

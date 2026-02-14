@@ -1,3 +1,21 @@
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.pageSub {
+  font-size: 0.875rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin-bottom: 1.5rem;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -8,6 +26,7 @@
 .title {
   font-size: 22px;
   font-weight: 800;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .right {

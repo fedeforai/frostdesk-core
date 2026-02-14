@@ -47,15 +47,24 @@ export default function AutomationCard({
       </div>
 
       <div className={styles.integrations}>
-        {integrations.map((i) => (
-          <div key={i.name} className={styles.integration}>
-            <div className={styles.integrationCheck} aria-hidden>✓</div>
-            <div>
-              <div className={styles.integrationName}>{i.name}</div>
-              <div className={styles.integrationStatus}>{i.status}</div>
+        {integrations.map((i) => {
+          const isConnected = i.status === 'Connected';
+          const isChecking = i.status === 'Checking…';
+          const checkClass = isConnected
+            ? styles.integrationCheck
+            : isChecking
+              ? `${styles.integrationCheck} ${styles.warning}`
+              : `${styles.integrationCheck} ${styles.muted}`;
+          return (
+            <div key={i.name} className={styles.integration}>
+              <div className={checkClass} aria-hidden>{isConnected ? '✓' : isChecking ? '…' : '○'}</div>
+              <div>
+                <div className={styles.integrationName}>{i.name}</div>
+                <div className={styles.integrationStatus}>{i.status}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

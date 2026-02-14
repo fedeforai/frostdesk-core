@@ -2,32 +2,65 @@ import type { SystemHealthSnapshot } from '@/lib/adminApi';
 
 interface SystemHealthPanelProps {
   snapshot: SystemHealthSnapshot;
+  isLive?: boolean;
 }
 
-export default function SystemHealthPanel({ snapshot }: SystemHealthPanelProps) {
+const ACTIVITY_LABELS: Record<keyof SystemHealthSnapshot['activity_today'], string> = {
+  conversations_ai_eligible: 'Conversazioni AI-eligible',
+  escalations: 'Escalation',
+  drafts_generated: 'Draft generati',
+  drafts_sent: 'Draft inviati',
+};
+
+export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHealthPanelProps) {
+  const act = snapshot.activity_today;
+  const maxActivity = Math.max(
+    act.conversations_ai_eligible,
+    act.escalations,
+    act.drafts_generated,
+    act.drafts_sent,
+    1
+  );
+  const activityRows: Array<{ key: keyof SystemHealthSnapshot['activity_today']; label: string; value: number }> = [
+    { key: 'conversations_ai_eligible', label: ACTIVITY_LABELS.conversations_ai_eligible, value: act.conversations_ai_eligible },
+    { key: 'escalations', label: ACTIVITY_LABELS.escalations, value: act.escalations },
+    { key: 'drafts_generated', label: ACTIVITY_LABELS.drafts_generated, value: act.drafts_generated },
+    { key: 'drafts_sent', label: ACTIVITY_LABELS.drafts_sent, value: act.drafts_sent },
+  ];
+
   return (
-    <div style={{ 
-      border: '1px solid #e5e7eb', 
-      borderRadius: '0.5rem', 
+    <div style={{
+      border: '1px solid #e5e7eb',
+      borderRadius: '0.5rem',
       padding: '1.5rem',
       backgroundColor: '#ffffff',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '1.5rem',
         borderBottom: '1px solid #e5e7eb',
         paddingBottom: '0.75rem',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
       }}>
-        <h2 style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: '600',
-          color: '#111827',
-        }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#111827' }}>
           System Health Snapshot
         </h2>
+        <span
+          style={{
+            fontSize: '0.75rem',
+            padding: '0.25rem 0.5rem',
+            borderRadius: 4,
+            background: isLive ? '#d1fae5' : '#fef3c7',
+            color: isLive ? '#065f46' : '#92400e',
+            fontWeight: 500,
+          }}
+        >
+          {isLive ? 'Dati live (API + DB)' : 'Fallback (API non raggiungibile)'}
+        </span>
       </div>
 
       {/* Section 1: Emergency Status */}
@@ -203,84 +236,69 @@ export default function SystemHealthPanel({ snapshot }: SystemHealthPanelProps) 
         )}
       </div>
 
-      {/* Section 4: Activity Today */}
+      {/* Section 4: Activity Today — Table */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem' }}>
+          Activity Today (tabella)
+        </h3>
+        <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: '0.375rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f9fafb' }}>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#111827' }}>
+                  Metrica
+                </th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#111827' }}>
+                  Valore
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {activityRows.map((row) => (
+                <tr key={row.key} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', color: '#374151' }}>{row.label}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600, color: '#111827' }}>
+                    {row.value}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Section 5: Activity Today — Bar chart (CSS) */}
       <div>
-        <h3 style={{ 
-          fontSize: '1rem', 
-          fontWeight: '600',
-          color: '#111827',
-          marginBottom: '0.75rem',
-        }}>
-          Activity Today
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem' }}>
+          Activity Today (grafico)
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
-              AI-Eligible Conversations
-            </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
-              {snapshot.activity_today.conversations_ai_eligible}
-            </span>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
-              Escalations
-            </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
-              {snapshot.activity_today.escalations}
-            </span>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
-              Drafts Generated
-            </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
-              {snapshot.activity_today.drafts_generated}
-            </span>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-          }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
-              Drafts Sent
-            </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
-              {snapshot.activity_today.drafts_sent}
-            </span>
-          </div>
+          {activityRows.map((row) => (
+            <div key={row.key}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.8125rem', color: '#6b7280' }}>
+                <span>{row.label}</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#111827' }}>{row.value}</span>
+              </div>
+              <div
+                style={{
+                  height: 24,
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.min(100, (row.value / maxActivity) * 100)}%`,
+                    height: '100%',
+                    backgroundColor: row.key === 'escalations' ? '#f59e0b' : '#3b82f6',
+                    borderRadius: 4,
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

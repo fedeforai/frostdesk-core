@@ -21,7 +21,7 @@ export default function InstructorInboxClient() {
       .catch((err: any) => {
         if (!mounted) return;
         if (err?.status === 401) {
-          router.replace('/login');
+          router.replace('/instructor/login');
           return;
         }
         if (err?.status === 403) {
@@ -96,7 +96,7 @@ export default function InstructorInboxClient() {
           Inbox
         </h1>
         <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-          Unable to load inbox. <Link href="/login" style={{ color: '#3b82f6' }}>Sign in again</Link>
+          Unable to load inbox. <Link href="/instructor/login" style={{ color: '#3b82f6' }}>Sign in again</Link>
         </p>
       </div>
     );

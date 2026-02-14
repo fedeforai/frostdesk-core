@@ -7,7 +7,9 @@ export type AuditEventEntityType =
   | 'message'
   | 'whatsapp_account'
   | 'feature_flag'
-  | 'instructor';
+  | 'instructor'
+  | 'instructor_policy'
+  | 'customer';
 export type AuditEventSeverity = 'info' | 'warn' | 'error';
 
 export interface InsertAuditEventParams {

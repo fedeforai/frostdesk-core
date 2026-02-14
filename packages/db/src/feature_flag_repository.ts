@@ -3,12 +3,15 @@ import { sql } from './client.js';
 
 type Env = 'dev' | 'staging' | 'prod';
 
+/** Sentinel UUID for global (non-tenant) flags; PK does not allow NULL. */
+const GLOBAL_TENANT_ID = '00000000-0000-0000-0000-000000000000';
+
 /**
  * Retrieves a feature flag value.
  * 
  * Resolution rules (ORDERED, EXPLICIT):
  * 1. If exists (key, env, tenant_id = tenantId) → use that
- * 2. Else if exists (key, env, tenant_id IS NULL) → use that
+ * 2. Else if exists (key, env, tenant_id = GLOBAL_TENANT_ID) → use that
  * 3. Else → false
  * 
  * @param key - Feature flag key
@@ -42,13 +45,13 @@ export async function getFeatureFlag(
     }
   }
 
-  // 2️⃣ global flag
+  // 2️⃣ global flag (sentinella UUID; PK non ammette NULL)
   const { data, error } = await db
     .from('feature_flags')
     .select('enabled')
     .eq('key', key)
     .eq('env', env)
-    .is('tenant_id', null)
+    .eq('tenant_id', GLOBAL_TENANT_ID)
     .maybeSingle();
 
   if (error) {

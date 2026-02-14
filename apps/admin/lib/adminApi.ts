@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -11,6 +12,15 @@ function getSupabaseClient() {
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+/** In browser use cookie-based client (same as login) so session is found after admin login. */
+function getSessionClient() {
+  if (typeof window !== 'undefined') {
+    const browser = getSupabaseBrowser();
+    if (browser) return browser;
+  }
+  return getSupabaseClient();
 }
 
 /** Admin requests: identity from Bearer only; no x-user-id or userId query. */
@@ -1398,48 +1408,137 @@ export interface FetchPendingInstructorsResponse {
 }
 
 export async function fetchPendingInstructors(): Promise<FetchPendingInstructorsResponse> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
 
-  if (!session) {
-    throw new Error('No session found');
+  try {
+    if (useProxy) {
+      // Proxy uses server session (cookies via getServerSession); no client token needed
+      response = await fetch('/api/admin/instructors/pending', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session found');
+      response = await fetch(`${API_BASE_URL}/admin/instructors/pending`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error('Network error');
+    if (err.message === 'Failed to fetch' || (err as any).name === 'TypeError') {
+      const friendly = new Error('Impossibile contattare l\'API. Avvia l\'API (es. pnpm dev:instructor) e ricarica.');
+      (friendly as any).status = 0;
+      throw friendly;
+    }
+    throw err;
   }
-
-  const url = `${API_BASE_URL}/admin/instructors/pending`;
-  const response = await fetch(url, {
-    method: 'GET',
-    ...getAdminFetchOptions(session),
-  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch pending instructors');
-    const errorObj = new Error(message);
+    const { message } = parseAdminErrorBody(errorData, `Errore ${response.status}`);
+    let fullMessage = message;
+    if (response.status === 502) {
+      fullMessage = `${message}. Verifica che l'API sia avviata (es. pnpm dev:instructor).`;
+    } else if (response.status === 404) {
+      fullMessage = `Endpoint non trovato (404). L'app admin deve chiamare l'API sulla porta 3001: avvia l'API con \`pnpm dev:instructor\` e verifica che in .env dell'admin sia \`NEXT_PUBLIC_API_URL=http://localhost:3001\` (non la porta 3012).`;
+    }
+    const errorObj = new Error(fullMessage);
     (errorObj as any).status = response.status;
-    (errorObj as any).message = message;
+    (errorObj as any).message = fullMessage;
     throw errorObj;
   }
 
   return response.json();
 }
 
+// --- System Health (admin, system_admin only) ---
+
+export interface SystemHealthSnapshot {
+  emergency_disabled: boolean;
+  ai_global_enabled: boolean;
+  ai_whatsapp_enabled: boolean;
+  quota: {
+    channel: 'whatsapp';
+    limit: number | null;
+    used_today: number | null;
+    percentage: number | null;
+    status: 'ok' | 'exceeded' | 'not_configured';
+  };
+  activity_today: {
+    conversations_ai_eligible: number;
+    escalations: number;
+    drafts_generated: number;
+    drafts_sent: number;
+  };
+}
+
+export interface FetchSystemHealthResponse {
+  ok: true;
+  snapshot: SystemHealthSnapshot;
+}
+
+export async function fetchSystemHealth(): Promise<FetchSystemHealthResponse | null> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  try {
+    if (useProxy) {
+      response = await fetch('/api/admin/system-health', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      response = await fetch(`${API_BASE_URL}/admin/system-health`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+  const data = await response.json();
+  return data.ok && data.snapshot ? data : null;
+}
+
 export async function approveInstructor(
   instructorId: string,
   status: 'approved' | 'rejected'
 ): Promise<{ ok: true; instructor: { id: string; email: string | null; approval_status: string; created_at: string } }> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
 
-  if (!session) {
-    throw new Error('No session found');
+  if (useProxy) {
+    // Proxy uses server session (cookies); no client token needed
+    response = await fetch(`/api/admin/instructors/${instructorId}/approve`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/instructors/${instructorId}/approve`, {
+      method: 'POST',
+      ...getAdminFetchOptions(session),
+      body: JSON.stringify({ status }),
+    });
   }
-
-  const url = `${API_BASE_URL}/admin/instructors/${instructorId}/approve`;
-  const response = await fetch(url, {
-    method: 'POST',
-    ...getAdminFetchOptions(session),
-    body: JSON.stringify({ status }),
-  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-import AppShell from '@/components/shell/AppShell';
 import styles from './inbox.module.css';
 
 import {
@@ -14,9 +13,11 @@ import {
   getConversationDraft,
   useDraft,
   ignoreDraft,
+  patchConversationAiState,
   type InstructorConversation,
   type InstructorMessage,
   type ConversationDraft,
+  type ConversationAiState,
 } from '@/lib/instructorApi';
 import { usePolling } from '@/lib/usePolling';
 import { mergeConversations } from '@/lib/mergeConversations';
@@ -97,6 +98,12 @@ export default function HumanInboxPage() {
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const composerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const [aiStateByConversationId, setAiStateByConversationId] = useState<
+    Record<string, ConversationAiState | null>
+  >({});
+  const [aiStateLoading, setAiStateLoading] = useState(false);
+  const [aiStateError, setAiStateError] = useState<string | null>(null);
 
   const loadConversations = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -209,6 +216,11 @@ export default function HumanInboxPage() {
       if (id) setSelectedId(id);
     }
   }, [conversations, sp]);
+
+  // Clear AI state error when switching conversation
+  useEffect(() => {
+    setAiStateError(null);
+  }, [selectedId]);
 
   // Load messages when selected changes (with caching)
   useEffect(() => {
@@ -423,6 +435,36 @@ export default function HumanInboxPage() {
     }
   };
 
+  const handleTakeOver = useCallback(async () => {
+    if (!selectedId) return;
+    setAiStateError(null);
+    setAiStateLoading(true);
+    try {
+      await patchConversationAiState(selectedId, { ai_state: 'ai_paused_by_human' });
+      setAiStateByConversationId((prev) => ({ ...prev, [selectedId]: 'ai_paused_by_human' }));
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setAiStateError(err?.message ?? 'Failed to pause AI');
+    } finally {
+      setAiStateLoading(false);
+    }
+  }, [selectedId]);
+
+  const handleResumeAi = useCallback(async () => {
+    if (!selectedId) return;
+    setAiStateError(null);
+    setAiStateLoading(true);
+    try {
+      await patchConversationAiState(selectedId, { ai_state: 'ai_on' });
+      setAiStateByConversationId((prev) => ({ ...prev, [selectedId]: 'ai_on' }));
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setAiStateError(err?.message ?? 'Failed to resume AI');
+    } finally {
+      setAiStateLoading(false);
+    }
+  }, [selectedId]);
+
   const handleRetry = async (conversationId: string, tempId: string, text: string) => {
     setError(null);
 
@@ -465,26 +507,32 @@ export default function HumanInboxPage() {
     }
   };
 
-  return (
-    <AppShell>
-      <div className={styles.page}>
-        <div className={styles.topRow}>
-          <h1 className={styles.title}>Inbox</h1>
-        </div>
+  const isAuthError = error && (error.status === 401 || /UNAUTHORIZED|No session/i.test(error.message));
 
-        {error && (
-          <div className={styles.errorBanner}>
-            <div>
-              <strong>Problem:</strong> {error.message}
-              {error.status === 401 && (
-                <>
-                  {' '}
-                  <Link className={styles.errorLink} href="/instructor/login">
-                    Log in
-                  </Link>
-                </>
-              )}
-            </div>
+  return (
+    <div className={styles.page}>
+      <div className={styles.topRow}>
+        <div>
+          <h1 className={styles.title}>Inbox</h1>
+          <p className={styles.subtitle}>Conversazioni e messaggi</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className={styles.errorBanner}>
+          <div>
+            {isAuthError ? (
+              <>
+                Sessione scaduta o non autenticato.{' '}
+                <Link className={styles.errorLink} href="/instructor/login">
+                  Accedi
+                </Link>
+              </>
+            ) : (
+              error.message
+            )}
+          </div>
+          {!isAuthError && (
             <button
               type="button"
               className={styles.retryBtn}
@@ -492,26 +540,32 @@ export default function HumanInboxPage() {
             >
               Retry
             </button>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
+      {error ? (
+        <div className={styles.emptyList} style={{ marginTop: 8 }}>
+          Riprova sopra per caricare le conversazioni.
+        </div>
+      ) : (
         <div className={styles.twoCol}>
           <div className={styles.listPanel}>
             <div className={styles.searchWrap}>
               <input
                 type="search"
                 className={styles.searchInput}
-                placeholder="Search conversations..."
+                placeholder="Cerca conversazioni..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                aria-label="Search conversations"
+                aria-label="Cerca conversazioni"
               />
             </div>
 
             {listLoading ? (
-              <div className={styles.listLoading}>Loading conversations…</div>
+              <div className={styles.listLoading}>Caricamento conversazioni…</div>
             ) : filtered.length === 0 ? (
-              <div className={styles.emptyList}>No conversations</div>
+              <div className={styles.emptyList}>Nessuna conversazione</div>
             ) : (
               <ul className={styles.conversationList}>
                 {filtered.map((c) => (
@@ -547,6 +601,34 @@ export default function HumanInboxPage() {
                     {selectedConversation.channel} · Last activity{' '}
                     {formatLastActivity(selectedConversation.updatedAt)}
                   </div>
+                  <div className={styles.detailActions} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                      {aiStateByConversationId[selectedConversation.id] === 'ai_paused_by_human'
+                        ? 'AI paused'
+                        : aiStateByConversationId[selectedConversation.id] === 'ai_on'
+                          ? 'AI on'
+                          : 'AI: —'}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.inlineRetryBtn}
+                      disabled={aiStateLoading}
+                      onClick={() => void handleTakeOver()}
+                    >
+                      {aiStateLoading ? '…' : 'Take over'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.inlineRetryBtn}
+                      disabled={aiStateLoading}
+                      onClick={() => void handleResumeAi()}
+                    >
+                      Resume AI
+                    </button>
+                  </div>
+                  {aiStateError && (
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#b91c1c' }}>{aiStateError}</div>
+                  )}
                 </div>
 
                 <div className={styles.messagesWrap}>
@@ -676,11 +758,11 @@ export default function HumanInboxPage() {
                 </div>
               </>
             ) : (
-              <div className={styles.emptyDetail}>Select a conversation</div>
+              <div className={styles.emptyDetail}>Seleziona una conversazione</div>
             )}
           </div>
         </div>
-      </div>
-    </AppShell>
+      )}
+    </div>
   );
 }

@@ -40,6 +40,11 @@ export {
   setConversationAIModeAdmin,
 } from './conversation_service.js';
 export type { ResolveConversationForInboundMessageParams } from './conversation_service.js';
+export {
+  getConversationAiState,
+  setConversationAiState,
+} from './conversation_ai_state_repository.js';
+export type { ConversationAiState, SetConversationAiStateParams } from './conversation_ai_state_repository.js';
 
 // Inbound messages
 export {
@@ -50,18 +55,65 @@ export {
 export type { InboundMessage, InsertInboundMessageParams } from './inbound_messages_repository.js';
 
 // Booking
-export { updateBookingState } from './booking_repository.js';
+export {
+  createBooking,
+  getBookingById,
+  listInstructorBookings,
+  updateBookingState,
+  updateBooking,
+  updateBookingDetails,
+  updateBookingStatus,
+  deleteBooking,
+  getBookingInstructorId,
+  getConfirmedOrModifiedBookingsInRange,
+} from './booking_repository.js';
 export { BookingNotFoundError } from './booking_repository.js';
+export type { UpdateBookingDetailsPatch } from './booking_repository.js';
 export type { BookingState } from './booking_state_machine.js';
-export { InvalidBookingTransitionError, transitionBookingState } from './booking_state_machine.js';
+export {
+  InvalidBookingTransitionError,
+  transitionBookingState,
+  canTransition,
+  isTerminal,
+  isActive,
+} from './booking_state_machine.js';
 
 // Feature flags
 export { getFeatureFlag, isFeatureEnabled } from './feature_flag_repository.js';
+
+// Booking expiry (read + apply pending→declined if expired)
+export { getBookingByIdWithExpiryCheck } from './booking_expiry.js';
+
+// AI booking suggestion context (read-only: availability, busySlots, recentBookings)
+export { getAIBookingSuggestionContext } from './ai_booking_suggestion_repository.js';
+export type { AIBookingSuggestionContext } from './ai_booking_suggestion_repository.js';
+
+// Customer profiles & notes (instructor-scoped)
+export {
+  listInstructorCustomers,
+  getCustomerById,
+  upsertCustomer,
+  computeCustomerValueScore,
+} from './customer_profile_repository.js';
+export type { CustomerProfileRow, CustomerProfileListItem } from './customer_profile_repository.js';
+export {
+  listNotesByCustomerId,
+  createCustomerNote,
+} from './customer_notes_repository.js';
+export type { CustomerNoteRow } from './customer_notes_repository.js';
+export { countBookingsByCustomerId, getCustomerStats } from './customer_repository.js';
+
+// Booking audit (state change log)
+export { recordBookingAudit } from './booking_audit.js';
+export type { RecordBookingAuditParams } from './booking_audit.js';
 
 // Booking lifecycle
 export { getBookingLifecycle } from './booking_lifecycle_repository.js';
 export { getBookingLifecycleAdmin } from './booking_lifecycle_service.js';
 export type { BookingLifecycleEvent, BookingLifecycleEventType } from './booking_lifecycle_repository.js';
+
+// Booking timeline (decision/audit read-only)
+export { getBookingTimeline } from './booking_timeline_repository.js';
 
 // AI snapshot
 export {
@@ -132,6 +184,7 @@ export {
   createInstructorProfile,
   updateInstructorProfile,
   updateInstructorProfileByUserId,
+  updateInstructorProfileByUserIdExtended,
   completeInstructorOnboarding,
 } from './instructor_profile_repository.js';
 export type {
@@ -139,7 +192,12 @@ export type {
   UpdateInstructorProfileParams,
   CreateInstructorProfileParams,
   UpdateInstructorProfileByUserIdParams,
+  UpdateInstructorProfileByUserIdExtendedParams,
 } from './instructor_profile_repository.js';
+
+// Instructor dashboard (read-only aggregated data)
+export { getInstructorDashboardData } from './instructor_dashboard_repository.js';
+export type { InstructorDashboardData } from './instructor_dashboard_repository.js';
 
 // Instructor availability (repository)
 export {
@@ -160,6 +218,109 @@ export type {
   UpdateInstructorAvailabilityParams,
 } from './instructor_availability_repository.js';
 
+// Availability vs calendar conflicts (read-only)
+export { listAvailabilityCalendarConflicts } from './availability_conflict_repository.js';
+export type { AvailabilityCalendarConflict } from './availability_conflict_repository.js';
+
+// Calendar conflicts (read-only, for instructor calendar UI)
+export { getCalendarConflicts } from './calendar_conflict_repository.js';
+export type {
+  CalendarConflictDto,
+  GetCalendarConflictsParams,
+  ConflictSource,
+  ConflictProvider,
+} from './calendar_conflict_repository.js';
+
+// Availability overrides (date-specific add/remove)
+export { listAvailabilityOverridesInRange } from './availability_overrides_repository.js';
+export type { InstructorAvailabilityOverride } from './availability_overrides_repository.js';
+
+// Calendar connections (Google etc.)
+export {
+  getCalendarConnection,
+  upsertCalendarConnection,
+  updateCalendarConnectionSync,
+} from './calendar_connections_repository.js';
+export type { CalendarConnection, CalendarConnectionStatus } from './calendar_connections_repository.js';
+
+// Calendar events cache (list for instructor calendar UI)
+export { listInstructorEvents } from './calendar_events_cache_repository.js';
+export type { CalendarEventCache } from './calendar_events_cache_repository.js';
+
+// External busy blocks (mirror of Google busy events)
+export {
+  listExternalBusyBlocksInRange,
+  upsertExternalBusyBlock,
+  deleteExternalBusyBlocksByConnection,
+} from './external_busy_blocks_repository.js';
+export type { ExternalBusyBlock } from './external_busy_blocks_repository.js';
+
+// Sellable slots (core domain)
+export { computeSellableSlots, computeSellableSlotsFromInput } from './compute_sellable_slots.js';
+export type {
+  SellableSlot,
+  ComputeSellableSlotsParams,
+  ComputeSellableSlotsResult,
+  ExcludedRange,
+} from './compute_sellable_slots.js';
+
+// Instructor domain (types + Zod for API boundaries)
+export type {
+  InstructorProfile as InstructorProfileDomain,
+  InstructorService as InstructorServiceDomain,
+  AvailabilityWindow,
+  AvailabilityOverride as AvailabilityOverrideDomain,
+  ExternalBusyBlock as ExternalBusyBlockDomain,
+  InstructorAIConfig,
+  ComputeSellableSlotsInput,
+} from './instructor_domain.js';
+export {
+  instructorProfileStatusSchema,
+  instructorProfileSchema,
+  lessonTypeSchema,
+  instructorServiceSchema,
+  availabilityWindowSchema,
+  availabilityOverrideSchema,
+  externalBusyBlockSchema,
+  escalationModeSchema,
+  instructorAIConfigSchema,
+  sellableSlotSchema,
+  computeSellableSlotsInputSchema,
+} from './instructor_domain.js';
+
+// Instructor profile definitive (JSONB shapes, assets, reviews, ai_versions)
+export {
+  getInstructorProfileDefinitiveByUserId,
+  patchInstructorProfileByUserId,
+  listInstructorReviews,
+  listInstructorAssets,
+} from './instructor_profile_definitive_repository.js';
+export type { InstructorProfileDefinitiveRow } from './instructor_profile_definitive_repository.js';
+export type {
+  InstructorProfileDefinitive,
+  InstructorAsset,
+  InstructorReviewDefinitive,
+  InstructorAiConfigVersion,
+  MarketingFields,
+  OperationalFields,
+  PricingConfig,
+  AiConfigProfile,
+  Compliance,
+  PatchProfileBody,
+} from './instructor_profile_definitive_domain.js';
+export {
+  marketingFieldsSchema,
+  operationalFieldsSchema,
+  pricingConfigSchema,
+  aiConfigProfileSchema,
+  complianceSchema,
+  instructorProfileDefinitiveSchema,
+  instructorAssetSchema,
+  instructorReviewDefinitiveSchema,
+  instructorAiConfigVersionSchema,
+  patchProfileBodySchema,
+} from './instructor_profile_definitive_domain.js';
+
 // Instructor services (repository)
 export {
   getInstructorServices,
@@ -172,6 +333,18 @@ export type {
   CreateInstructorServiceParams,
   UpdateInstructorServiceParams,
 } from './instructor_services_repository.js';
+
+// Instructor meeting points (repository)
+export {
+  listInstructorMeetingPoints,
+  createInstructorMeetingPoint,
+  updateInstructorMeetingPoint,
+} from './instructor_meeting_points_repository.js';
+export type {
+  InstructorMeetingPoint,
+  CreateInstructorMeetingPointParams,
+  UpdateInstructorMeetingPointParams,
+} from './instructor_meeting_points_repository.js';
 
 // Instructor guardrails (repository)
 export { getInstructorGuardrails, updateInstructorGuardrails } from './instructor_guardrails_repository.js';
@@ -191,6 +364,29 @@ export type {
 // Instructor inbox (repository — read-only)
 export { getInstructorInbox } from './instructor_inbox_repository.js';
 export type { InstructorInboxItem } from './instructor_inbox_repository.js';
+
+// Instructor policy document (one row per instructor, versioned, audit on PATCH)
+export {
+  getInstructorPolicyDocument,
+  patchInstructorPolicyDocument,
+} from './instructor_policy_document_repository.js';
+export type {
+  InstructorPolicyDocumentRow,
+  PatchInstructorPolicyDocumentParams,
+} from './instructor_policy_document_repository.js';
+export {
+  policyStructuredSchema,
+  instructorPolicyDocumentSchema,
+  patchInstructorPolicyBodySchema,
+  mergeStructured,
+} from './instructor_policy_domain.js';
+export type {
+  PolicyStructured,
+  InstructorPolicyDocument,
+  PatchInstructorPolicyBody,
+} from './instructor_policy_domain.js';
+export { buildPolicyContext } from './instructor_policy_context.js';
+export type { PolicyContext } from './instructor_policy_context.js';
 
 // Audit log (append-only)
 export { insertAuditEvent, listAuditLog } from './audit_log_repository.js';

@@ -4,6 +4,7 @@ import {
   getInstructorAvailability,
   upsertInstructorAvailability,
   toggleInstructorAvailability,
+  listAvailabilityCalendarConflicts,
   InstructorAvailabilityNotFoundError,
 } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
@@ -66,6 +67,34 @@ export async function instructorAvailabilityRoutes(app: FastifyInstance): Promis
     if (!profile.onboarding_completed_at) return { code: 'ONBOARDING_REQUIRED' as const, profile: null };
     return { code: 'OK' as const, profile };
   }
+
+  // GET /instructor/availability/conflicts — list availability vs calendar conflicts (must be before /instructor/availability)
+  app.get('/instructor/availability/conflicts', async (request, reply) => {
+    try {
+      const userId = await getUserIdFromJwt(request);
+      const { code, profile } = await requireOnboarded(userId);
+      if (code === 'NOT_FOUND') {
+        return reply.status(404).send({
+          ok: false,
+          error: { code: ERROR_CODES.NOT_FOUND },
+          message: 'Profile not found',
+        });
+      }
+      if (code === 'ONBOARDING_REQUIRED') {
+        return reply.status(403).send({
+          ok: false,
+          error: { code: ERROR_CODES.ONBOARDING_REQUIRED },
+          message: 'Onboarding must be completed to view conflicts',
+        });
+      }
+      const items = await listAvailabilityCalendarConflicts(profile!.id);
+      return reply.send({ ok: true, items });
+    } catch (error) {
+      // Always return 200 + empty list so the Conflicts page loads; log error for debugging
+      request.log?.warn?.({ err: error }, 'availability/conflicts: error, returning empty list');
+      return reply.send({ ok: true, items: [] });
+    }
+  });
 
   app.get('/instructor/availability', async (request, reply) => {
     try {

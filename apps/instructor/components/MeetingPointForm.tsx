@@ -313,6 +313,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
           value={what3words}
           onChange={(e) => setWhat3words(e.target.value)}
           disabled={loading}
+          placeholder="es. tavolo.lampada.sedia"
           style={{
             width: '100%',
             padding: '0.5rem',
@@ -329,6 +330,10 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             e.currentTarget.style.outline = 'none';
           }}
         />
+        <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+          Codice a tre parole per il punto esatto (3×3 m). Trovalo su{' '}
+          <a href="https://what3words.com" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>what3words.com</a> o nell’app — utile da comunicare al cliente.
+        </p>
       </div>
 
       <div style={{ marginBottom: '1rem' }}>

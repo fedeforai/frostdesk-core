@@ -6,16 +6,19 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --watch"
+    "dev": "tsup src/index.ts --format esm,cjs --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "@frostdesk/ai": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
     "postgres": "^3.4.8",
-    "@supabase/supabase-js": "^2.39.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.0"
   }
 }

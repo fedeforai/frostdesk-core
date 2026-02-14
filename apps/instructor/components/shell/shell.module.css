@@ -1,10 +1,118 @@
 .shell {
-  display: grid;
-  grid-template-columns: 280px 1fr;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
+.header {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #0f172a;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  color: rgba(226, 232, 240, 0.92);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hamburger:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Hamburger → X when menu is open */
+.hamburgerOpen .hamburgerLine:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburgerOpen .hamburgerLine:nth-child(2) {
+  opacity: 0;
+}
+.hamburgerOpen .hamburgerLine:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.hamburgerLine {
+  display: block;
+  height: 2px;
+  width: 100%;
+  max-width: 20px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.headerTitle {
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.headerSub {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+  margin-left: 4px;
+}
+
+.headerProfileLink {
+  margin-left: auto;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.95);
+  text-decoration: none;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 8px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.headerProfileLink:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(148, 163, 184, 0.5);
+  color: #fff;
+}
+
 .main {
+  flex: 1;
   padding: 24px;
   overflow: auto;
+  background: #0b1220;
+  color: #e5e7eb;
+  min-width: 0;
+  border-radius: 0;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s, visibility 0.2s, pointer-events 0s 0.2s;
+}
+
+.overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.2s, visibility 0.2s;
 }

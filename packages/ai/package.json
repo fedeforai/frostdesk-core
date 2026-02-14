@@ -11,6 +11,7 @@
     "dev": "tsup src/index.ts --watch"
   },
   "dependencies": {
+    "openai": "^4.77.0",
     "tsup": "^8.5.1"
   },
   "devDependencies": {
