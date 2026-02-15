@@ -8,6 +8,7 @@ import { instructorRoutes } from './routes/instructor.js';
 import { registerRateLimit } from './middleware/rate_limit.js';
 import { registerErrorHandler } from './middleware/error_handler.js';
 import { registerRequestId } from './middleware/request_id.js';
+import { logRequest } from './lib/logger.js';
 
 export async function buildServer() {
   const fastify = Fastify({
@@ -23,6 +24,22 @@ export async function buildServer() {
 
   // Request ID propagation (x-request-id or generated UUID) for audit and tracing
   await registerRequestId(fastify);
+
+  // Loop A: Structured request logging (onResponse hook)
+  fastify.addHook('onResponse', (request, reply, done) => {
+    try {
+      logRequest({
+        request_id: (request as any).id ?? '',
+        route: request.routeOptions?.url ?? request.url,
+        method: request.method,
+        instructor_id: (request as any).instructorId ?? null,
+        latency_ms: Math.round(reply.elapsedTime),
+        status_code: reply.statusCode,
+        error_code: reply.statusCode >= 400 ? `HTTP_${reply.statusCode}` : null,
+      });
+    } catch { /* logger must never throw */ }
+    done();
+  });
 
   await fastify.register(healthRoutes);
   await fastify.register(inboundRoutes);

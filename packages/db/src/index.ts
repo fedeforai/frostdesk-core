@@ -46,6 +46,12 @@ export {
 } from './conversation_ai_state_repository.js';
 export type { ConversationAiState, SetConversationAiStateParams } from './conversation_ai_state_repository.js';
 
+// Conversation ↔ Customer linking (CM-2)
+export {
+  linkConversationToCustomer,
+  getConversationCustomerId,
+} from './conversation_customer_link.js';
+
 // Inbound messages
 export {
   findInboundMessageByExternalId,
@@ -88,10 +94,14 @@ export { getBookingByIdWithExpiryCheck } from './booking_expiry.js';
 export { getAIBookingSuggestionContext } from './ai_booking_suggestion_repository.js';
 export type { AIBookingSuggestionContext } from './ai_booking_suggestion_repository.js';
 
+// Phone normalization (E.164)
+export { normalizePhoneE164 } from './phone_normalize.js';
+
 // Customer profiles & notes (instructor-scoped)
 export {
   listInstructorCustomers,
   getCustomerById,
+  findCustomerByPhone,
   upsertCustomer,
   computeCustomerValueScore,
 } from './customer_profile_repository.js';
@@ -440,3 +450,53 @@ export type {
   PendingInstructor,
   InstructorApprovalRow,
 } from './instructor_approval_repository.js';
+
+// Loop B: AI usage telemetry
+export {
+  insertAiUsageEvent,
+  getAiUsageSummary,
+  getAiUsageByInstructor,
+  getAiUsageByConversation,
+  getAiCostSpikes,
+  getAiCostSummary,
+} from './ai_usage_repository.js';
+export type {
+  InsertAiUsageEventParams,
+  AiUsageWindow,
+  AiUsageSummary,
+  InstructorAiUsage,
+  ConversationAiUsage,
+  AiCostSpike,
+  AiCostSummary,
+} from './ai_usage_repository.js';
+
+// Loop C: Customer booking context (read-only suggestion memory)
+export { getLastCompletedBookingContext } from './customer_booking_context.js';
+export type { CustomerBookingContext } from './customer_booking_context.js';
+
+// Rolling Summary (token control)
+export {
+  getConversationSummary,
+  getMessageCountSinceLastSummary,
+  getRecentMessagesForSummary,
+  updateConversationSummary,
+} from './conversation_summary_repository.js';
+export type {
+  ConversationSummary,
+  UpdateConversationSummaryParams,
+} from './conversation_summary_repository.js';
+
+export {
+  shouldUpdateSummary,
+  estimateTokens,
+  MESSAGE_THRESHOLD,
+  TOKEN_BUDGET_SOFT_LIMIT,
+} from './summary_policy.js';
+export type {
+  SummaryPolicyInput,
+  SummaryPolicyOutput,
+  SummaryTriggerReason,
+} from './summary_policy.js';
+
+export { generateSummary } from './summary_generator.js';
+export type { SummaryInput, SummaryOutput } from './summary_generator.js';

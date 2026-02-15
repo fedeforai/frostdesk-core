@@ -67,6 +67,7 @@ export async function classifyIntent(input: {
         /(cambia|change|modifica|sposta|posticipa|anticipa).*(prenot|booking|lesson|lezione|data|orario)/i,
         /(reschedule|riprogramma|riprogrammare)/i,
         /(altro giorno|altra data|altro orario)/i,
+        /(move|postpone|bring forward|push back).*(lesson|booking|session|class|appointment)/i,
       ],
       baseConfidence: 0.85,
     },
@@ -77,17 +78,21 @@ export async function classifyIntent(input: {
         /(prenota|prenotare|prenotazione|booking)/i,
         /(disponibil|availability|libero|free).*(giorno|day|data|date)/i,
         /(quando|when).*(posso|puoi|possiamo).*(fare|prenotare|prenotare)/i,
+        /(want|would like|i'd like|like to).*(lesson|booking|session|class)/i,
+        /(book|reserve).*(lesson|session|class|instructor)/i,
+        /\b(private|group)\s+(ski|snowboard)?\s*(lesson|session|class)\b/i,
       ],
       baseConfidence: 0.8,
     },
     {
       intent: 'INFO_REQUEST',
       patterns: [
-        /(quanto costa|how much|prezzo|price|tariffa)/i,
+        /(quanto costa|how much|prezzo|price|tariffa|rates?|pricing|fee)/i,
         /(info|informazioni|information|dettagli|details)/i,
         /(cosa|what).*(offri|offer|servizi|services)/i,
         /(dove|where).*(sei|are you|location|posizione)/i,
         /(come|how).*(funziona|works|prenotare|book)/i,
+        /(do you).*(teach|offer|do|have).*(lesson|class|session|course)/i,
       ],
       baseConfidence: 0.75,
     },
@@ -110,12 +115,15 @@ export async function classifyIntent(input: {
     }
   }
 
-  // If no strong match, default to INFO_REQUEST with lower confidence
+  // If no strong match, default with fallback logic
   if (bestConfidence < 0.6) {
-    // Check if it's clearly a booking request
-    if (/(prenot|booking|lesson|lezione)/i.test(text)) {
+    // Check if it's clearly a booking request (keyword fallback)
+    if (/(prenot|booking|lesson|lezione|session|class)/i.test(text)) {
       bestIntent = 'NEW_BOOKING';
-      bestConfidence = 0.65;
+      bestConfidence = 0.76; // Above INTENT_MIN_DRAFT (0.75) so drafts can be generated
+    } else if (/(rate|price|cost|info|how much|quanto)/i.test(text)) {
+      bestIntent = 'INFO_REQUEST';
+      bestConfidence = 0.76;
     } else {
       bestIntent = 'INFO_REQUEST';
       bestConfidence = 0.6;

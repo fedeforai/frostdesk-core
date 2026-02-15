@@ -4,6 +4,10 @@ export interface GenerateAIReplyInput {
   lastMessageText: string;
   language?: string;
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  /** Loop C: customer context injected into system prompt. */
+  customerContext?: string | null;
+  /** Loop C: detected language code for reply language. */
+  detectedLanguage?: string | null;
 }
 
 export interface GenerateAIReplyOutput {

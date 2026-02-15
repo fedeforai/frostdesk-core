@@ -7,6 +7,9 @@ import {
   persistInboundMessageWithInboxBridge,
   orchestrateInboundDraft,
   insertAuditEvent,
+  upsertCustomer,
+  linkConversationToCustomer,
+  normalizePhoneE164,
 } from '@frostdesk/db';
 
 /**
@@ -151,19 +154,28 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       }
 
       // Normalize WhatsApp message to canonical format
+      // CM-1: Normalize phone to E.164 to prevent duplicate customers/conversations.
+      // WhatsApp may send "447712345021" or "+447712345021" — both must resolve to same identity.
       const normalizedMessage = {
         external_id: message.id,
         channel: 'whatsapp' as const,
-        sender_identifier: message.from,
+        sender_identifier: normalizePhoneE164(message.from) ?? message.from,
         text: message.text.body,
         received_at: new Date(Number(message.timestamp) * 1000),
       };
 
-      // Resolve conversation by channel and customer identifier
+      // Resolve conversation by channel and customer identifier.
+      // Use DEFAULT_INSTRUCTOR_ID (UUID) from env so the right instructor sees messages in Inbox; else fallback to 1.
+      const defaultInstructorId = process.env.DEFAULT_INSTRUCTOR_ID?.trim();
+      const instructorIdForConversation =
+        defaultInstructorId && /^[0-9a-fA-F-]{36}$/.test(defaultInstructorId)
+          ? defaultInstructorId
+          : 1;
+
       const conversation = await resolveConversationByChannel(
         'whatsapp',
         normalizedMessage.sender_identifier,
-        1 // Default instructor_id
+        instructorIdForConversation
       );
 
       // Fail-fast: resolved conversation must have a valid UUID id
@@ -181,6 +193,41 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
             message: normalized.message || 'Resolved conversation has no valid id',
           },
         });
+      }
+
+      // CM-2: Upsert customer profile and link to conversation (fail-open)
+      try {
+        const instructorIdStr =
+          typeof instructorIdForConversation === 'string'
+            ? instructorIdForConversation
+            : '00000000-0000-0000-0000-000000000001';
+
+        const customer = await upsertCustomer({
+          instructorId: instructorIdStr,
+          phoneNumber: normalizedMessage.sender_identifier,
+          source: 'whatsapp',
+        });
+
+        const linked = await linkConversationToCustomer(conversationId, customer.id);
+        if (linked) {
+          try {
+            await insertAuditEvent({
+              actor_type: 'system',
+              actor_id: null,
+              action: 'customer_linked',
+              entity_type: 'conversation',
+              entity_id: conversationId,
+              severity: 'info',
+              payload: {
+                customer_id: customer.id,
+                phone: normalizedMessage.sender_identifier,
+                source: 'whatsapp_ingestion',
+              },
+            });
+          } catch { /* audit fail-open */ }
+        }
+      } catch (linkErr) {
+        request.log.warn({ err: linkErr }, 'Customer linking failed (non-fatal)');
       }
 
       // PILOT MODE v1: message_type intentionally removed. Direction + channel are sufficient.
@@ -225,7 +272,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
 
       // F2.4.1: Orchestrate AI classification and draft generation (idempotent)
       try {
-        await orchestrateInboundDraft({
+        const orchResult = await orchestrateInboundDraft({
           conversationId: conversationId,
           externalMessageId: normalizedMessage.external_id,
           messageText: normalizedMessage.text,
@@ -233,10 +280,23 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           language: 'it', // TODO: detect from message or payload
           requestId: request.id ?? null,
         });
-      } catch (error) {
+
+        // Loop A: Log AI span telemetry (fail-open)
+        try {
+          const { logAiSpan } = await import('../lib/logger.js');
+          logAiSpan({
+            request_id: (request as any).id ?? null,
+            conversation_id: conversationId,
+            task: 'intent_classification',
+            model: orchResult.timedOut ? 'timeout-fallback' : 'stub-v1',
+            latency_ms: orchResult.classificationElapsedMs ?? 0,
+            timed_out: orchResult.timedOut ?? false,
+            confidence_band: orchResult.confidenceBand ?? null,
+          });
+        } catch { /* telemetry is best-effort */ }
+      } catch {
         // Orchestration failure should not break webhook response
         // Log error but return 200 OK (message was persisted)
-        console.error('[WEBHOOK WHATSAPP] Draft orchestration failed:', error);
       }
 
       return reply.status(200).send({ ok: true });

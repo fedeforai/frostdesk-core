@@ -28,6 +28,9 @@ export interface AISnapshot {
   intent_confidence?: number | null;
   model: string;
   created_at: string;
+  // Loop A: computed in-memory, NOT persisted as DB columns (no schema change).
+  confidence_band?: string | null;
+  timed_out?: boolean;
 }
 
 export interface InsertAISnapshotParams {
@@ -40,6 +43,11 @@ export interface InsertAISnapshotParams {
   intent?: 'NEW_BOOKING' | 'RESCHEDULE' | 'CANCEL' | 'INFO_REQUEST' | null;
   intent_confidence?: number | null;
   model: string;
+  /** Optional: resolved automatically from conversation if omitted. */
+  instructor_id?: string | null;
+  // Loop A: in-memory enrichment. Not persisted to snapshot table (no migration).
+  confidence_band?: string | null;
+  timed_out?: boolean;
 }
 
 /**
@@ -65,6 +73,18 @@ export async function insertAISnapshot(
     return existing[0].id;
   }
 
+  // Resolve instructor_id from conversation if not provided
+  let instructorId = params.instructor_id ?? null;
+  if (!instructorId) {
+    const convRow = await sql<Array<{ instructor_id: string }>>`
+      SELECT instructor_id::text FROM conversations WHERE id = ${params.conversation_id}::uuid LIMIT 1
+    `;
+    instructorId = convRow.length > 0 ? convRow[0].instructor_id : null;
+  }
+  if (!instructorId) {
+    throw new Error(`Cannot resolve instructor_id for conversation ${params.conversation_id}`);
+  }
+
   // Insert new snapshot (classification only; no decision fields persisted)
   const relevanceReason = params.relevance_reason ?? null;
   const result = await Promise.resolve(
@@ -72,6 +92,7 @@ export async function insertAISnapshot(
     INSERT INTO ai_snapshots (
       message_id,
       conversation_id,
+      instructor_id,
       channel,
       relevant,
       relevance_confidence,
@@ -83,6 +104,7 @@ export async function insertAISnapshot(
     ) VALUES (
       ${params.message_id}::uuid,
       ${params.conversation_id}::uuid,
+      ${instructorId}::uuid,
       ${params.channel},
       ${params.relevant},
       ${params.relevance_confidence},

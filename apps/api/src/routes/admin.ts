@@ -383,4 +383,12 @@ export async function adminRoutes(fastify: FastifyInstance) {
 
   // Register admin instructor approval (pending list + approve/reject)
   await adminInstructorApprovalRoutes(fastify);
+
+  // Loop B: AI telemetry & cost metrics
+  const { adminAiMetricsRoutes } = await import('./admin/ai_metrics.js');
+  await adminAiMetricsRoutes(fastify);
+
+  // AI cost dashboard (enriched cost tracking)
+  const { adminAiCostRoutes } = await import('./admin/ai_cost.js');
+  await adminAiCostRoutes(fastify);
 }

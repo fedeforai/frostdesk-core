@@ -10,3 +10,11 @@ export { decideByConfidence, type ConfidenceDecisionInput, type ConfidenceDecisi
 export { decideBooking, type DecideBookingInput, type DecideBookingOutput, type DecideBookingAction } from './bookingDecision.js';
 export { escalationGate, type EscalationGateInput, type EscalationGateOutput } from './escalationGate.js';
 export { resolveDraftEligibility, type DraftEligibilityInput, type DraftEligibilityOutput } from './draftEligibilityResolver.js';
+
+// Loop A: AI Router + Confidence Band + Timeout
+export { runAiTask, getTaskTier, type AiTaskType, type AiModelTier, type AiTaskParams, type AiTaskResult, type AiUsageEvent, type AiErrorCode, type SummaryGenerationOutput } from './ai_router.js';
+export { mapConfidenceToBand, bandAllowsDraft, bandRequiresEscalation, type ConfidenceBand } from './confidence_band.js';
+export { withTimeout, AI_TIMEOUT, type TimeoutResult } from './ai_timeout.js';
+
+// Loop C: Customer context prompt builder
+export { buildCustomerContextPrompt, type CustomerContextInput } from './customer_context_prompt.js';

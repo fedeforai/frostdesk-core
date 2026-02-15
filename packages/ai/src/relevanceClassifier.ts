@@ -90,17 +90,19 @@ export async function classifyRelevance(input: {
   // Relevant patterns (domain-specific keywords)
   const relevantKeywords = [
     // Booking-related
-    'prenot', 'booking', 'reserv', 'prenota', 'prenotazione',
+    'prenot', 'booking', 'reserv', 'prenota', 'prenotazione', 'book',
     'lesson', 'lezione', 'corso', 'course',
     'sci', 'ski', 'snowboard',
     'instructor', 'istruttore', 'maestro',
     'schedule', 'orario', 'disponibil', 'availability',
-    'price', 'prezzo', 'cost', 'costo',
+    'price', 'prezzo', 'cost', 'costo', 'rate', 'tariffa',
     'cancel', 'cancella', 'annulla',
-    'change', 'cambia', 'modifica', 'reschedule',
+    'change', 'cambia', 'modifica', 'reschedule', 'move', 'spost',
     'info', 'informazioni', 'information',
     'when', 'quando', 'where', 'dove',
     'how much', 'quanto costa',
+    'meeting point', 'punto di ritrovo',
+    'private', 'privat', 'group', 'gruppo',
   ];
 
   let relevanceScore = 0;
@@ -114,10 +116,10 @@ export async function classifyRelevance(input: {
   }
 
   // Normalize confidence (0-1 range, capped at 0.95)
-  const relevanceConfidence = Math.min(0.95, Math.min(1.0, relevanceScore / 2));
+  const relevanceConfidence = Math.min(0.95, relevanceScore);
 
-  // Threshold: relevanceConfidence >= 0.6 means relevant
-  const relevant = relevanceConfidence >= 0.6;
+  // Threshold: relevanceConfidence >= 0.3 means relevant (a single domain keyword is a signal)
+  const relevant = relevanceConfidence >= 0.3;
 
   if (!relevant) {
     return {
