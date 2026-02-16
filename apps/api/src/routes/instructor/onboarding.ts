@@ -6,7 +6,7 @@ import {
   setInstructorOnboardingStatusCompleted,
   setInstructorOnboardingStatusInProgress,
 } from '@frostdesk/db';
-import { getAuthUserFromJwt } from '../../lib/auth_instructor.js';
+import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
@@ -38,7 +38,8 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
     };
   }>('/instructor/onboarding/draft', async (request, reply) => {
     try {
-      const { id: userId, email } = await getAuthUserFromJwt(request);
+      const userId = await getUserIdFromJwt(request);
+      const email = ''; // getUserIdFromJwt returns only the ID
       const body = request.body ?? {};
       let existing: Awaited<ReturnType<typeof getInstructorProfileForDraft>> = null;
       try {
@@ -109,7 +110,7 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
     };
   }>('/instructor/onboarding/complete', async (request, reply) => {
     try {
-      const { id: userId, email } = await getAuthUserFromJwt(request);
+      const userId = await getUserIdFromJwt(request);
       const body = request.body ?? {};
       const full_name = isNonEmptyString(body.full_name) ? body.full_name.trim() : '';
       const base_resort = isNonEmptyString(body.base_resort) ? body.base_resort.trim() : '';
@@ -132,7 +133,7 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
 
       await upsertInstructorOnboardingComplete({
         userId,
-        contactEmail: email ?? '',
+        contactEmail: '', // email retrieval deferred until route re-enabled
         full_name,
         base_resort,
         working_language,
