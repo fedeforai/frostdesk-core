@@ -10,6 +10,10 @@ import {
   computeEffectiveState,
   getInstructorDraftKpiSummary,
   InstructorDraftNotFoundError,
+  orchestrateInboundDraft,
+  getSuggestedActionsForConversation,
+  sql,
+  insertAuditEvent,
 } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -81,9 +85,12 @@ export async function instructorDraftRoutes(app: FastifyInstance): Promise<void>
           message: 'Not authorized',
         });
       }
-      const draft = await getActiveDraftForConversation({ conversationId, instructorId });
+      const [draft, suggestedActions] = await Promise.all([
+        getActiveDraftForConversation({ conversationId, instructorId }),
+        getSuggestedActionsForConversation(conversationId, instructorId),
+      ]);
       if (!draft) {
-        return reply.send({ ok: true, draft: null });
+        return reply.send({ ok: true, draft: null, suggested_actions: suggestedActions });
       }
       const effectiveState = computeEffectiveState(draft);
       return reply.send({
@@ -97,6 +104,7 @@ export async function instructorDraftRoutes(app: FastifyInstance): Promise<void>
           createdAt: draft.created_at,
           expiresAt: draft.expires_at,
         },
+        suggested_actions: suggestedActions,
       });
     } catch (error) {
       const normalized = normalizeError(error);
@@ -264,6 +272,105 @@ export async function instructorDraftRoutes(app: FastifyInstance): Promise<void>
           ignored: drafts.ignored,
           expired: drafts.expired,
           usageRate: drafts.usageRate,
+        },
+      });
+    } catch (error) {
+      const normalized = normalizeError(error);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
+    }
+  });
+
+  // POST /instructor/conversations/:id/draft/regenerate
+  // Re-runs AI classification + draft generation on the last inbound message.
+  app.post<{ Params: { id: string } }>('/instructor/conversations/:id/draft/regenerate', async (request, reply) => {
+    try {
+      const userId = await getUserIdFromJwt(request);
+      const profile = await getInstructorProfileByUserId(userId);
+      if (!profile) {
+        return reply.status(404).send({ ok: false, error: { code: ERROR_CODES.NOT_FOUND }, message: 'Instructor profile not found' });
+      }
+      if (!profile.onboarding_completed_at) {
+        return reply.status(403).send({ ok: false, error: { code: ERROR_CODES.ONBOARDING_REQUIRED }, message: 'Not authorized' });
+      }
+
+      const conversationId = request.params.id;
+      if (!conversationId || !UUID_REGEX.test(conversationId)) {
+        return reply.status(400).send({ ok: false, error: { code: ERROR_CODES.INVALID_PAYLOAD }, message: 'Invalid conversation id' });
+      }
+
+      // Ownership check
+      const conv = await getConversationById(conversationId);
+      if (!conv || String(conv.instructor_id) !== profile.id) {
+        return reply.status(403).send({ ok: false, error: { code: ERROR_CODES.ADMIN_ONLY }, message: 'Not authorized' });
+      }
+
+      // Find the last inbound message for this conversation
+      const lastInbound = await sql<Array<{ id: string; external_message_id: string; message_text: string }>>`
+        SELECT id, external_message_id, message_text
+        FROM messages
+        WHERE conversation_id = ${conversationId}::uuid AND direction = 'inbound'
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+      if (lastInbound.length === 0) {
+        return reply.status(404).send({ ok: false, error: { code: ERROR_CODES.NOT_FOUND }, message: 'No inbound messages in conversation' });
+      }
+
+      const msg = lastInbound[0];
+
+      // Expire existing proposed draft so orchestrator can create a fresh one
+      await sql`
+        UPDATE ai_drafts
+        SET state = 'ignored', ignored_at = now(), last_event_at = now()
+        WHERE conversation_id = ${conversationId}::uuid AND instructor_id = ${profile.id}::uuid AND state = 'proposed'
+      `;
+
+      // Delete existing AI snapshot for this message so orchestrator re-classifies
+      await sql`DELETE FROM ai_snapshots WHERE message_id = ${msg.id}::uuid`.catch(() => {});
+
+      // Re-run the orchestrator
+      const result = await orchestrateInboundDraft({
+        conversationId,
+        externalMessageId: msg.external_message_id,
+        messageText: msg.message_text,
+        channel: 'whatsapp',
+      });
+
+      // Audit event for regenerate
+      try {
+        await insertAuditEvent({
+          actor_type: 'instructor',
+          actor_id: profile.id,
+          action: 'ai_draft_regenerated',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          severity: 'info',
+          payload: { snapshotId: result.snapshotId, draftGenerated: result.draftGenerated },
+        });
+      } catch { /* fail-open */ }
+
+      // Fetch the new draft
+      const draft = await getActiveDraftForConversation({ conversationId, instructorId: profile.id });
+      if (!draft) {
+        return reply.send({ ok: true, draft: null, regenerated: true });
+      }
+      const effectiveState = computeEffectiveState(draft);
+      return reply.send({
+        ok: true,
+        regenerated: true,
+        draft: {
+          id: draft.id,
+          conversationId: draft.conversation_id,
+          state: draft.state,
+          effectiveState,
+          text: draft.draft_text,
+          createdAt: draft.created_at,
+          expiresAt: draft.expires_at,
         },
       });
     } catch (error) {

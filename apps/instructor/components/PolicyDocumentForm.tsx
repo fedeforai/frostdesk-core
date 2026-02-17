@@ -55,7 +55,7 @@ export default function PolicyDocumentForm({
   const updateStructured = <K extends keyof PolicyStructuredApi>(
     key: K,
     field: string,
-    value: number | string | boolean | undefined
+    value: number | string | boolean | string[] | undefined
   ) => {
     setStructured((prev) => ({
       ...prev,
@@ -91,10 +91,10 @@ export default function PolicyDocumentForm({
         <div
           style={{
             padding: '0.75rem',
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
             borderRadius: '0.5rem',
-            color: '#991b1b',
+            color: 'rgba(252, 165, 165, 0.95)',
             fontSize: '0.875rem',
           }}
         >
@@ -106,17 +106,17 @@ export default function PolicyDocumentForm({
         <fieldset
           key={key}
           style={{
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.5rem',
             padding: '1rem',
           }}
         >
-          <legend style={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+          <legend style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'rgba(226, 232, 240, 0.95)' }}>
             {SECTION_LABELS[key]}
           </legend>
           {key === 'cancellation' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Notice (hours):{' '}
                 <input
                   type="number"
@@ -129,9 +129,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Refund % before notice:{' '}
                 <input
                   type="number"
@@ -145,9 +152,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Refund % after:{' '}
                 <input
                   type="number"
@@ -161,9 +175,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -172,14 +193,21 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('cancellation', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
           )}
           {key === 'no_show' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Charge %:{' '}
                 <input
                   type="number"
@@ -193,9 +221,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Grace (minutes):{' '}
                 <input
                   type="number"
@@ -208,9 +243,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -219,14 +261,21 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('no_show', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
           )}
           {key === 'weather' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Reschedule or refund:{' '}
                 <select
                   value={structured.weather?.reschedule_or_refund ?? ''}
@@ -239,6 +288,13 @@ export default function PolicyDocumentForm({
                         : (e.target.value as 'reschedule' | 'refund' | 'either')
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 >
                   <option value="">—</option>
                   <option value="reschedule">Reschedule</option>
@@ -246,7 +302,7 @@ export default function PolicyDocumentForm({
                   <option value="either">Either</option>
                 </select>
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -255,14 +311,21 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('weather', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
           )}
           {key === 'payment' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Currency (3 letters):{' '}
                 <input
                   type="text"
@@ -271,9 +334,16 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('payment', 'currency', e.target.value || undefined)
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Methods (comma-separated):{' '}
                 <input
                   type="text"
@@ -287,10 +357,17 @@ export default function PolicyDocumentForm({
                         : undefined
                     )
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -299,14 +376,21 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('payment', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
           )}
           {key === 'liability' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 <input
                   type="checkbox"
                   checked={structured.liability?.waiver_required ?? false}
@@ -316,7 +400,7 @@ export default function PolicyDocumentForm({
                 />
                 Waiver required
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -325,14 +409,21 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('liability', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
           )}
           {key === 'meeting_point' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Arrival (minutes before):{' '}
                 <input
                   type="number"
@@ -345,9 +436,16 @@ export default function PolicyDocumentForm({
                       e.target.value === '' ? undefined : parseInt(e.target.value, 10)
                     )
                   }
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
-              <label>
+              <label style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
                 Text override:{' '}
                 <input
                   type="text"
@@ -356,7 +454,14 @@ export default function PolicyDocumentForm({
                   onChange={(e) =>
                     updateStructured('meeting_point', 'text_override', e.target.value || undefined)
                   }
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    color: 'rgba(226, 232, 240, 0.95)',
+                  }}
                 />
               </label>
             </div>
@@ -366,29 +471,61 @@ export default function PolicyDocumentForm({
 
       <fieldset
         style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1rem',
         }}
       >
-        <legend style={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+        <legend style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'rgba(226, 232, 240, 0.95)' }}>
           Freeform (additional terms)
         </legend>
         <textarea
           value={freeform}
           onChange={(e) => setFreeform(e.target.value)}
           rows={6}
-          style={{ width: '100%', marginTop: '0.5rem', padding: '0.5rem' }}
+          style={{
+            width: '100%',
+            marginTop: '0.5rem',
+            padding: '0.5rem',
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '0.375rem',
+            color: 'rgba(226, 232, 240, 0.95)',
+          }}
           placeholder="Any additional policy text..."
         />
       </fieldset>
 
       <div style={{ display: 'flex', gap: '0.75rem' }}>
-        <button type="submit" disabled={loading} style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            padding: '0.5rem 1rem',
+            fontWeight: 600,
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            color: 'rgba(165, 180, 252, 1)',
+            border: '1px solid rgba(99, 102, 241, 0.4)',
+            borderRadius: '0.375rem',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
           {loading ? 'Saving…' : 'Save'}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem' }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              color: 'rgba(226, 232, 240, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+            }}
+          >
             Cancel
           </button>
         )}

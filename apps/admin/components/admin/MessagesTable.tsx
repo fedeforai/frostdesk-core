@@ -56,7 +56,7 @@ export default function MessagesTable({ messages }: MessagesTableProps) {
                 }}
               >
                 <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
-                  {new Date(msg.created_at).toLocaleString()}
+                  {msg.created_at ? new Date(msg.created_at).toLocaleString() : '—'}
                 </td>
                 <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
                   {msg.role || 'N/A'}
@@ -79,7 +79,7 @@ export default function MessagesTable({ messages }: MessagesTableProps) {
                     maxHeight: '200px',
                     overflow: 'auto',
                   }}
-                  title={msg.content}
+                  title={msg.content ?? undefined}
                 >
                   {msg.content}
                 </td>

@@ -5,6 +5,8 @@ import {
   upsertInstructorOnboardingDraft,
   setInstructorOnboardingStatusCompleted,
   setInstructorOnboardingStatusInProgress,
+  getInstructorProfileByUserId,
+  connectInstructorWhatsappAccount,
 } from '@frostdesk/db';
 import { getAuthUserFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -141,6 +143,16 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
       });
 
       await setInstructorOnboardingStatusCompleted(userId);
+
+      // Link WhatsApp number so Settings shows "Il tuo numero WhatsApp è collegato a FrostDesk"
+      try {
+        const profile = await getInstructorProfileByUserId(userId);
+        if (profile?.id && whatsapp_phone) {
+          await connectInstructorWhatsappAccount(profile.id, whatsapp_phone);
+        }
+      } catch {
+        // Non-blocking: profile/WhatsApp link is best-effort
+      }
 
       return reply.send({ ok: true });
     } catch (error) {

@@ -9,7 +9,9 @@ export type TimelineEventType =
   | 'ai_draft_created'
   | 'human_approved'
   | 'booking_created'
-  | 'booking_state_changed';
+  | 'booking_state_changed'
+  | 'booking_confirmed'
+  | 'booking_cancelled';
 
 export interface TimelineEvent {
   type: TimelineEventType;
@@ -54,9 +56,9 @@ export default function SemanticTimeline({ events }: SemanticTimelineProps) {
       case 'human':
         return { bg: '#f0fdf4', text: '#166534', border: '#86efac' };
       case 'system':
-        return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+        return { bg: 'rgba(255, 255, 255, 0.06)', text: '#374151', border: 'rgba(255, 255, 255, 0.12)' };
       default:
-        return { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' };
+        return { bg: 'rgba(255, 255, 255, 0.06)', text: '#6b7280', border: 'rgba(255, 255, 255, 0.1)' };
     }
   };
 
@@ -65,8 +67,8 @@ export default function SemanticTimeline({ events }: SemanticTimelineProps) {
       <div style={{
         padding: '3rem',
         textAlign: 'center',
-        backgroundColor: '#f9fafb',
-        border: '1px solid #e5e7eb',
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.5rem',
         color: '#6b7280',
       }}>
@@ -101,9 +103,9 @@ export default function SemanticTimeline({ events }: SemanticTimelineProps) {
               display: 'flex',
               gap: '1rem',
               padding: '1rem',
-              border: '1px solid #e5e7eb',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '0.5rem',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
             }}
           >
             <div style={{
@@ -140,7 +142,7 @@ export default function SemanticTimeline({ events }: SemanticTimelineProps) {
               </div>
               <div style={{
                 fontSize: '0.875rem',
-                color: '#111827',
+                color: 'rgba(226, 232, 240, 0.95)',
                 fontWeight: '500',
               }}>
                 {content}

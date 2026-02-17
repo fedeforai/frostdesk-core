@@ -30,7 +30,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
 
   return (
     <div style={{
-      border: '1px solid #e5e7eb',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
       borderRadius: '0.5rem',
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -41,12 +41,12 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '1.5rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
         flexWrap: 'wrap',
         gap: '0.5rem',
       }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#111827' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
           System Health Snapshot
         </h2>
         <span
@@ -68,7 +68,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           Emergency Status
@@ -82,7 +82,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
           borderRadius: '0.375rem',
           border: `1px solid ${snapshot.emergency_disabled ? '#fecaca' : '#86efac'}`,
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             ENV Emergency Kill Switch
           </span>
           <span style={{
@@ -105,7 +105,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           AI Feature Flags
@@ -116,11 +116,11 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               AI Global
             </span>
             <span style={{
@@ -142,11 +142,11 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               WhatsApp AI
             </span>
             <span style={{
@@ -170,7 +170,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           Channel Quota
@@ -178,9 +178,9 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         {snapshot.quota.status === 'not_configured' ? (
           <div style={{
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             color: '#6b7280',
             fontSize: '0.875rem',
           }}>
@@ -189,9 +189,9 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
         ) : (
           <div style={{
             padding: '0.75rem',
-            backgroundColor: snapshot.quota.status === 'exceeded' ? '#fef2f2' : snapshot.quota.status === 'ok' ? '#f0fdf4' : '#f9fafb',
+            backgroundColor: snapshot.quota.status === 'exceeded' ? '#fef2f2' : snapshot.quota.status === 'ok' ? '#f0fdf4' : 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: `1px solid ${snapshot.quota.status === 'exceeded' ? '#fecaca' : snapshot.quota.status === 'ok' ? '#86efac' : '#e5e7eb'}`,
+            border: `1px solid ${snapshot.quota.status === 'exceeded' ? '#fecaca' : snapshot.quota.status === 'ok' ? '#86efac' : 'rgba(255, 255, 255, 0.1)'}`,
           }}>
             <div style={{ 
               display: 'flex', 
@@ -199,7 +199,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
               alignItems: 'center',
               marginBottom: '0.5rem',
             }}>
-              <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>
+              <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>
                 {snapshot.quota.channel}
               </span>
               <span style={{
@@ -210,7 +210,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
                 color: snapshot.quota.status === 'exceeded' ? '#991b1b' : snapshot.quota.status === 'ok' ? '#065f46' : '#6b7280',
                 fontSize: '0.875rem',
                 fontWeight: '600',
-                border: `1px solid ${snapshot.quota.status === 'exceeded' ? '#fecaca' : snapshot.quota.status === 'ok' ? '#a7f3d0' : '#e5e7eb'}`,
+                border: `1px solid ${snapshot.quota.status === 'exceeded' ? '#fecaca' : snapshot.quota.status === 'ok' ? '#a7f3d0' : 'rgba(255, 255, 255, 0.1)'}`,
               }}>
                 {snapshot.quota.status.toUpperCase()}
               </span>
@@ -238,26 +238,26 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
 
       {/* Section 4: Activity Today — Table */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem' }}>
           Activity Today (tabella)
         </h3>
-        <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: '0.375rem' }}>
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.375rem' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f9fafb' }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#111827' }}>
+              <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>
                   Metrica
                 </th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#111827' }}>
+                <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>
                   Valore
                 </th>
               </tr>
             </thead>
             <tbody>
               {activityRows.map((row) => (
-                <tr key={row.key} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem', color: '#374151' }}>{row.label}</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600, color: '#111827' }}>
+                <tr key={row.key} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                  <td style={{ padding: '0.75rem', color: 'rgba(148, 163, 184, 0.9)' }}>{row.label}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>
                     {row.value}
                   </td>
                 </tr>
@@ -269,7 +269,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
 
       {/* Section 5: Activity Today — Bar chart (CSS) */}
       <div>
-        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem' }}>
           Activity Today (grafico)
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -277,7 +277,7 @@ export default function SystemHealthPanel({ snapshot, isLive = false }: SystemHe
             <div key={row.key}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.8125rem', color: '#6b7280' }}>
                 <span>{row.label}</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#111827' }}>{row.value}</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>{row.value}</span>
               </div>
               <div
                 style={{

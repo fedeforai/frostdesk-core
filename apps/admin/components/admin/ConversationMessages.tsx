@@ -8,7 +8,7 @@ interface Message {
   message_id: string;
   direction: 'inbound' | 'outbound';
   message_text: string | null;
-  sender_identity: 'customer' | 'human' | 'ai' | null;
+  sender_identity: 'customer' | 'human' | 'ai' | string | null;
   created_at: string;
   intent?: string | null;
   confidence?: number | null;
@@ -128,7 +128,7 @@ export default function ConversationMessages({
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           margin: 0,
         }}>
           Messages

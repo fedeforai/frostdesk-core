@@ -1,119 +1,93 @@
-import { fetchAdminBookingDetail, fetchBookingLifecycle } from '@/lib/adminApi';
-import { getUserRole } from '@/lib/getUserRole';
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+  fetchAdminBookingDetail,
+  fetchBookingLifecycle,
+  type AdminBookingDetail,
+  type BookingAuditEntry,
+  type BookingLifecycleEvent,
+} from '@/lib/adminApi';
 import BookingDetail from '@/components/admin/BookingDetail';
 import BookingAuditTrail from '@/components/admin/BookingAuditTrail';
 import BookingStatusOverride from '@/components/admin/BookingStatusOverride';
 import BookingLifecycleTimeline from '@/components/admin/BookingLifecycleTimeline';
-import ErrorState from '@/components/admin/ErrorState';
-import Breadcrumbs from '@/components/admin/Breadcrumbs';
-import Badge from '@/components/ui/badge';
-import Link from 'next/link';
 
-interface BookingDetailPageProps {
-  params: {
-    bookingId: string;
-  };
-}
+export default function BookingDetailPage() {
+  const params = useParams();
+  const bookingId = params.bookingId as string;
 
-export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
-  const bookingId = params.bookingId;
+  const [booking, setBooking] = useState<AdminBookingDetail | null>(null);
+  const [auditTrail, setAuditTrail] = useState<BookingAuditEntry[]>([]);
+  const [lifecycleEvents, setLifecycleEvents] = useState<BookingLifecycleEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // UI-ONLY / DEMO-SAFE MODE: Graceful fallback when API unavailable
-  let bookingData = null;
-  let lifecycleEvents = null;
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [detail, lifecycle] = await Promise.allSettled([
+        fetchAdminBookingDetail(bookingId),
+        fetchBookingLifecycle(bookingId),
+      ]);
 
-  try {
-    bookingData = await fetchAdminBookingDetail(bookingId);
-  } catch (error) {
-    console.warn('[ADMIN BOOKING DETAIL] API unavailable, using fallback');
-  }
+      if (detail.status === 'fulfilled' && detail.value) {
+        setBooking(detail.value.booking);
+        setAuditTrail(detail.value.auditTrail ?? []);
+      } else {
+        setError('Failed to load booking detail');
+      }
 
-  try {
-    lifecycleEvents = await fetchBookingLifecycle(bookingId);
-  } catch (error) {
-    console.warn('[ADMIN BOOKING LIFECYCLE] API unavailable, lifecycle timeline will be empty');
-  }
+      if (lifecycle.status === 'fulfilled') {
+        setLifecycleEvents(lifecycle.value ?? []);
+      }
+    } catch {
+      setError('Failed to load booking data');
+    } finally {
+      setLoading(false);
+    }
+  }, [bookingId]);
 
-  const userRole = await getUserRole();
-
-  // Fallback data (read-only, realistic for demo)
-  const fallbackBooking = bookingData?.booking ?? {
-    id: bookingId,
-    instructor_id: 1,
-    customer_name: 'Demo Customer',
-    phone: '+39 123 456 7890',
-    status: 'confirmed',
-    booking_date: new Date().toISOString().split('T')[0],
-    start_time: '10:00:00',
-    end_time: '12:00:00',
-    calendar_event_id: null,
-    payment_intent_id: null,
-    conversation_id: null,
-    created_at: new Date().toISOString(),
-  };
-
-  const fallbackAuditTrail = bookingData?.auditTrail ?? [];
+  useEffect(() => { load(); }, [load]);
 
   return (
     <div style={{ padding: '2rem' }}>
-      <Breadcrumbs items={[
-        { label: 'Admin', href: '/admin' },
-        { label: 'Bookings', href: '/admin/bookings' },
-        { label: bookingId },
-      ]} />
       <div style={{ marginBottom: '2rem' }}>
-        <Link
-          href="/admin/bookings"
-          style={{
-            color: '#3b82f6',
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            marginBottom: '1rem',
-            transition: 'color 0.15s ease',
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#2563eb';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#3b82f6';
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid #3b82f6';
-            e.currentTarget.style.outlineOffset = '2px';
-            e.currentTarget.style.borderRadius = '0.25rem';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.outline = 'none';
-          }}
-          aria-label="Back to bookings list"
-        >
+        <Link href="/admin/bookings" style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginBottom: '1rem' }}>
           ← Back to Bookings
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', margin: 0 }}>
-            Booking: {bookingId}
-          </h1>
-          <Badge variant="outline">Read-only</Badge>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', margin: 0 }}>
+          Booking: {bookingId}
+        </h1>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: '2rem', color: '#6b7280', fontSize: '0.875rem' }}>Loading booking details...</div>
+      ) : error ? (
+        <div style={{ padding: '1rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b', fontSize: '0.875rem', marginBottom: '1rem' }}>
+          {error}
+          <br />
+          <button type="button" onClick={load} style={{ marginTop: '0.5rem', padding: '0.375rem 0.75rem', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '0.375rem', background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', fontSize: '0.8125rem' }}>
+            Retry
+          </button>
         </div>
-      </div>
-      
-      <div style={{ marginBottom: '2rem' }}>
-        <BookingDetail booking={fallbackBooking} />
-      </div>
-      
-      <div style={{ marginBottom: '2rem' }}>
-        <BookingLifecycleTimeline events={lifecycleEvents ?? []} />
-      </div>
-      
-      <div style={{ marginBottom: '2rem' }}>
-        <BookingAuditTrail auditTrail={fallbackAuditTrail} />
-      </div>
-      
-      <BookingStatusOverride bookingId={bookingId} currentStatus={fallbackBooking.status} userRole={userRole} />
+      ) : (
+        <>
+          <div style={{ marginBottom: '2rem' }}>
+            <BookingDetail booking={booking} />
+          </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <BookingLifecycleTimeline events={lifecycleEvents} />
+          </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <BookingAuditTrail auditTrail={auditTrail} />
+          </div>
+          <BookingStatusOverride bookingId={bookingId} currentStatus={booking?.status ?? 'unknown'} userRole={null} />
+        </>
+      )}
     </div>
   );
 }

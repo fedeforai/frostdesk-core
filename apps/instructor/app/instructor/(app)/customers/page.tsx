@@ -55,12 +55,12 @@ export default function InstructorCustomersPage() {
       const res = await fetchInstructorCustomers({ limit: 100 });
       setItems(Array.isArray(res?.items) ? res.items : []);
     } catch (e: unknown) {
-      const raw = e instanceof Error ? e.message : 'Impossibile caricare i clienti';
+      const raw = e instanceof Error ? e.message : 'Unable to load customers';
       const msg =
         /UNAUTHORIZED|No session|session not found/i.test(raw)
           ? 'UNAUTHORIZED'
           : /Failed to fetch|Load failed|NetworkError|failed.*customer|customer.*failed/i.test(raw)
-            ? 'Connessione non riuscita. Verifica che l\'API sia avviata (es. porta 3001) e riprova.'
+            ? 'Connection failed. Verify that the API is running (e.g. port 3001) and retry.'
             : raw;
       setError(msg);
       setItems([]);
@@ -98,7 +98,11 @@ export default function InstructorCustomersPage() {
       setAddName('');
       load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to add customer');
+      if ((e as any)?.code === 'BILLING_BLOCKED') {
+        setError('Subscription required. Contact support to activate billing.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to add customer');
+      }
     } finally {
       setAdding(false);
     }
@@ -109,7 +113,7 @@ export default function InstructorCustomersPage() {
     muted: { color: 'rgba(148, 163, 184, 0.9)' },
     input: { padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid rgba(148, 163, 184, 0.3)', background: 'rgba(15, 23, 42, 0.8)', color: 'rgba(226, 232, 240, 0.92)', minWidth: 200 },
     error: { marginBottom: '1rem', padding: '0.75rem', background: 'rgba(185, 28, 28, 0.2)', color: '#fca5a5', borderRadius: 8 },
-    tableWrap: { overflowX: 'auto', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: 8 },
+    tableWrap: { overflowX: 'auto' as const, border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: 8 },
     th: { padding: '0.75rem', borderBottom: '1px solid rgba(148, 163, 184, 0.2)', background: 'rgba(30, 41, 59, 0.6)', textAlign: 'left' as const },
     td: { padding: '0.75rem', borderBottom: '1px solid rgba(148, 163, 184, 0.15)' },
     link: { color: '#7dd3fc', textDecoration: 'none' },
@@ -122,15 +126,15 @@ export default function InstructorCustomersPage() {
     <section style={dark.section}>
       <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem' }}>Customers</h1>
       <p style={{ ...dark.muted, fontSize: '0.875rem', marginBottom: '1rem' }}>
-        Clienti e note. Aggiungi un numero per creare un profilo; puoi aggiungere note dalla scheda dettaglio.
+        Customers and notes. Add a number to create a profile; you can add notes from the detail card.
       </p>
 
       {error && (
         <div style={dark.error}>
           {error === 'UNAUTHORIZED' ? (
             <>
-              Sessione scaduta o non autenticato.{' '}
-              <Link href="/instructor/login" style={dark.link}>Accedi</Link>
+              Session expired or not authenticated.{' '}
+              <Link href="/instructor/login" style={dark.link}>Login</Link>
             </>
           ) : (
             <>
@@ -141,7 +145,7 @@ export default function InstructorCustomersPage() {
                 onClick={() => load()}
                 style={{ ...dark.btn, marginLeft: '0.5rem', padding: '0.35rem 0.75rem', fontSize: '0.875rem' }}
               >
-                Riprova
+                Retry
               </button>
             </>
           )}
@@ -151,7 +155,7 @@ export default function InstructorCustomersPage() {
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
         <input
           type="text"
-          placeholder="Cerca telefono o nome..."
+          placeholder="Search phone or name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ ...dark.input, minWidth: 200 }}
@@ -172,21 +176,21 @@ export default function InstructorCustomersPage() {
             style={{ ...dark.input, width: 140 }}
           />
           <button type="submit" disabled={adding || !addPhone.trim()} style={adding || !addPhone.trim() ? dark.btnDisabled : dark.btn}>
-            {adding ? '…' : 'Aggiungi'}
+            {adding ? '…' : 'Add'}
           </button>
         </form>
       </div>
 
       {loading ? (
-        <p style={dark.muted}>Caricamento…</p>
+        <p style={dark.muted}>Loading…</p>
       ) : items.length === 0 ? (
-        <p style={dark.muted}>Nessun cliente. Aggiungi un numero per iniziare.</p>
+        <p style={dark.muted}>No customers. Add a number to get started.</p>
       ) : (
         <div style={dark.tableWrap}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
             <thead>
               <tr>
-                <th style={dark.th}>Cliente</th>
+                <th style={dark.th}>Customer</th>
                 <th style={dark.th}>Ultimo visto</th>
                 <th style={dark.th}>Note</th>
                 <th style={dark.th}>Valore</th>
@@ -219,7 +223,7 @@ export default function InstructorCustomersPage() {
                   </td>
                   <td style={dark.td}>
                     <Link href={`/instructor/customers/${c.id}`} style={dark.link}>
-                      Dettaglio
+                      Detail
                     </Link>
                   </td>
                 </tr>

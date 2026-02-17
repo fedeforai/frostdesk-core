@@ -13,6 +13,7 @@ type StatusType =
   | 'proposed'
   | 'confirmed'
   | 'cancelled'
+  | 'modified'
   | 'expired';
 
 interface StatusBadgeProps {
@@ -88,9 +89,9 @@ function getStatusConfig(status: StatusType) {
     case 'closed':
       return {
         label: 'Closed',
-        bg: '#f3f4f6',
+        bg: 'rgba(255, 255, 255, 0.06)',
         text: '#4b5563',
-        border: '#d1d5db',
+        border: 'rgba(255, 255, 255, 0.12)',
       };
 
     case 'pending':
@@ -133,12 +134,20 @@ function getStatusConfig(status: StatusType) {
         border: '#fecaca',
       };
 
+    case 'modified':
+      return {
+        label: 'Modified',
+        bg: '#fefce8',
+        text: '#854d0e',
+        border: '#fde68a',
+      };
+
     case 'expired':
       return {
         label: 'Expired',
-        bg: '#f3f4f6',
+        bg: 'rgba(255, 255, 255, 0.06)',
         text: '#6b7280',
-        border: '#d1d5db',
+        border: 'rgba(255, 255, 255, 0.12)',
       };
 
     case 'proposed':

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/supabaseServer';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const AUTH_TRACE = process.env.AUTH_TRACE === '1';
+
+type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
 
 function trace(msg: string, extra?: Record<string, unknown>) {
   if (!AUTH_TRACE) return;
@@ -34,33 +37,68 @@ async function proxy(
 ) {
   const url = new URL(request.url);
 
-  const authHeader = request.headers.get('authorization');
-  const hasAuthHeader = !!(authHeader && authHeader.startsWith('Bearer '));
-  const allCookies = request.cookies.getAll();
-  const hasSbAuthCookie = allCookies.some(
-    (c) => c.name.startsWith('sb-') && c.name.includes('auth-token')
+  // ── Track cookie changes so we can propagate refreshed tokens to the browser ──
+  const cookieChanges: CookieToSet[] = [];
+
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          // Collect changes so we can forward them to the response.
+          cookieChanges.push(...cookiesToSet);
+          // Also write to the cookie store so subsequent reads see fresh values.
+          cookiesToSet.forEach(({ name, value, options }) => {
+            try {
+              cookieStore.set({ name, value, ...(options ?? {}) });
+            } catch {
+              // Swallow in read-only contexts
+            }
+          });
+        },
+      },
+    }
   );
 
-  const session = await getServerSession();
+  // getSession() reads the JWT from cookies and refreshes if the access token
+  // is expired.  Any refreshed tokens are captured in cookieChanges above so
+  // the browser receives them in the response.
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   const token = session?.access_token;
 
   if (AUTH_TRACE) {
+    const allCookies = request.cookies.getAll();
+    const cookieNames = allCookies.map((c) => c.name);
+    const hasSbAuthCookie = allCookies.some(
+      (c) => c.name.startsWith('sb-') && c.name.includes('auth-token')
+    );
     trace('session-check', {
       method,
       path: url.pathname,
-      hasAuthHeader,
       hasSbAuthCookie,
-      cookieNames: allCookies.map((c) => c.name),
+      cookieNames,
       tokenPresent: !!token,
       hasSession: !!session,
+      sessionError: sessionError?.message ?? null,
+      cookieRefreshCount: cookieChanges.length,
     });
   }
 
-  if (!session?.access_token) {
-    return NextResponse.json(
+  if (!token) {
+    const res = NextResponse.json(
       { ok: false, error: 'UNAUTHENTICATED', message: 'Missing session' },
       { status: 401 }
     );
+    // Propagate any cookie changes (e.g., cleared session on signOut)
+    for (const c of cookieChanges) {
+      res.cookies.set(c.name, c.value, c.options as Record<string, unknown>);
+    }
+    return res;
   }
 
   const { path: pathParams } = await context.params;
@@ -71,7 +109,7 @@ async function proxy(
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    Authorization: `Bearer ${session.access_token}`,
+    Authorization: `Bearer ${token}`,
   };
   const ifMatch = request.headers.get('if-match');
   if (ifMatch) headers['If-Match'] = ifMatch;
@@ -95,10 +133,14 @@ async function proxy(
     });
   } catch (e) {
     trace('upstream-fetch-failed', { backendUrl });
-    return NextResponse.json(
-      { ok: false, error: 'UPSTREAM_DOWN' },
+    const res = NextResponse.json(
+      { ok: false, error: 'UPSTREAM_DOWN', message: 'API server unreachable at ' + API_BASE },
       { status: 502 }
     );
+    for (const c of cookieChanges) {
+      res.cookies.set(c.name, c.value, c.options as Record<string, unknown>);
+    }
+    return res;
   }
 
   trace('upstream-status', { status: upstream.status, upstreamStatus: upstream.status });
@@ -111,5 +153,12 @@ async function proxy(
     payload = { raw: text };
   }
 
-  return NextResponse.json(payload, { status: upstream.status });
+  const res = NextResponse.json(payload, { status: upstream.status });
+
+  // ── Propagate refreshed auth cookies to the browser ──────────────────────
+  for (const c of cookieChanges) {
+    res.cookies.set(c.name, c.value, c.options as Record<string, unknown>);
+  }
+
+  return res;
 }

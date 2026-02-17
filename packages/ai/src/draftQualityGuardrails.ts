@@ -21,6 +21,15 @@ export interface DraftQualityInput {
   rawDraftText: string;
   intent: IntentType;
   language?: string;
+  /**
+   * When true, the draft may reference verified availability, dates, and times.
+   * Only set by the orchestrator when it has run validateAvailability() with
+   * real data (not LLM-generated). This bypasses NO_COMMITMENT, NO_ASSUMPTIONS_DATE,
+   * NO_ASSUMPTIONS_TIME, and TONE_CHECK rules for reschedule-verified drafts.
+   *
+   * SAFETY: the orchestrator is the only caller — the LLM never sets this flag.
+   */
+  rescheduleVerified?: boolean;
 }
 
 export interface DraftViolation {
@@ -66,91 +75,134 @@ function firstSentences(text: string, max: number): string {
  * @returns Sanitized text or null if blocked, with violations list
  */
 export function sanitizeDraftText(input: DraftQualityInput): DraftQualityOutput {
-  const { rawDraftText, intent, language = 'en' } = input;
+  const { rawDraftText, intent, language = 'en', rescheduleVerified = false } = input;
   const violations: DraftViolation[] = [];
   let text = rawDraftText.trim();
   let was_truncated = false;
 
-  // Rule: Max 2 sentences (draft brevi e operativi — truncate if longer)
+  // Allow 3 sentences for reschedule-verified drafts (they carry more context)
+  const maxSentences = rescheduleVerified ? 3 : MAX_SENTENCES;
+
+  // Rule: Max sentences (draft brevi e operativi — truncate if longer)
   const sentenceCount = text.split(/(?<=[.!?])\s+/).filter(Boolean).length;
-  if (sentenceCount > MAX_SENTENCES) {
-    text = firstSentences(text, MAX_SENTENCES);
+  if (sentenceCount > maxSentences) {
+    text = firstSentences(text, maxSentences);
     was_truncated = true;
     violations.push({
       rule: 'MAX_SENTENCES',
-      reason: `Draft truncated to ${MAX_SENTENCES} sentences`,
+      reason: `Draft truncated to ${maxSentences} sentences`,
       severity: 'warning',
     });
   }
 
-  // Rule 1: No Commitment Detection
-  const commitmentPatterns = language === 'it' 
-    ? [
-        /ti\s+confermo|confermo|è\s+disponibile|disponibile|il\s+prezzo|prezzo\s+è|prenotazione\s+effettuata|prenotato|confermato/i,
-        /posso\s+confermare|posso\s+prenotare|posso\s+garantire/i,
-      ]
-    : [
-        /i\s+confirm|confirmed|is\s+available|available|the\s+price|price\s+is|booking\s+confirmed|booked/i,
-        /can\s+confirm|can\s+book|can\s+guarantee/i,
-      ];
+  // ── Reschedule-verified bypass ──────────────────────────────────────────
+  // When the orchestrator has verified availability via real data,
+  // skip commitment/date/time/tone blocking rules.
+  // Price rules are NEVER bypassed (prices are not part of reschedule context).
+  if (rescheduleVerified) {
+    violations.push({
+      rule: 'RESCHEDULE_VERIFIED_BYPASS',
+      reason: 'Commitment/date/time/tone rules bypassed — availability verified by system',
+      severity: 'warning',
+    });
+    // Skip to price check and disclaimer (below)
+  }
 
-  for (const pattern of commitmentPatterns) {
-    if (pattern.test(text)) {
-      violations.push({
-        rule: 'NO_COMMITMENT',
-        reason: 'Draft contains commitment language (confirmation, availability, price, booking)',
-        severity: 'blocking',
-      });
-      break;
+  // ── Rules 1-3: Commitment, Date/Time assumptions, Tone ────────────────
+  // These are BYPASSED when rescheduleVerified=true (data comes from system).
+  // Price rules (Rule 2c) are NEVER bypassed.
+
+  if (!rescheduleVerified) {
+    // Rule 1: No Commitment Detection
+    const commitmentPatterns = language === 'it' 
+      ? [
+          /ti\s+confermo|confermo|è\s+disponibile|disponibile|il\s+prezzo|prezzo\s+è|prenotazione\s+effettuata|prenotato|confermato/i,
+          /posso\s+confermare|posso\s+prenotare|posso\s+garantire/i,
+        ]
+      : [
+          /i\s+confirm|confirmed|is\s+available|available|the\s+price|price\s+is|booking\s+confirmed|booked/i,
+          /can\s+confirm|can\s+book|can\s+guarantee/i,
+        ];
+
+    for (const pattern of commitmentPatterns) {
+      if (pattern.test(text)) {
+        violations.push({
+          rule: 'NO_COMMITMENT',
+          reason: 'Draft contains commitment language (confirmation, availability, price, booking)',
+          severity: 'blocking',
+        });
+        break;
+      }
+    }
+
+    // Rule 2a: No Assumptions — Block specific dates
+    const datePatterns = language === 'it'
+      ? [
+          /domani|dopodomani|(lun|mar|mer|gio|ven|sab|dom)edì|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre/i,
+          /\d{1,2}\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)/i,
+        ]
+      : [
+          /tomorrow|day after tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december/i,
+          /\d{1,2}\s+(january|february|march|april|may|june|july|august|september|october|november|december)/i,
+        ];
+
+    for (const pattern of datePatterns) {
+      if (pattern.test(text)) {
+        violations.push({
+          rule: 'NO_ASSUMPTIONS_DATE',
+          reason: 'Draft contains specific date (should not invent dates)',
+          severity: 'blocking',
+        });
+        break;
+      }
+    }
+
+    // Rule 2b: No Assumptions — Block specific times
+    const timePatterns = language === 'it'
+      ? [
+          /alle\s+\d{1,2}|alle\s+\d{1,2}:\d{2}|dalle\s+\d{1,2}|dalle\s+\d{1,2}:\d{2}/i,
+          /\d{1,2}:\d{2}/,
+        ]
+      : [
+          /at\s+\d{1,2}|at\s+\d{1,2}:\d{2}|from\s+\d{1,2}|from\s+\d{1,2}:\d{2}/i,
+          /\d{1,2}:\d{2}\s*(am|pm)?/i,
+        ];
+
+    for (const pattern of timePatterns) {
+      if (pattern.test(text)) {
+        violations.push({
+          rule: 'NO_ASSUMPTIONS_TIME',
+          reason: 'Draft contains specific time (should not invent times)',
+          severity: 'blocking',
+        });
+        break;
+      }
+    }
+
+    // Rule 3: Tone Check - Block assertive statements
+    const assertivePatterns = language === 'it'
+      ? [
+          /puoi\s+prenotare|puoi\s+confermare|puoi\s+fare|devi\s+prenotare|devi\s+fare/i,
+          /è\s+fatto|è\s+pronto|è\s+disponibile|è\s+confermato/i,
+        ]
+      : [
+          /you\s+can\s+book|you\s+can\s+confirm|you\s+can\s+do|you\s+must\s+book|you\s+must\s+do/i,
+          /it\s+is\s+done|it\s+is\s+ready|it\s+is\s+available|it\s+is\s+confirmed/i,
+        ];
+
+    for (const pattern of assertivePatterns) {
+      if (pattern.test(text)) {
+        violations.push({
+          rule: 'TONE_CHECK',
+          reason: 'Draft uses assertive tone instead of conditional/suggestive',
+          severity: 'blocking',
+        });
+        break;
+      }
     }
   }
 
-  // Rule 2: No Assumptions Detection (invented data)
-  // Block specific dates
-  const datePatterns = language === 'it'
-    ? [
-        /domani|dopodomani|(lun|mar|mer|gio|ven|sab|dom)edì|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre/i,
-        /\d{1,2}\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)/i,
-      ]
-    : [
-        /tomorrow|day after tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december/i,
-        /\d{1,2}\s+(january|february|march|april|may|june|july|august|september|october|november|december)/i,
-      ];
-
-  for (const pattern of datePatterns) {
-    if (pattern.test(text)) {
-      violations.push({
-        rule: 'NO_ASSUMPTIONS_DATE',
-        reason: 'Draft contains specific date (should not invent dates)',
-        severity: 'blocking',
-      });
-      break;
-    }
-  }
-
-  // Block specific times
-  const timePatterns = language === 'it'
-    ? [
-        /alle\s+\d{1,2}|alle\s+\d{1,2}:\d{2}|dalle\s+\d{1,2}|dalle\s+\d{1,2}:\d{2}/i,
-        /\d{1,2}:\d{2}/,
-      ]
-    : [
-        /at\s+\d{1,2}|at\s+\d{1,2}:\d{2}|from\s+\d{1,2}|from\s+\d{1,2}:\d{2}/i,
-        /\d{1,2}:\d{2}\s*(am|pm)?/i,
-      ];
-
-  for (const pattern of timePatterns) {
-    if (pattern.test(text)) {
-      violations.push({
-        rule: 'NO_ASSUMPTIONS_TIME',
-        reason: 'Draft contains specific time (should not invent times)',
-        severity: 'blocking',
-      });
-      break;
-    }
-  }
-
-  // Block specific prices
+  // Rule 2c: No Assumptions — Block specific prices (ALWAYS active, never bypassed)
   const pricePatterns = language === 'it'
     ? [
         /\d+\s*euro|\d+\s*€|prezzo\s+è\s+\d+|costa\s+\d+/i,
@@ -164,28 +216,6 @@ export function sanitizeDraftText(input: DraftQualityInput): DraftQualityOutput 
       violations.push({
         rule: 'NO_ASSUMPTIONS_PRICE',
         reason: 'Draft contains specific price (should not invent prices)',
-        severity: 'blocking',
-      });
-      break;
-    }
-  }
-
-  // Rule 3: Tone Check - Block assertive statements
-  const assertivePatterns = language === 'it'
-    ? [
-        /puoi\s+prenotare|puoi\s+confermare|puoi\s+fare|devi\s+prenotare|devi\s+fare/i,
-        /è\s+fatto|è\s+pronto|è\s+disponibile|è\s+confermato/i,
-      ]
-    : [
-        /you\s+can\s+book|you\s+can\s+confirm|you\s+can\s+do|you\s+must\s+book|you\s+must\s+do/i,
-        /it\s+is\s+done|it\s+is\s+ready|it\s+is\s+available|it\s+is\s+confirmed/i,
-      ];
-
-  for (const pattern of assertivePatterns) {
-    if (pattern.test(text)) {
-      violations.push({
-        rule: 'TONE_CHECK',
-        reason: 'Draft uses assertive tone instead of conditional/suggestive',
         severity: 'blocking',
       });
       break;

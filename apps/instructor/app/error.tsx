@@ -36,7 +36,7 @@ export default function RootError({
           background: 'rgba(15,23,42,0.9)',
         }}
       >
-        <h1 style={{ fontSize: 18, marginBottom: 8 }}>Errore</h1>
+        <h1 style={{ fontSize: 18, marginBottom: 8 }}>Error</h1>
         <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 16 }}>
           {error.message || 'Qualcosa è andato storto'}
         </p>
@@ -54,7 +54,7 @@ export default function RootError({
               cursor: 'pointer',
             }}
           >
-            Riprova
+            Retry
           </button>
           <Link
             href="/instructor/login"

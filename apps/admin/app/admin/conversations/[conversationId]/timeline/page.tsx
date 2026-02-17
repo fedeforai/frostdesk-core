@@ -50,7 +50,7 @@ export default async function ConversationTimelinePage({ params }: ConversationT
             >
               ← Back to Conversation
             </Link>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
               Conversation Timeline
             </h1>
           </div>
@@ -81,7 +81,7 @@ export default async function ConversationTimelinePage({ params }: ConversationT
           >
             ← Back to Conversation
           </Link>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.5rem' }}>
             Conversation Timeline
           </h1>
           <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
@@ -115,7 +115,7 @@ export default async function ConversationTimelinePage({ params }: ConversationT
           >
             ← Back to Conversation
           </Link>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
             Conversation Timeline
           </h1>
         </div>

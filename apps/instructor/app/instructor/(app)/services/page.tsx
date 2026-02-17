@@ -26,16 +26,25 @@ export default function ServicesPage() {
       const data = await fetchInstructorServices();
       setServices(data);
     } catch (err: any) {
-      // Only redirect on actual 401 from API; network errors have no status
-      if (typeof err?.status === 'number' && err.status === 401) {
-        router.push('/instructor/login');
+      const status = typeof err?.status === 'number' ? err.status : 0;
+      const message = err?.message || '';
+      if (status === 401) {
+        setError('Session expired. Reload the page to retry.');
         return;
       }
-      if (typeof err?.status === 'number' && err.status === 403) {
-        setError('Not authorized');
+      if (status === 403) {
+        setError('Unauthorized: complete onboarding to access services.');
         return;
       }
-      setError(err?.message === 'Failed to fetch' ? 'Cannot reach API. Check connection.' : 'Unable to load services');
+      if (message === 'Failed to fetch') {
+        setError('Unable to reach server. Check connection.');
+      } else if (status === 502) {
+        setError('API unavailable. Verify that the API server is running (port 3001).');
+      } else if (status === 404) {
+        setError('Instructor profile not found. Try reloading the page.');
+      } else {
+        setError(`Error loading services${status ? ` (${status})` : ''}: ${message || 'unknown error'}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -70,7 +79,7 @@ export default function ServicesPage() {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
         Services & Pricing
       </h1>
 
@@ -78,28 +87,26 @@ export default function ServicesPage() {
         <div style={{
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'rgba(185,28,28,0.12)',
+          border: '1px solid rgba(248,113,113,0.4)',
           borderRadius: '0.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '0.75rem',
           fontSize: '0.875rem',
-          color: '#991b1b',
+          color: '#fca5a5',
         }}>
-          <span>
-            {error === 'Not authorized' ? 'Not authorized' : 'Couldn\'t load services. Check your connection and retry.'}
-          </span>
+          <span>{error}</span>
           <button
             type="button"
             onClick={() => void loadServices()}
             style={{
               padding: '0.375rem 0.75rem',
               borderRadius: '0.375rem',
-              border: '1px solid #f87171',
-              background: '#fff',
-              color: '#991b1b',
+              border: '1px solid rgba(248,113,113,0.4)',
+              background: 'rgba(185,28,28,0.15)',
+              color: '#fca5a5',
               fontWeight: 600,
               cursor: 'pointer',
               fontSize: '0.8125rem',
@@ -112,14 +119,14 @@ export default function ServicesPage() {
 
       {showAddForm || editingService ? (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
           marginBottom: '1.5rem',
         }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
             {editingService ? 'Edit Service' : 'Add Service'}
           </h2>
           <ServiceForm
@@ -130,10 +137,10 @@ export default function ServicesPage() {
         </div>
       ) : (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}>
           <ServicesTable

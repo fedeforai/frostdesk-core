@@ -69,7 +69,7 @@ export default async function HumanInboxDetailPage({ params }: HumanInboxDetailP
             >
               ← Back to Human Inbox
             </Link>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
               Conversation: {conversationId}
             </h1>
           </div>
@@ -117,7 +117,7 @@ export default async function HumanInboxDetailPage({ params }: HumanInboxDetailP
           >
             ← Back to Human Inbox
           </Link>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
             Conversation: {conversationId}
           </h1>
         </div>
@@ -203,7 +203,7 @@ export default async function HumanInboxDetailPage({ params }: HumanInboxDetailP
           >
             ← Back to Human Inbox
           </Link>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
             Conversation: {conversationId}
           </h1>
         </div>

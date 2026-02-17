@@ -15,9 +15,17 @@ import { instructorDashboardRoutes } from './instructor/dashboard.js';
 import { instructorPoliciesDocumentRoutes } from './instructor/policies_document.js';
 import { instructorBookingRoutes } from './instructor/bookings.js';
 import { instructorBookingTimelineRoutes } from './instructor/booking_timeline.js';
+import { instructorBookingAuditLogsRoutes } from './instructor/booking_audit_logs.js';
 import { instructorConversationAiStateRoutes } from './instructor/conversation_ai_state.js';
 import { instructorCustomersRoutes } from './instructor/customers.js';
 import { instructorAIBookingSuggestionContextRoutes } from './instructor/ai_booking_suggestion_context.js';
+import { instructorBookingDraftsRoutes } from './instructor/booking_drafts.js';
+import { instructorStripeConnectRoutes } from './instructor/stripe_connect.js';
+import { instructorPaymentLinkRoutes } from './instructor/payment_link.js';
+import { instructorSubscriptionCheckoutRoutes } from './instructor/subscription_checkout.js';
+import { instructorKpisRoutes } from './instructor/kpis.js';
+import { instructorAIFeatureStatusRoutes } from './instructor/ai_feature_status.js';
+import { instructorAIToggleWhatsAppRoutes } from './instructor/ai_toggle_whatsapp.js';
 
 /**
  * Instructor routes (authenticated by JWT, no admin).
@@ -43,7 +51,15 @@ export async function instructorRoutes(fastify: FastifyInstance): Promise<void> 
   await fastify.register(instructorReplyRoutes);
   await fastify.register(instructorBookingRoutes);
   await fastify.register(instructorBookingTimelineRoutes);
+  await fastify.register(instructorBookingAuditLogsRoutes);
   await fastify.register(instructorConversationAiStateRoutes);
   await fastify.register(instructorCustomersRoutes);
   await fastify.register(instructorAIBookingSuggestionContextRoutes);
+  await fastify.register(instructorBookingDraftsRoutes);
+  await fastify.register(instructorStripeConnectRoutes);
+  await fastify.register(instructorPaymentLinkRoutes);
+  await fastify.register(instructorSubscriptionCheckoutRoutes);
+  await fastify.register(instructorKpisRoutes);
+  await fastify.register(instructorAIFeatureStatusRoutes);
+  await fastify.register(instructorAIToggleWhatsAppRoutes);
 }

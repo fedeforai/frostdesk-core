@@ -4,28 +4,28 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 999px;
-  border: 1px solid #e6ebf2;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
   font-size: 12px;
   font-weight: 700;
-  color: #0f172a;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #94a3b8;
+  background: rgba(148, 163, 184, 0.7);
 }
 
 .success .dot {
-  background: #16a34a;
+  background: rgba(34, 197, 94, 0.9);
 }
 
 .danger .dot {
-  background: #dc2626;
+  background: rgba(239, 68, 68, 0.9);
 }
 
 .muted .dot {
-  background: #94a3b8;
+  background: rgba(148, 163, 184, 0.7);
 }

@@ -15,7 +15,7 @@ export default async function SystemDegradationPage() {
             { label: 'System Degradation', href: '/admin/system-degradation' },
           ]} />
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+            <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
               System Degradation
             </h1>
           </div>
@@ -31,7 +31,7 @@ export default async function SystemDegradationPage() {
           { label: 'System Degradation', href: '/admin/system-degradation' },
         ]} />
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
             System Degradation
           </h1>
           <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
@@ -50,7 +50,7 @@ export default async function SystemDegradationPage() {
           { label: 'System Degradation', href: '/admin/system-degradation' },
         ]} />
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
             System Degradation
           </h1>
         </div>

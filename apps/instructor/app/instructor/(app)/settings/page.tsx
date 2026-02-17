@@ -1,24 +1,26 @@
 import SubscriptionStatusPanel from '@/components/SubscriptionStatusPanel';
+import { StripeConnectCard } from '@/components/stripe/StripeConnectCard';
+import { WhatsAppCard } from '@/components/WhatsAppCard';
 import Link from 'next/link';
 
 export default function SettingsPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem' }}>
-        Impostazioni
+      <h1 style={{ fontSize: '1.875rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
+        Settings
       </h1>
 
       <section
         style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
           marginBottom: '1.5rem',
         }}
       >
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
           Abbonamento
         </h2>
         <SubscriptionStatusPanel />
@@ -26,17 +28,49 @@ export default function SettingsPage() {
 
       <section
         style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
+          WhatsApp
+        </h2>
+        <WhatsAppCard />
+      </section>
+
+      <section
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
+          Pagamenti — Stripe Connect
+        </h2>
+        <StripeConnectCard />
+      </section>
+
+      <section
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}
       >
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '0.75rem' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem' }}>
           Account
         </h2>
-        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>
+        <p style={{ color: 'rgba(148, 163, 184, 0.9)', fontSize: '0.875rem', marginBottom: '1rem' }}>
           Nome, resort, lingua e email di contatto.
         </p>
         <Link
@@ -50,9 +84,23 @@ export default function SettingsPage() {
             textDecoration: 'none',
             fontWeight: 500,
             fontSize: '0.875rem',
+            marginRight: '0.75rem',
           }}
         >
-          Apri Profilo
+          Open Profile
+        </Link>
+        <Link
+          href="/instructor/privacy"
+          style={{
+            display: 'inline-block',
+            padding: '0.5rem 1rem',
+            color: '#93c5fd',
+            borderRadius: '0.375rem',
+            textDecoration: 'underline',
+            fontSize: '0.875rem',
+          }}
+        >
+          Privacy Policy
         </Link>
       </section>
     </div>

@@ -3,13 +3,13 @@ import { BookingState } from './booking_state_machine.js';
 
 export interface AdminBookingSummary {
   id: string;
-  instructor_id: number;
-  customer_name: string;
-  phone: string;
+  instructor_id: string;
+  customer_name: string | null;
+  phone: string | null;
   status: BookingState;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
+  booking_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   calendar_event_id: string | null;
   payment_intent_id: string | null;
   created_at: string;
@@ -40,7 +40,7 @@ export async function listAllBookings(
     SELECT id, instructor_id, customer_name, phone, status, booking_date, start_time, end_time, calendar_event_id, payment_intent_id, created_at
     FROM bookings
     WHERE 1=1
-      ${instructorId ? sql`AND instructor_id = ${Number(instructorId)}` : sql``}
+      ${instructorId ? sql`AND instructor_id = ${instructorId}` : sql``}
       ${status ? sql`AND status = ${status}` : sql``}
       ${dateFrom ? sql`AND booking_date >= ${dateFrom}` : sql``}
       ${dateTo ? sql`AND booking_date <= ${dateTo}` : sql``}

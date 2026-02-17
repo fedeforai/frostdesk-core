@@ -67,8 +67,8 @@ export default function SystemHealthClient() {
           style={{
             padding: '0.5rem 1rem',
             borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            background: 'rgba(255, 255, 255, 0.05)',
             cursor: 'pointer',
             fontSize: '0.875rem',
           }}

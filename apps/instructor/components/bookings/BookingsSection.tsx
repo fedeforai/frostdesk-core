@@ -2,19 +2,37 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { fetchInstructorBookings } from '@/lib/instructorApi';
+import { fetchInstructorBookings, type FetchInstructorBookingsFilters } from '@/lib/instructorApi';
 import { BookingsTable, type Booking } from './BookingsTable';
+
+export type ListFilter = 'all' | 'today' | 'unpaid';
+
+function getFiltersForListFilter(filter: ListFilter): FetchInstructorBookingsFilters | undefined {
+  if (filter === 'all') return undefined;
+  if (filter === 'unpaid') return { payment_status: 'unpaid' };
+  if (filter === 'today') {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    const date = `${y}-${m}-${d}`;
+    return { date_from: date, date_to: date };
+  }
+  return undefined;
+}
 
 export function BookingsSection() {
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [listFilter, setListFilter] = useState<ListFilter>('today');
 
   const load = useCallback(async () => {
     setLoadError(null);
     setLoading(true);
     try {
-      const res = await fetchInstructorBookings();
+      const filters = getFiltersForListFilter(listFilter);
+      const res = await fetchInstructorBookings(filters);
       setItems(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
       const raw = e instanceof Error ? e.message : 'Couldn\'t load bookings';
@@ -22,14 +40,14 @@ export function BookingsSection() {
         /UNAUTHORIZED|No session/i.test(raw)
           ? 'UNAUTHORIZED'
           : /FAILED_TO_LOAD_BOOKINGS|NOT_FOUND|ONBOARDING/i.test(raw)
-            ? 'Impossibile caricare le prenotazioni. Verifica che l\'API sia avviata e riprova.'
+            ? 'Unable to load bookings. Verify that the API is running and retry.'
             : raw;
       setLoadError(msg);
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [listFilter]);
 
   useEffect(() => {
     load();
@@ -39,9 +57,9 @@ export function BookingsSection() {
     return (
       <div style={styles.wrap}>
         <p style={{ color: '#fca5a5', marginBottom: '0.5rem' }}>
-          Sessione scaduta o non autenticato.{' '}
+          Session expired or not authenticated.{' '}
           <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>
-            Accedi
+            Login
           </Link>
         </p>
       </div>
@@ -54,14 +72,14 @@ export function BookingsSection() {
       <div style={styles.wrap}>
         <div style={styles.topBar}>
           <Link href="/instructor/bookings/new" style={styles.btnPrimary}>
-            Nuova prenotazione
+            New booking
           </Link>
         </div>
         <div style={styles.errorBanner}>
           {loadError}
           {' '}
           <button type="button" onClick={load} style={styles.retryBtn}>
-            Riprova
+            Retry
           </button>
         </div>
       </div>
@@ -74,10 +92,10 @@ export function BookingsSection() {
       <div style={styles.wrap}>
         <div style={styles.topBar}>
           <Link href="/instructor/bookings/new" style={styles.btnPrimary}>
-            Nuova prenotazione
+            New booking
           </Link>
         </div>
-        <p style={styles.muted}>Caricamento prenotazioni…</p>
+        <p style={styles.muted}>Loading bookings…</p>
       </div>
     );
   }
@@ -87,11 +105,26 @@ export function BookingsSection() {
     <div style={styles.wrap}>
       <div style={styles.topBar}>
         <Link href="/instructor/bookings/new" style={styles.btnPrimary}>
-          Nuova prenotazione
+          New booking
         </Link>
+        <span style={styles.filterGroup}>
+          <span style={styles.filterLabel}>Mostra:</span>
+          <select
+            value={listFilter}
+            onChange={(e) => setListFilter(e.target.value as ListFilter)}
+            style={styles.filterSelect}
+            aria-label="Filter bookings"
+          >
+            <option value="all">Tutti</option>
+            <option value="today">Oggi</option>
+            <option value="unpaid">Non pagate</option>
+          </select>
+        </span>
       </div>
       {items.length === 0 ? (
-        <p style={styles.muted}>Nessuna prenotazione.</p>
+        <p style={styles.muted}>
+          {listFilter === 'all' ? 'No bookings.' : listFilter === 'today' ? 'No bookings today.' : 'No unpaid bookings.'}
+        </p>
       ) : (
         <BookingsTable items={items} onUpdated={load} />
       )}
@@ -142,5 +175,22 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#fca5a5',
     fontSize: '0.875rem',
     cursor: 'pointer',
+  },
+  filterGroup: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  filterLabel: {
+    fontSize: '0.875rem',
+    color: 'rgba(148, 163, 184, 0.92)',
+  },
+  filterSelect: {
+    padding: '0.35rem 0.5rem',
+    borderRadius: 6,
+    border: '1px solid rgba(148, 163, 184, 0.3)',
+    background: 'rgba(15, 23, 42, 0.8)',
+    color: 'rgba(226, 232, 240, 0.95)',
+    fontSize: '0.875rem',
   },
 };

@@ -9,8 +9,8 @@ export function DraftSafetyNotice() {
       fontSize: '0.875rem',
       color: 'rgba(191, 219, 254, 0.95)',
     }}>
-      È una bozza generata dall&apos;AI. Nessuna prenotazione è stata creata.
-      Nessun calendario, disponibilità o pagamento è stato modificato.
+      This is an AI-generated draft. No booking has been created.
+      No calendar, availability or payment has been modified.
     </div>
   );
 }

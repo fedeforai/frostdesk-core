@@ -120,11 +120,11 @@
 }
 
 .convItem:hover {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .convItemSelected {
-  background: #f1f5f9;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .convName {
@@ -156,8 +156,8 @@
 }
 
 .unread {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
   padding: 2px 6px;
   border-radius: 6px;
   font-weight: 800;
@@ -171,18 +171,18 @@
 }
 
 .statusHot {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
 }
 
 .statusWaiting {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
 }
 
 .statusResolved {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
 }
 
 /* --- Detail panel --- */
@@ -228,8 +228,8 @@
 
 .messageCustomer {
   align-self: flex-start;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .messageInstructor {
@@ -241,9 +241,9 @@
 
 .messageAi {
   align-self: flex-start;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
 .messageRole {
@@ -308,9 +308,9 @@
 
 .messageAiDraft {
   align-self: flex-start;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
 .draftActions {
@@ -323,9 +323,9 @@
 .draftBtnSecondary {
   padding: 8px 12px;
   border-radius: 10px;
-  border: 1px solid #a7f3d0;
-  background: #ffffff;
-  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  color: #34d399;
   font-weight: 800;
   font-size: 12px;
   cursor: pointer;
@@ -334,8 +334,8 @@
 .draftBtnPrimary {
   padding: 8px 12px;
   border-radius: 10px;
-  border: 1px solid #065f46;
-  background: #065f46;
+  border: 1px solid #10b981;
+  background: #10b981;
   color: #ffffff;
   font-weight: 800;
   font-size: 12px;
@@ -360,33 +360,34 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.04em;
-  border: 1px solid rgba(6, 95, 70, 0.25);
-  background: rgba(236, 253, 245, 0.65);
-  color: rgba(6, 95, 70, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.08);
+  color: rgba(52, 211, 153, 0.6);
   opacity: 0.55;
 }
 
 .usedBadgeOn {
   opacity: 1;
-  color: #065f46;
-  border-color: rgba(6, 95, 70, 0.35);
-  background: rgba(236, 253, 245, 0.95);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.12);
 }
 
 .draftBtn {
   padding: 8px 12px;
   border-radius: 12px;
-  border: 1px solid var(--border, #e6ebf2);
-  background: #fff;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(226, 232, 240, 0.95);
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
 }
 
 .draftBtnPrimary {
-  background: #0f172a;
+  background: #3b82f6;
   color: #fff;
-  border-color: #0f172a;
+  border-color: #3b82f6;
 }
 
 .draftBtn:disabled {
@@ -401,9 +402,9 @@
 /* --- Draft suggestion UI --- */
 .draftWrap {
   margin-top: 12px;
-  border: 1px solid #a7f3d0;
-  background: #ecfdf5;
-  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.06);
+  color: #34d399;
   border-radius: 14px;
   padding: 12px 14px;
 }
@@ -428,9 +429,9 @@
   font-weight: 900;
   padding: 4px 8px;
   border-radius: 999px;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
 }
 
 .draftWrap .draftActions {
@@ -442,8 +443,8 @@
 .draftWrap .draftBtnPrimary {
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid #065f46;
-  background: #065f46;
+  border: 1px solid #10b981;
+  background: #10b981;
   color: #fff;
   font-weight: 900;
   cursor: pointer;
@@ -452,9 +453,9 @@
 .draftWrap .draftBtnSecondary {
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(226, 232, 240, 0.95);
   font-weight: 900;
   cursor: pointer;
 }

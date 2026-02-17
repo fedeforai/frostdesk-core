@@ -12,7 +12,7 @@ const fallback = (
       fontSize: 14,
     }}
   >
-    Caricamento…
+    Loading…
   </div>
 );
 

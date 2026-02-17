@@ -3,6 +3,8 @@ import { healthRoutes } from './routes/health.js';
 import { inboundRoutes } from './routes/inbound.js';
 import { webhookRoutes } from './routes/webhook.js';
 import { webhookWhatsAppRoutes } from './routes/webhook_whatsapp.js';
+import { webhookStripeRoutes } from './routes/webhook_stripe.js';
+import { webhookStripeSubscriptionRoutes } from './routes/webhook_stripe_subscription.js';
 import { adminRoutes } from './routes/admin.js';
 import { instructorRoutes } from './routes/instructor.js';
 import { registerRateLimit } from './middleware/rate_limit.js';
@@ -45,6 +47,8 @@ export async function buildServer() {
   await fastify.register(inboundRoutes);
   await fastify.register(webhookRoutes);
   await fastify.register(webhookWhatsAppRoutes);
+  await fastify.register(webhookStripeRoutes);
+  await fastify.register(webhookStripeSubscriptionRoutes);
   await fastify.register(adminRoutes);
   await fastify.register(instructorRoutes);
 

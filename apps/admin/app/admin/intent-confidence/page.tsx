@@ -22,7 +22,7 @@ export default async function IntentConfidencePage({ searchParams }: IntentConfi
           { label: 'Admin', href: '/admin' },
           { label: 'Intent Confidence' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Intent Confidence Telemetry
         </h1>
         <IntentConfidenceChart buckets={data.buckets} />
@@ -35,7 +35,7 @@ export default async function IntentConfidencePage({ searchParams }: IntentConfi
           { label: 'Admin', href: '/admin' },
           { label: 'Intent Confidence' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Intent Confidence Telemetry
         </h1>
         <ErrorState

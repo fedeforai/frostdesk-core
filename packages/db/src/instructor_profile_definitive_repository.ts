@@ -36,6 +36,10 @@ type ProfileRow = {
   internal_notes: string | null;
   account_health: string;
   fraud_flag: boolean;
+  billing_status: string;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  current_plan?: string | null;
   created_at: string;
   updated_at: string;
   base_resort?: string;
@@ -65,6 +69,7 @@ function rowToDefinitive(r: ProfileRow): InstructorProfileDefinitive {
     internal_notes: r.internal_notes,
     account_health: r.account_health as InstructorProfileDefinitive['account_health'],
     fraud_flag: r.fraud_flag ?? false,
+    billing_status: r.billing_status as InstructorProfileDefinitive['billing_status'],
     created_at: r.created_at,
     updated_at: r.updated_at,
   };
@@ -136,6 +141,7 @@ export async function getInstructorProfileDefinitiveByUserId(
         internal_notes,
         COALESCE(account_health, 'ok') AS account_health,
         COALESCE(fraud_flag, false) AS fraud_flag,
+        COALESCE(billing_status, 'pilot') AS billing_status,
         created_at,
         updated_at,
         base_resort,
@@ -212,7 +218,7 @@ export async function patchInstructorProfileByUserId(
     WHERE user_id = ${userId}::uuid
     RETURNING
       id, user_id, full_name, display_name, slug, profile_status, timezone, availability_mode, calendar_sync_enabled,
-      marketing_fields, operational_fields, pricing_config, ai_config, compliance, approval_status, risk_score, internal_notes, account_health, fraud_flag, created_at, updated_at,
+      marketing_fields, operational_fields, pricing_config, ai_config, compliance, approval_status, risk_score, internal_notes, account_health, fraud_flag, billing_status, created_at, updated_at,
       base_resort, working_language, contact_email, onboarding_completed_at
   `;
   if (result.length === 0) return current;

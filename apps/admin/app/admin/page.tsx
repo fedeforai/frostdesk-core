@@ -13,13 +13,13 @@ export default async function AdminPage() {
   return (
     <div style={{ padding: '2rem' }}>
       <Breadcrumbs items={[{ label: 'Admin' }]} />
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
         FrostDesk Admin
       </h1>
       <p style={{ color: '#6b7280', marginBottom: '2rem' }}>Admin panel ready</p>
 
       <div style={{ marginTop: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
           Quick Navigation
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

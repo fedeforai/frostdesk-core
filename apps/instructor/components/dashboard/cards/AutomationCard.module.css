@@ -22,15 +22,15 @@
 }
 
 .badgeOn {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: rgba(34, 197, 94, 0.15);
+  color: rgba(74, 222, 128, 0.95);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .badgeOff {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  color: rgba(252, 165, 165, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .center {
@@ -41,45 +41,61 @@
 .stateLabel {
   font-weight: 800;
   font-size: 16px;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .desc {
-  color: var(--muted, #64748b);
+  color: rgba(148, 163, 184, 0.9);
   font-size: 13px;
   margin-top: 4px;
 }
 
 .toggleBtn {
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 10px 14px;
   cursor: pointer;
   font-weight: 800;
   font-size: 14px;
+  transition: all 0.15s ease;
 }
 
 .toggleOn {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  color: rgba(252, 165, 165, 0.95);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.toggleOn:hover {
+  background: rgba(239, 68, 68, 0.25);
 }
 
 .toggleOff {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.15);
+  color: rgba(74, 222, 128, 0.95);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.toggleOff:hover {
+  background: rgba(34, 197, 94, 0.25);
 }
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
+@media (max-width: 640px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .kpi {
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  background: #fbfcff;
+  background: rgba(255, 255, 255, 0.04);
   padding: 14px;
   text-align: center;
 }
@@ -87,12 +103,13 @@
 .kpiValue {
   font-size: 26px;
   font-weight: 900;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .kpiLabel {
   margin-top: 6px;
   font-size: 12px;
-  color: var(--muted, #64748b);
+  color: rgba(148, 163, 184, 0.9);
   font-weight: 700;
 }
 
@@ -102,13 +119,19 @@
   gap: 12px;
 }
 
+@media (max-width: 640px) {
+  .integrations {
+    grid-template-columns: 1fr;
+  }
+}
+
 .integration {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
   padding: 12px;
 }
 
@@ -116,30 +139,32 @@
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(34, 197, 94, 0.15);
+  color: rgba(74, 222, 128, 0.95);
   display: grid;
   place-items: center;
   font-weight: 900;
+  font-size: 12px;
 }
 
 .integrationCheck.muted {
-  background: #f1f5f9;
-  color: #64748b;
+  background: rgba(148, 163, 184, 0.1);
+  color: rgba(148, 163, 184, 0.7);
 }
 
 .integrationCheck.warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: rgba(251, 146, 60, 0.15);
+  color: rgba(251, 146, 60, 0.95);
 }
 
 .integrationName {
   font-weight: 800;
   font-size: 14px;
+  color: rgba(226, 232, 240, 0.95);
 }
 
 .integrationStatus {
   font-size: 12px;
-  color: var(--muted, #64748b);
+  color: rgba(148, 163, 184, 0.9);
   margin-top: 2px;
 }

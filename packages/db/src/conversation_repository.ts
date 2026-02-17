@@ -31,7 +31,8 @@ export interface Conversation {
 }
 
 export interface CreateConversationParams {
-  instructor_id: number;
+  /** Instructor ID: number (1 = default UUID) or UUID string for real instructor profile */
+  instructor_id: number | string;
   customer_identifier: string;
   channel?: string; // Optional, defaults to 'whatsapp'
 }
@@ -52,12 +53,14 @@ export async function createConversation(params: CreateConversationParams): Prom
   console.log('[DEBUG CREATE] createConversation called - params:', JSON.stringify(params, null, 2));
   console.log('[DEBUG CREATE] instructor_id type:', typeof params.instructor_id, 'value:', params.instructor_id);
   
-  // Convert instructor_id from number to UUID string if needed
-  // The database expects UUID, but we're passing a number (1)
-  // Use a fixed UUID for default instructor
-  const instructorIdUuid = params.instructor_id === 1 
-    ? '00000000-0000-0000-0000-000000000001' 
-    : String(params.instructor_id);
+  // Convert instructor_id to UUID string: number 1 → default UUID; string UUID → as-is; other number → string
+  const raw = params.instructor_id;
+  const instructorIdUuid =
+    typeof raw === 'string' && /^[0-9a-fA-F-]{36}$/.test(raw)
+      ? raw
+      : raw === 1
+        ? '00000000-0000-0000-0000-000000000001'
+        : String(raw);
   
   // Default channel to 'whatsapp' if not provided
   const channel = params.channel ?? 'whatsapp';
@@ -155,7 +158,7 @@ export async function getOpenConversationByCustomer(
 export async function resolveConversationByChannel(
   channel: string,
   customerIdentifier: string,
-  instructorId: number = 1
+  instructorId: number | string = 1
 ): Promise<Conversation> {
   console.log('[DEBUG REPO] resolveConversationByChannel called - channel:', channel, 'customerIdentifier:', customerIdentifier, 'instructorId:', instructorId, 'type:', typeof instructorId);
   

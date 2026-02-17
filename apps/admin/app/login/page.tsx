@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
@@ -15,7 +15,7 @@ function getAfterLogin(sp: ReturnType<typeof useSearchParams>): string {
   return next;
 }
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const sp = useSearchParams();
 
   const [email, setEmail] = useState('');
@@ -53,7 +53,6 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Redirect a tutta pagina così i cookie di sessione sono inviati alla richiesta successiva
       window.location.href = afterLogin;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Accesso fallito');
@@ -70,7 +69,7 @@ export default function AdminLoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: 24,
-        background: '#f9fafb',
+        background: '#0b1220',
       }}
     >
       <div
@@ -78,23 +77,23 @@ export default function AdminLoginPage() {
           width: '100%',
           maxWidth: 420,
           padding: 24,
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: 12,
-          background: '#fff',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          background: 'rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'rgba(226, 232, 240, 0.95)' }}>
             Admin login
           </div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-            Usa un utente presente in <code style={{ background: '#f3f4f6', padding: '0 4px' }}>admin_users</code> (stesso Supabase dell’instructor).
+          <div style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.9)', marginTop: 4 }}>
+            Usa un utente presente in <code style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '0 4px', borderRadius: 4 }}>admin_users</code> (stesso Supabase dell&apos;instructor).
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 4 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'rgba(148, 163, 184, 0.9)', marginBottom: 4 }}>
             Email
           </label>
           <input
@@ -108,15 +107,15 @@ export default function AdminLoginPage() {
               marginBottom: 12,
               padding: '10px 12px',
               borderRadius: 8,
-              border: '1px solid #d1d5db',
-              background: '#fff',
-              color: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'rgba(226, 232, 240, 0.95)',
               outline: 'none',
               boxSizing: 'border-box',
             }}
           />
 
-          <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 4 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'rgba(148, 163, 184, 0.9)', marginBottom: 4 }}>
             Password
           </label>
           <input
@@ -130,9 +129,9 @@ export default function AdminLoginPage() {
               marginBottom: 12,
               padding: '10px 12px',
               borderRadius: 8,
-              border: '1px solid #d1d5db',
-              background: '#fff',
-              color: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'rgba(226, 232, 240, 0.95)',
               outline: 'none',
               boxSizing: 'border-box',
             }}
@@ -143,9 +142,9 @@ export default function AdminLoginPage() {
               style={{
                 marginBottom: 12,
                 fontSize: 12,
-                color: '#b91c1c',
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
+                color: '#fca5a5',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
                 padding: 10,
                 borderRadius: 8,
               }}
@@ -161,21 +160,29 @@ export default function AdminLoginPage() {
               width: '100%',
               padding: '10px 12px',
               borderRadius: 8,
-              border: '1px solid #d1d5db',
-              background: loading ? '#f3f4f6' : '#111827',
-              color: loading ? '#9ca3af' : '#fff',
+              border: 'none',
+              background: loading ? 'rgba(255, 255, 255, 0.06)' : '#3b82f6',
+              color: loading ? 'rgba(148, 163, 184, 0.6)' : '#fff',
               fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? 'Accesso in corso…' : 'Accedi'}
+            {loading ? 'Accesso in corso\u2026' : 'Accedi'}
           </button>
 
-          <div style={{ marginTop: 12, fontSize: 12, color: '#6b7280' }}>
-            Dopo l’accesso: <Link href={afterLogin} style={{ color: '#2563eb' }}>{afterLogin}</Link>
+          <div style={{ marginTop: 12, fontSize: 12, color: 'rgba(148, 163, 184, 0.9)' }}>
+            Dopo l&apos;accesso: <Link href={afterLogin} style={{ color: '#3b82f6' }}>{afterLogin}</Link>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1220', color: 'rgba(226, 232, 240, 0.9)' }}>Loading…</div>}>
+      <AdminLoginForm />
+    </Suspense>
   );
 }

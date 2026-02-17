@@ -2,7 +2,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { getUserRole } from '@/lib/getUserRole';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
+import '../admin-tokens.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,20 +38,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <AdminSidebar />
-      <div style={{ flex: 1, marginLeft: '200px' }}>
-        <div style={{
-          padding: '0.75rem 2rem',
-          borderBottom: '1px solid #e5e7eb',
-          backgroundColor: '#f9fafb',
-          fontSize: '0.875rem',
-          color: '#6b7280',
-        }}>
-          Role: {role || 'unknown'}
-        </div>
-        {children}
-      </div>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0b1220' }}>
+      <AdminShell role={role}>{children}</AdminShell>
     </div>
   );
 }

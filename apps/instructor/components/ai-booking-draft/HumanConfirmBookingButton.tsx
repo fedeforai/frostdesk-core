@@ -14,7 +14,7 @@ export function HumanConfirmBookingButton({
       <button
         type="button"
         disabled={!acknowledged}
-        title="Questa azione creerà una prenotazione reale."
+        title="This action will create a real booking."
         onClick={onClick}
         style={{
           padding: '0.625rem 1.25rem',
@@ -28,7 +28,7 @@ export function HumanConfirmBookingButton({
           opacity: acknowledged ? 1 : 0.7,
         }}
       >
-        Conferma prenotazione (azione umana)
+        Confirm booking (human action)
       </button>
     </div>
   );

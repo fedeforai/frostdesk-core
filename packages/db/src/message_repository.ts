@@ -26,12 +26,14 @@ export interface CreateMessageParams {
 
 /**
  * Creates a new message (append-only event log entry).
+ * Uses message_text column (canonical schema); returned as Message.content for API compatibility.
+ * channel is required by schema; default 'whatsapp' when not provided by callers.
  */
 export async function createMessage(params: CreateMessageParams): Promise<Message> {
   const result = await sql<Message[]>`
-    INSERT INTO messages (conversation_id, direction, content, raw_payload, created_at)
-    VALUES (${params.conversation_id}, ${params.direction}, ${params.content}, ${params.raw_payload}, NOW())
-    RETURNING id, conversation_id, direction, content, raw_payload, created_at
+    INSERT INTO messages (conversation_id, direction, message_text, channel, raw_payload, created_at)
+    VALUES (${params.conversation_id}, ${params.direction}, ${params.content}, 'whatsapp', ${params.raw_payload}, NOW())
+    RETURNING id, conversation_id, direction, message_text AS content, raw_payload, created_at
   `;
 
   if (result.length === 0) {
@@ -44,12 +46,13 @@ export async function createMessage(params: CreateMessageParams): Promise<Messag
 /**
  * Retrieves all messages for a conversation, ordered by creation time (ascending).
  * Returns empty array if no messages exist.
+ * Uses message_text column (canonical schema); aliased as content for Message type.
  */
 export async function getMessagesByConversation(
   conversationId: string
 ): Promise<Message[]> {
   const result = await sql<Message[]>`
-    SELECT id, conversation_id, direction, content, raw_payload, created_at
+    SELECT id, conversation_id, direction, message_text AS content, raw_payload, created_at
     FROM messages
     WHERE conversation_id = ${conversationId}
     ORDER BY created_at ASC
@@ -312,4 +315,64 @@ export async function persistOutboundMessage(
 
     return { id: result[0].id };
   });
+}
+
+/**
+ * Persists an outbound message from WhatsApp "message echo" (business sent from phone).
+ * Idempotent on (conversation_id, external_message_id): if already stored, returns existing id.
+ * Does NOT insert into inbound_messages (echo is outbound only).
+ *
+ * @param params - conversationId, channel, externalMessageId, messageText, receivedAt
+ * @returns Message id (existing or newly created)
+ */
+export interface PersistOutboundMessageFromEchoParams {
+  conversationId: string;
+  channel: 'whatsapp';
+  externalMessageId: string;
+  messageText: string;
+  receivedAt: Date;
+  rawPayload?: Record<string, unknown>;
+}
+
+export async function persistOutboundMessageFromEcho(
+  params: PersistOutboundMessageFromEchoParams
+): Promise<{ id: string }> {
+  const existing = await sql<Array<{ id: string }>>`
+    SELECT id FROM messages
+    WHERE conversation_id = ${params.conversationId}::uuid
+      AND direction = 'outbound'
+      AND external_message_id = ${params.externalMessageId}
+    LIMIT 1
+  `;
+  if (existing.length > 0) {
+    return { id: existing[0].id };
+  }
+
+  const result = await sql<Array<{ id: string }>>`
+    INSERT INTO messages (
+      conversation_id,
+      channel,
+      direction,
+      message_text,
+      sender_identity,
+      external_message_id,
+      raw_payload,
+      created_at
+    )
+    VALUES (
+      ${params.conversationId},
+      ${params.channel},
+      'outbound',
+      ${params.messageText},
+      'whatsapp_echo',
+      ${params.externalMessageId},
+      ${JSON.stringify(params.rawPayload ?? {})}::jsonb,
+      ${params.receivedAt.toISOString()}::timestamptz
+    )
+    RETURNING id
+  `;
+  if (result.length === 0) {
+    throw new Error('Failed to insert outbound echo message: no row returned');
+  }
+  return { id: result[0].id };
 }

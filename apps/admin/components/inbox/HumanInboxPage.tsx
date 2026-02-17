@@ -1,21 +1,14 @@
-// apps/admin/components/inbox/HumanInboxPage.tsx
-
 'use client';
 
-import { useMemo, useState } from 'react';
-import AppShell from '@/components/shell/AppShell';
-import StatusPill from '@/components/shared/StatusPill';
-import { useAdminCheck, setAdminToken } from '@/components/shared/useAdminCheck';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  MOCK_CONVERSATIONS,
-  getMockMessages,
-  type MockConversation,
-  type MockMessage,
-} from './mockInboxData';
-import { kpiStore } from '@/lib/kpiStore';
+  fetchHumanInbox,
+  fetchHumanInboxDetail,
+  sendOutboundMessage,
+  type HumanInboxItem,
+  type HumanInboxDetail,
+} from '@/lib/adminApi';
 import styles from './inbox.module.css';
-
-const API_BASE = 'http://127.0.0.1:3001';
 
 function formatLastActivity(iso: string): string {
   const d = new Date(iso);
@@ -31,255 +24,303 @@ function formatMessageTime(iso: string): string {
   return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-function statusClass(status: MockConversation['status']): string {
-  return status === 'hot'
-    ? styles.statusHot
-    : status === 'waiting'
-      ? styles.statusWaiting
-      : styles.statusResolved;
+function statusClass(needsHuman: boolean, status: string): string {
+  if (needsHuman) return styles.statusHot;
+  if (status === 'resolved' || status === 'closed') return styles.statusResolved;
+  return styles.statusWaiting;
 }
 
-type DraftState = Record<string, { used: boolean }>;
+function statusLabel(needsHuman: boolean, status: string): string {
+  if (needsHuman) return 'needs reply';
+  return status || 'waiting';
+}
 
 export default function HumanInboxPage() {
-  const adminCheck = useAdminCheck(API_BASE);
-
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [pasteValue, setPasteValue] = useState('');
   const [composerText, setComposerText] = useState('');
+  const [sending, setSending] = useState(false);
 
-  // local UI state: which drafts have been used
-  const [draftState, setDraftState] = useState<DraftState>({});
-  // local UI state: appended "sent messages" when using a draft
-  const [localSent, setLocalSent] = useState<Record<string, MockMessage[]>>({});
+  const [conversations, setConversations] = useState<HumanInboxItem[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
+
+  const [detail, setDetail] = useState<HumanInboxDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  const loadConversations = useCallback(async () => {
+    setListError(null);
+    setListLoading(true);
+    try {
+      const res = await fetchHumanInbox();
+      setConversations(res.items);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setListError(err?.message ?? 'Failed to load inbox');
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadConversations();
+  }, [loadConversations]);
+
+  const loadDetail = useCallback(async (conversationId: string) => {
+    setDetailError(null);
+    setDetailLoading(true);
+    try {
+      const res = await fetchHumanInboxDetail(conversationId);
+      setDetail(res.detail);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setDetailError(err?.message ?? 'Failed to load conversation');
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setDetail(null);
+      return;
+    }
+    void loadDetail(selectedId);
+  }, [selectedId, loadDetail]);
+
+  const handleSend = async () => {
+    if (!selectedId || !composerText.trim() || sending) return;
+    setSending(true);
+    try {
+      await sendOutboundMessage({
+        conversationId: selectedId,
+        text: composerText.trim(),
+      });
+      setComposerText('');
+      void loadDetail(selectedId);
+      void loadConversations();
+    } catch {
+      // keep text in composer so user can retry
+    } finally {
+      setSending(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return MOCK_CONVERSATIONS;
-    return MOCK_CONVERSATIONS.filter(
+    if (!q) return conversations;
+    return conversations.filter(
       (c) =>
-        c.customerName.toLowerCase().includes(q) ||
-        c.lastMessagePreview.toLowerCase().includes(q)
+        c.conversation_id.toLowerCase().includes(q) ||
+        (c.last_message.text ?? '').toLowerCase().includes(q) ||
+        c.channel.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, conversations]);
 
-  const selected = selectedId
-    ? MOCK_CONVERSATIONS.find((c) => c.id === selectedId) ?? null
-    : null;
-
-  const baseMessages: MockMessage[] = selectedId ? getMockMessages(selectedId) : [];
-  const appendedMessages: MockMessage[] = selectedId ? (localSent[selectedId] ?? []) : [];
-  const messages: MockMessage[] = [...baseMessages, ...appendedMessages];
-
-  const handlePasteToken = () => {
-    const t = pasteValue.trim();
-    if (t) {
-      setAdminToken(t);
-      adminCheck.refetch();
-      setPasteValue('');
-    }
-  };
-
-  const handleUseDraft = (draftMsg: MockMessage) => {
-    // mark used
-    setDraftState((prev) => ({
-      ...prev,
-      [draftMsg.id]: { used: true },
-    }));
-
-    // KPI: Draft used +1
-    kpiStore.incrementDraftUsed();
-
-    // simulate sending draft as instructor message to customer
-    if (selectedId) {
-      const sent: MockMessage = {
-        id: `${selectedId}-sent-${Date.now()}`,
-        role: 'instructor',
-        text: draftMsg.text,
-        createdAt: new Date().toISOString(),
-      };
-      setLocalSent((prev) => ({
-        ...prev,
-        [selectedId]: [...(prev[selectedId] ?? []), sent],
-      }));
-    }
-  };
-
-  const handleDismissDraft = (draftMsg: MockMessage) => {
-    // if you want: mark as used OR add a separate dismissed state.
-    // minimal: mark used so buttons disable and UI shows it's no longer actionable
-    setDraftState((prev) => ({
-      ...prev,
-      [draftMsg.id]: { used: true },
-    }));
-  };
-
-  const selectedConversationMeta = selectedId
-    ? MOCK_CONVERSATIONS.find((c) => c.id === selectedId) ?? null
+  const selectedConv = selectedId
+    ? conversations.find((c) => c.conversation_id === selectedId) ?? null
     : null;
 
   return (
-    <AppShell>
-      <div className={styles.page}>
-        <div className={styles.topRow}>
-          <h1 className={styles.title}>Human Inbox</h1>
-          <div className={styles.bannerRow}>
-            <StatusPill label={adminCheck.label} tone={adminCheck.tone} />
-            {adminCheck.message && (
-              <span className={styles.bannerMessage}>{adminCheck.message}</span>
-            )}
-          </div>
+    <div className={styles.page}>
+      <div className={styles.topRow}>
+        <div>
+          <h1 className={styles.title}>Inbox</h1>
+          <p style={{ fontSize: '0.8125rem', color: '#6b7280', margin: '0.25rem 0 0' }}>
+            Conversations requiring attention
+          </p>
         </div>
+      </div>
 
-        <div className={styles.twoCol}>
-          <div className={styles.listPanel}>
-            <div className={styles.pasteRow}>
-              <input
-                type="text"
-                className={styles.pasteInput}
-                placeholder="Paste token"
-                value={pasteValue}
-                onChange={(e) => setPasteValue(e.target.value)}
-                aria-label="Paste token"
-              />
-              <button
-                type="button"
-                className={styles.pasteBtn}
-                onClick={handlePasteToken}
-              >
-                Paste token
-              </button>
+      {listError && (
+        <div style={{
+          padding: '0.75rem 1rem',
+          margin: '0 0 1rem',
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '0.5rem',
+          color: '#991b1b',
+          fontSize: '0.875rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <span>{listError}</span>
+          <button
+            type="button"
+            onClick={() => void loadConversations()}
+            style={{
+              padding: '4px 12px',
+              border: '1px solid #fecaca',
+              borderRadius: '0.375rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              color: '#991b1b',
+              fontSize: '0.8125rem',
+              cursor: 'pointer',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      <div className={styles.twoCol}>
+        {/* ── List panel ────────────────────────── */}
+        <div className={styles.listPanel}>
+          <div className={styles.searchWrap}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search conversations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search conversations"
+            />
+          </div>
+
+          {listLoading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
+              Loading conversations…
             </div>
-
-            <div className={styles.searchWrap}>
-              <input
-                type="search"
-                className={styles.searchInput}
-                placeholder="Search conversations..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                aria-label="Search conversations"
-              />
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
+              No conversations
             </div>
-
+          ) : (
             <ul className={styles.conversationList}>
               {filtered.map((c) => (
-                <li key={c.id}>
+                <li key={c.conversation_id}>
                   <button
                     type="button"
-                    className={`${styles.convItem} ${selectedId === c.id ? styles.convItemSelected : ''}`}
-                    onClick={() => setSelectedId(c.id)}
+                    className={`${styles.convItem} ${selectedId === c.conversation_id ? styles.convItemSelected : ''}`}
+                    onClick={() => setSelectedId(c.conversation_id)}
                   >
-                    <div className={styles.convName}>{c.customerName}</div>
-                    <div className={styles.convPreview}>{c.lastMessagePreview}</div>
+                    <div className={styles.convName}>
+                      {c.channel}
+                      {c.needs_human && (
+                        <span style={{ marginLeft: 6, fontSize: '0.625rem', color: '#dc2626', fontWeight: 700 }}>
+                          ● NEEDS REPLY
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.convPreview}>
+                      {c.last_message.text?.slice(0, 120) ?? '—'}
+                    </div>
                     <div className={styles.convMeta}>
                       <span className={styles.channelTag}>{c.channel}</span>
-                      <span>{formatLastActivity(c.updatedAt)}</span>
-                      <span className={`${styles.statusBadge} ${statusClass(c.status)}`}>
-                        {c.status}
+                      <span>{formatLastActivity(c.last_activity_at)}</span>
+                      <span className={`${styles.statusBadge} ${statusClass(c.needs_human, c.status)}`}>
+                        {statusLabel(c.needs_human, c.status)}
                       </span>
-                      {c.unreadCount > 0 && (
-                        <span className={styles.unread}>{c.unreadCount}</span>
-                      )}
                     </div>
                   </button>
                 </li>
               ))}
             </ul>
-          </div>
+          )}
+        </div>
 
-          <div className={styles.detailPanel}>
-            {selectedConversationMeta ? (
-              <>
-                <div className={styles.detailHeader}>
-                  <div className={styles.detailName}>
-                    {selectedConversationMeta.customerName}
-                  </div>
-                  <div className={styles.detailMeta}>
-                    {selectedConversationMeta.channel} · Last activity{' '}
-                    {formatLastActivity(selectedConversationMeta.updatedAt)}
-                  </div>
+        {/* ── Detail panel ────────────────────────── */}
+        <div className={styles.detailPanel}>
+          {selectedConv && selectedId ? (
+            <>
+              <div className={styles.detailHeader}>
+                <div className={styles.detailName}>
+                  {selectedConv.channel} conversation
                 </div>
+                <div className={styles.detailMeta}>
+                  ID: {selectedId.slice(0, 8)}… · Status: {selectedConv.status} · Last activity{' '}
+                  {formatLastActivity(selectedConv.last_activity_at)}
+                </div>
+              </div>
 
-                <div className={styles.messagesWrap}>
-                  {messages.map((m) => {
-                    // AI Draft is not part of the customer chat bubble stream
-                    if (m.role === 'ai_draft') {
-                      const used = draftState[m.id]?.used === true;
-                      return (
-                        <div key={m.id} className={styles.draftWrap}>
-                          <div className={styles.draftHeaderRow}>
-                            <div className={styles.draftTitle}>AI suggested draft</div>
-                            {used && <span className={styles.usedBadge}>USED</span>}
-                          </div>
-
-                          <div>{m.text}</div>
-
-                          <div className={styles.draftActions}>
-                            <button
-                              type="button"
-                              className={`${styles.draftBtnPrimary} ${used ? styles.btnDisabled : ''}`}
-                              disabled={used}
-                              onClick={() => handleUseDraft(m)}
-                            >
-                              Use draft
-                            </button>
-                            <button
-                              type="button"
-                              className={`${styles.draftBtnSecondary} ${used ? styles.btnDisabled : ''}`}
-                              disabled={used}
-                              onClick={() => handleDismissDraft(m)}
-                            >
-                              Dismiss
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    // customer / instructor are real chat bubbles
+              <div className={styles.messagesWrap}>
+                {detailLoading ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Loading messages…
+                  </div>
+                ) : detailError ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#991b1b', fontSize: '0.875rem' }}>
+                    {detailError}
+                  </div>
+                ) : detail && detail.messages.length > 0 ? (
+                  detail.messages.map((m) => {
+                    const isCustomer = m.direction === 'inbound';
                     return (
                       <div
-                        key={m.id}
+                        key={m.message_id}
                         className={`${styles.message} ${
-                          m.role === 'customer'
-                            ? styles.messageCustomer
-                            : styles.messageInstructor
+                          isCustomer ? styles.messageCustomer : styles.messageInstructor
                         }`}
                       >
                         <div className={styles.messageRole}>
-                          {m.role === 'customer' ? 'customer' : 'instructor'}
+                          {isCustomer ? 'customer' : 'outbound'}
+                          {m.intent && (
+                            <span style={{ marginLeft: 8, fontSize: '0.6875rem', color: '#6b7280' }}>
+                              intent: {m.intent}
+                              {m.confidence != null && ` (${Math.round(m.confidence * 100)}%)`}
+                            </span>
+                          )}
                         </div>
-                        <div>{m.text}</div>
+                        <div>{m.message_text ?? ''}</div>
                         <div className={styles.messageTime}>
-                          {formatMessageTime(m.createdAt)}
+                          {formatMessageTime(m.created_at)}
                         </div>
                       </div>
                     );
-                  })}
-                </div>
+                  })
+                ) : (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
+                    No messages
+                  </div>
+                )}
 
-                <div className={styles.composerWrap}>
-                  <textarea
-                    className={styles.composerTextarea}
-                    placeholder="Type a message to the customer…"
-                    value={composerText}
-                    onChange={(e) => setComposerText(e.target.value)}
-                    rows={2}
-                    aria-label="Message composer"
-                  />
-                  <button type="button" className={styles.sendBtn} disabled>
-                    Send
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className={styles.emptyDetail}>Select a conversation</div>
-            )}
-          </div>
+                {detail?.booking && (
+                  <div style={{
+                    margin: '1rem 0',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.8125rem',
+                    color: '#166534',
+                  }}>
+                    Booking: {detail.booking.status} (ID: {detail.booking.booking_id.slice(0, 8)}…)
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.composerWrap}>
+                <textarea
+                  className={styles.composerTextarea}
+                  placeholder="Type a message (admin outbound)…"
+                  value={composerText}
+                  onChange={(e) => setComposerText(e.target.value)}
+                  rows={2}
+                  aria-label="Message composer"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSend();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className={styles.sendBtn}
+                  disabled={!composerText.trim() || sending}
+                  onClick={() => void handleSend()}
+                >
+                  {sending ? 'Sending…' : 'Send'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className={styles.emptyDetail}>Select a conversation</div>
+          )}
         </div>
       </div>
-    </AppShell>
+    </div>
   );
 }

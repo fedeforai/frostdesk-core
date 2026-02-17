@@ -7,6 +7,7 @@ export interface InstructorAvailability {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  meeting_point_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface UpsertInstructorAvailabilityParams {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  meeting_point_id?: string | null;
 }
 
 export interface CreateInstructorAvailabilityParams {
@@ -32,6 +34,7 @@ export interface CreateInstructorAvailabilityParams {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  meetingPointId?: string | null;
 }
 
 export interface UpdateInstructorAvailabilityParams {
@@ -41,6 +44,7 @@ export interface UpdateInstructorAvailabilityParams {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  meetingPointId?: string | null;
 }
 
 /**
@@ -60,6 +64,7 @@ export async function getInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     FROM instructor_availability
@@ -89,7 +94,7 @@ export async function listInstructorAvailability(
 export async function upsertInstructorAvailability(
   params: UpsertInstructorAvailabilityParams
 ): Promise<InstructorAvailability> {
-  const { instructor_id, day_of_week, start_time, end_time, is_active } = params;
+  const { instructor_id, day_of_week, start_time, end_time, is_active, meeting_point_id = null } = params;
 
   const existing = await sql<InstructorAvailability[]>`
     SELECT
@@ -99,6 +104,7 @@ export async function upsertInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     FROM instructor_availability
@@ -113,6 +119,7 @@ export async function upsertInstructorAvailability(
     const result = await sql<InstructorAvailability[]>`
       UPDATE instructor_availability
       SET is_active = ${is_active},
+          meeting_point_id = ${meeting_point_id},
           updated_at = NOW()
       WHERE id = ${existing[0].id}
       RETURNING
@@ -122,6 +129,7 @@ export async function upsertInstructorAvailability(
         start_time,
         end_time,
         is_active,
+        meeting_point_id,
         created_at,
         updated_at
     `;
@@ -135,6 +143,7 @@ export async function upsertInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     )
@@ -144,6 +153,7 @@ export async function upsertInstructorAvailability(
       ${start_time},
       ${end_time},
       ${is_active},
+      ${meeting_point_id},
       NOW(),
       NOW()
     )
@@ -154,6 +164,7 @@ export async function upsertInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
   `;
@@ -169,7 +180,7 @@ export async function upsertInstructorAvailability(
 export async function createInstructorAvailability(
   params: CreateInstructorAvailabilityParams
 ): Promise<InstructorAvailability> {
-  const { instructorId, dayOfWeek, startTime, endTime, isActive } = params;
+  const { instructorId, dayOfWeek, startTime, endTime, isActive, meetingPointId = null } = params;
 
   const result = await sql<InstructorAvailability[]>`
     INSERT INTO instructor_availability (
@@ -178,6 +189,7 @@ export async function createInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     )
@@ -187,6 +199,7 @@ export async function createInstructorAvailability(
       ${startTime},
       ${endTime},
       ${isActive},
+      ${meetingPointId},
       NOW(),
       NOW()
     )
@@ -197,6 +210,7 @@ export async function createInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     `;
@@ -217,7 +231,7 @@ export async function createInstructorAvailability(
 export async function updateInstructorAvailability(
   params: UpdateInstructorAvailabilityParams
 ): Promise<InstructorAvailability> {
-  const { id, instructorId, dayOfWeek, startTime, endTime, isActive } = params;
+  const { id, instructorId, dayOfWeek, startTime, endTime, isActive, meetingPointId } = params;
 
   const result = await sql<InstructorAvailability[]>`
     UPDATE instructor_availability
@@ -226,6 +240,7 @@ export async function updateInstructorAvailability(
       start_time = ${startTime},
       end_time = ${endTime},
       is_active = ${isActive},
+      meeting_point_id = ${meetingPointId ?? null},
       updated_at = NOW()
     WHERE id = ${id}
       AND instructor_id = ${instructorId}
@@ -236,6 +251,7 @@ export async function updateInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     `;
@@ -290,6 +306,7 @@ export async function findInstructorAvailabilityBySlot(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
     FROM instructor_availability
@@ -327,6 +344,7 @@ export async function toggleInstructorAvailability(
       start_time,
       end_time,
       is_active,
+      meeting_point_id,
       created_at,
       updated_at
   `;

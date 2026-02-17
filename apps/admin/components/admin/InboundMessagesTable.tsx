@@ -40,31 +40,31 @@ export default function InboundMessagesTable({ messages }: InboundMessagesTableP
       }}>
         <strong>READ-ONLY / OBSERVABILITY</strong> — This table is READ-ONLY. No mutations allowed.
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <thead>
-          <tr style={{ backgroundColor: '#f9fafb' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+          <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Channel
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Conversation ID
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               External Message ID
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Sender Identity
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Message Type
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Message Text
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Received At
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Created At
             </th>
           </tr>
@@ -78,29 +78,29 @@ export default function InboundMessagesTable({ messages }: InboundMessagesTableP
             </tr>
           ) : (
             messages.map((message) => (
-              <tr key={message.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+              <tr key={message.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {message.channel}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', fontFamily: 'monospace', fontSize: '0.875rem' }}>
                   {message.conversation_id}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', fontFamily: 'monospace', fontSize: '0.875rem' }}>
                   {message.external_message_id}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', fontFamily: 'monospace', fontSize: '0.875rem' }}>
                   {message.sender_identity}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {message.message_type}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827', maxWidth: '300px', wordBreak: 'break-word' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', maxWidth: '300px', wordBreak: 'break-word' }}>
                   {message.message_text ?? '-'}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {message.received_at}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {message.created_at}
                 </td>
               </tr>

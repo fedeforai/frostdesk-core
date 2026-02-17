@@ -17,8 +17,8 @@ export default async function OnboardingFormPage() {
   if (!supabase) {
     return (
       <div style={{ padding: '2rem', maxWidth: '640px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Completa onboarding</h1>
-        <p style={{ color: '#991b1b' }}>Errore di configurazione.</p>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Complete onboarding</h1>
+        <p style={{ color: '#991b1b' }}>Configuration error.</p>
       </div>
     );
   }
@@ -95,11 +95,11 @@ export default async function OnboardingFormPage() {
             fontSize: '1.75rem',
             fontWeight: 700,
             letterSpacing: '-0.02em',
-            color: '#0f172a',
+            color: 'rgba(226, 232, 240, 0.95)',
             marginBottom: '0.5rem',
           }}
         >
-          Completa il tuo profilo
+          Complete your profile
         </h1>
         <p
           style={{
@@ -109,23 +109,23 @@ export default async function OnboardingFormPage() {
             marginBottom: '0.5rem',
           }}
         >
-          Inserisci i dati richiesti qui sotto. Serviranno per la tua scheda e per i contatti con gli allievi.
+          Enter the required data below. It will be used for your card and for contacts with students.
         </p>
         <div
           style={{
             marginBottom: '1.5rem',
             padding: '1rem 1.25rem',
-            background: '#fff',
+            background: 'rgba(255, 255, 255, 0.05)',
             borderRadius: '12px',
             border: '1px solid #e2e8f0',
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}
         >
-          <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+          <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
             Privacy
           </p>
-          <p style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-            I dati sono trattati nel rispetto della privacy e utilizzati solo per il servizio FrostDesk.
+          <p style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.9)', lineHeight: 1.5, margin: 0 }}>
+            Your data is processed in compliance with privacy regulations and used only for the FrostDesk service.
           </p>
         </div>
 
@@ -135,12 +135,12 @@ export default async function OnboardingFormPage() {
           <Link
             href="/instructor/onboarding"
             style={{
-              color: '#2563eb',
+              color: 'rgba(129, 140, 248, 0.95)',
               textDecoration: 'none',
               fontWeight: 500,
             }}
           >
-            ← Torna alla pagina onboarding
+            ← Back to onboarding page
           </Link>
         </p>
       </div>

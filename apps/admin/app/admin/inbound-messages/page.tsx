@@ -23,7 +23,7 @@ export default async function InboundMessagesPage({ searchParams }: InboundMessa
           { label: 'Admin', href: '/admin' },
           { label: 'Inbound Messages' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Inbound Messages
         </h1>
         <InboundMessagesTable messages={data.items} />
@@ -36,7 +36,7 @@ export default async function InboundMessagesPage({ searchParams }: InboundMessa
           { label: 'Admin', href: '/admin' },
           { label: 'Inbound Messages' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Inbound Messages
         </h1>
         <ErrorState

@@ -7,19 +7,19 @@ interface WhatsappInboundTableProps {
 export default function WhatsappInboundTable({ items }: WhatsappInboundTableProps) {
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <thead>
-          <tr style={{ backgroundColor: '#f9fafb' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+          <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Received At
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Sender ID
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Message ID
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
               Signature Valid
             </th>
           </tr>
@@ -33,17 +33,17 @@ export default function WhatsappInboundTable({ items }: WhatsappInboundTableProp
             </tr>
           ) : (
             items.map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+              <tr key={item.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {item.received_at}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {item.sender_id ?? '-'}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {item.message_id ?? '-'}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {item.signature_valid ? 'Yes' : 'No'}
                 </td>
               </tr>

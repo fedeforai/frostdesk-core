@@ -22,7 +22,10 @@ import {
   isValidUUID,
   getCustomerById,
   insertAuditEvent,
+  validateAvailability,
+  AvailabilityConflictError,
 } from '@frostdesk/db';
+import type { ListInstructorBookingsFilters } from '@frostdesk/db';
 import type { UpdateBookingDetailsPatch } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import {
@@ -33,17 +36,18 @@ import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 import { isPilotInstructor } from '../../lib/pilot_instructor.js';
+import { checkBillingGate } from '../../lib/billing_gate.js';
 
 /**
- * Resolve instructor id from JWT. Tries definitive profile first, then legacy (same as /instructor/profile).
- * So GET /instructor/bookings works whether the instructor exists only in definitive or only in legacy.
+ * Resolve instructor id + billing status from JWT.
+ * Tries definitive profile first (has billing_status), then legacy (defaults to 'pilot').
  */
-async function getInstructorId(request: { headers?: { authorization?: string } }): Promise<string> {
+async function getInstructorId(request: { headers?: { authorization?: string } }): Promise<{ id: string; billingStatus: string }> {
   const userId = await getUserIdFromJwt(request);
   const definitive = await getInstructorProfileDefinitiveByUserId(userId);
-  if (definitive) return definitive.id;
+  if (definitive) return { id: definitive.id, billingStatus: definitive.billing_status ?? 'pilot' };
   const legacy = await getInstructorProfileByUserId(userId);
-  if (legacy) return legacy.id;
+  if (legacy) return { id: legacy.id, billingStatus: 'pilot' };
   const e = new Error('Instructor profile not found');
   (e as any).code = ERROR_CODES.NOT_FOUND;
   throw e;
@@ -51,13 +55,13 @@ async function getInstructorId(request: { headers?: { authorization?: string } }
 
 /**
  * Shared: load booking, enforce ownership (404 if not found or not owner), apply expiry.
- * Returns { booking, instructorId } or null after sending error response.
+ * Returns { booking, instructorId, billingStatus } or null after sending error response.
  */
 async function loadBookingAndEnforceOwnership(
   request: { headers?: { authorization?: string }; params: { id: string } },
   reply: { status: (code: number) => { send: (body: unknown) => unknown } }
-): Promise<{ booking: any; instructorId: string } | null> {
-  const instructorId = await getInstructorId(request);
+): Promise<{ booking: any; instructorId: string; billingStatus: string } | null> {
+  const { id: instructorId, billingStatus } = await getInstructorId(request);
   const bookingId = (request.params as { id: string }).id;
   if (!bookingId?.trim()) {
     reply.status(400).send({
@@ -85,7 +89,7 @@ async function loadBookingAndEnforceOwnership(
     });
     return null;
   }
-  return { booking, instructorId };
+  return { booking, instructorId, billingStatus };
 }
 
 /**
@@ -110,10 +114,20 @@ async function applyTransition(
 
 export async function instructorBookingRoutes(app: FastifyInstance): Promise<void> {
   // GET /instructor/bookings — list all bookings for the instructor (never accept instructorId from client)
+  // Query: date_from, date_to (YYYY-MM-DD), payment_status ('unpaid' = unpaid|pending|failed)
   app.get('/instructor/bookings', async (request, reply) => {
     try {
-      const instructorId = await getInstructorId(request);
-      const items = await listInstructorBookings(instructorId);
+      const { id: instructorId } = await getInstructorId(request);
+      const query = request.query as { date_from?: string; date_to?: string; payment_status?: string };
+      const filters: ListInstructorBookingsFilters | undefined =
+        query.date_from != null || query.date_to != null || query.payment_status != null
+          ? {
+              dateFrom: query.date_from ?? undefined,
+              dateTo: query.date_to ?? undefined,
+              paymentStatus: query.payment_status ?? undefined,
+            }
+          : undefined;
+      const items = await listInstructorBookings(instructorId, filters);
       return reply.send({ items: items ?? [] });
     } catch (err) {
       const normalized = normalizeError(err);
@@ -125,7 +139,7 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
   // GET /instructor/bookings/:id — single booking (ownership enforced)
   app.get<{ Params: { id: string } }>('/instructor/bookings/:id', async (request, reply) => {
     try {
-      const instructorId = await getInstructorId(request);
+      const { id: instructorId } = await getInstructorId(request);
       const bookingId = (request.params as { id: string }).id;
       if (!bookingId?.trim()) {
         return reply.status(400).send({
@@ -160,13 +174,17 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
   // POST /instructor/bookings — create booking. Requires customerId (existing customer); ownership enforced.
   app.post<{ Body: Record<string, unknown> }>('/instructor/bookings', async (request, reply) => {
     try {
-      const instructorId = await getInstructorId(request);
+      const { id: instructorId, billingStatus } = await getInstructorId(request);
       if (!isPilotInstructor(instructorId)) {
         return reply.status(402).send({
           ok: false,
           error: ERROR_CODES.PILOT_ONLY,
           message: 'This feature is only available for pilot instructors.',
         });
+      }
+      const billingBlock = checkBillingGate(billingStatus);
+      if (billingBlock) {
+        return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
       }
       const body = request.body as Record<string, unknown>;
       const customerId =
@@ -262,16 +280,110 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
         (customer.phone_number && String(customer.phone_number).trim()) ||
         'Customer';
 
-      const created = await createBooking({
-        instructorId,
-        customerId,
-        customerName,
-        startTime,
-        endTime,
-        serviceId: serviceId || undefined,
-        meetingPointId: meetingPointId || undefined,
-        notes: notes ?? undefined,
-      });
+      // ── Optional lesson detail fields ────────────────────────────────────────
+      const rawDuration = body.duration_minutes ?? body.durationMinutes;
+      const durationMinutes =
+        rawDuration != null && Number.isFinite(Number(rawDuration))
+          ? Math.round(Number(rawDuration))
+          : null;
+      if (durationMinutes != null && (durationMinutes < 15 || durationMinutes > 480)) {
+        return reply.status(400).send({
+          ok: false,
+          error: ERROR_CODES.INVALID_PAYLOAD,
+          message: 'duration_minutes must be between 15 and 480',
+        });
+      }
+
+      const rawPartySize = body.party_size ?? body.partySize;
+      const partySize =
+        rawPartySize != null && Number.isFinite(Number(rawPartySize))
+          ? Math.round(Number(rawPartySize))
+          : null;
+      if (partySize != null && (partySize < 1 || partySize > 20)) {
+        return reply.status(400).send({
+          ok: false,
+          error: ERROR_CODES.INVALID_PAYLOAD,
+          message: 'party_size must be between 1 and 20',
+        });
+      }
+
+      const VALID_SKILL_LEVELS = ['beginner', 'intermediate', 'advanced', 'mixed', 'unknown'] as const;
+      const rawSkill = body.skill_level ?? body.skillLevel;
+      const skillLevel =
+        rawSkill != null && typeof rawSkill === 'string' && VALID_SKILL_LEVELS.includes(rawSkill.toLowerCase() as any)
+          ? rawSkill.toLowerCase()
+          : null;
+
+      const VALID_CURRENCIES = ['eur', 'gbp', 'chf'] as const;
+      const rawAmount = body.amount_cents ?? body.amountCents;
+      const amountCents =
+        rawAmount != null && Number.isFinite(Number(rawAmount))
+          ? Math.round(Number(rawAmount))
+          : null;
+      if (amountCents != null && amountCents < 0) {
+        return reply.status(400).send({
+          ok: false,
+          error: ERROR_CODES.INVALID_PAYLOAD,
+          message: 'amount_cents must be >= 0',
+        });
+      }
+      const rawCurrency = body.currency;
+      const currency =
+        rawCurrency != null && typeof rawCurrency === 'string' && VALID_CURRENCIES.includes(rawCurrency.toLowerCase() as any)
+          ? rawCurrency.toLowerCase()
+          : amountCents != null ? 'eur' : null;
+
+      // ── Availability enforcement ──────────────────────────────────────────
+      // Uses getCalendarConflicts() (confirmed/modified bookings + external calendar).
+      // If any conflict exists → 409. No booking created.
+      try {
+        await validateAvailability({
+          instructorId,
+          startUtc: startTime,
+          endUtc: endTime,
+        });
+      } catch (availErr) {
+        if (availErr instanceof AvailabilityConflictError) {
+          return reply.status(409).send({
+            ok: false,
+            error: ERROR_CODES.AVAILABILITY_CONFLICT,
+            message: 'Time slot not available: conflicts with existing booking or calendar event',
+            conflicts: availErr.conflicts,
+          });
+        }
+        throw availErr;
+      }
+
+      // createBooking() uses SELECT FOR UPDATE inside a transaction to prevent
+      // race-condition double bookings. If a concurrent request wins, this throws
+      // AvailabilityConflictError — same as the pre-check above.
+      let created: { id: string };
+      try {
+        created = await createBooking({
+          instructorId,
+          customerId,
+          customerName,
+          startTime,
+          endTime,
+          serviceId: serviceId || undefined,
+          meetingPointId: meetingPointId || undefined,
+          notes: notes ?? undefined,
+          durationMinutes,
+          partySize,
+          skillLevel,
+          amountCents,
+          currency,
+        });
+      } catch (createErr) {
+        if (createErr instanceof AvailabilityConflictError) {
+          return reply.status(409).send({
+            ok: false,
+            error: ERROR_CODES.AVAILABILITY_CONFLICT,
+            message: 'Time slot not available: concurrent booking conflict',
+          });
+        }
+        throw createErr;
+      }
       await insertAuditEvent({
         actor_type: 'instructor',
         actor_id: instructorId,
@@ -354,7 +466,7 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
     try {
       const ctx = await loadBookingAndEnforceOwnership(request, reply);
       if (!ctx) return;
-      const { booking, instructorId } = ctx;
+      const { booking, instructorId, billingStatus } = ctx;
       if (!isPilotInstructor(instructorId)) {
         return reply.status(402).send({
           ok: false,
@@ -362,7 +474,27 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
           message: 'This feature is only available for pilot instructors.',
         });
       }
+      const billingBlock = checkBillingGate(billingStatus);
+      if (billingBlock) {
+        return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
+      }
       const updated = await applyTransition(booking.id, booking.status, 'cancelled', instructorId);
+      return reply.send({ ok: true, booking: updated });
+    } catch (err) {
+      const normalized = normalizeError(err);
+      const status = mapErrorToHttp(normalized.error);
+      return reply.status(status).send({ ok: false, error: normalized.error, message: normalized.message });
+    }
+  });
+
+  // POST /instructor/bookings/:id/complete — confirmed | modified → completed (lesson delivered).
+  // completed is terminal: no further transitions allowed.
+  app.post<{ Params: { id: string } }>('/instructor/bookings/:id/complete', async (request, reply) => {
+    try {
+      const ctx = await loadBookingAndEnforceOwnership(request, reply);
+      if (!ctx) return;
+      const { booking, instructorId } = ctx;
+      const updated = await applyTransition(booking.id, booking.status, 'completed', instructorId);
       return reply.send({ ok: true, booking: updated });
     } catch (err) {
       const normalized = normalizeError(err);
@@ -376,13 +508,17 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
     try {
       const ctx = await loadBookingAndEnforceOwnership(request, reply);
       if (!ctx) return;
-      const { booking, instructorId } = ctx;
+      const { booking, instructorId, billingStatus } = ctx;
       if (!isPilotInstructor(instructorId)) {
         return reply.status(402).send({
           ok: false,
           error: ERROR_CODES.PILOT_ONLY,
           message: 'This feature is only available for pilot instructors.',
         });
+      }
+      const billingBlock = checkBillingGate(billingStatus);
+      if (billingBlock) {
+        return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
       }
       const body = (request.body ?? {}) as Record<string, unknown>;
 
@@ -478,7 +614,7 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
       const body = request.body ?? {};
       const nextStatus = typeof body.status === 'string' ? body.status.trim() : '';
 
-      const allowed: string[] = ['draft', 'pending', 'confirmed', 'cancelled', 'modified', 'declined'];
+      const allowed: string[] = ['draft', 'pending', 'confirmed', 'cancelled', 'modified', 'declined', 'completed'];
       if (!allowed.includes(nextStatus)) {
         return reply.status(400).send({
           ok: false,

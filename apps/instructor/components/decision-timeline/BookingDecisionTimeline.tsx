@@ -46,7 +46,7 @@ function TimelineSkeleton() {
               width: 24,
               height: 24,
               borderRadius: 4,
-              backgroundColor: '#e5e7eb',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
             }}
           />
           <div style={{ flex: 1 }}>
@@ -54,7 +54,7 @@ function TimelineSkeleton() {
               style={{
                 height: 14,
                 width: '50%',
-                backgroundColor: '#e5e7eb',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderRadius: 4,
                 marginBottom: 6,
               }}
@@ -63,7 +63,7 @@ function TimelineSkeleton() {
               style={{
                 height: 12,
                 width: '35%',
-                backgroundColor: '#f3f4f6',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
                 borderRadius: 4,
               }}
             />
@@ -80,12 +80,12 @@ function EmptyState() {
       style={{
         padding: '1.5rem 1rem',
         textAlign: 'center',
-        color: '#6b7280',
+color: 'rgba(148, 163, 184, 0.9)',
         fontSize: '0.875rem',
         lineHeight: 1.5,
       }}
     >
-      <p style={{ margin: 0, fontWeight: 500, color: '#374151' }}>
+      <p style={{ margin: 0, fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)' }}>
         No decisions yet.
       </p>
       <p style={{ margin: '0.25rem 0 0 0' }}>
@@ -112,10 +112,10 @@ function ErrorState({
     <div
       style={{
         padding: '1rem',
-        backgroundColor: '#fef2f2',
-        border: '1px solid #fecaca',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        border: '1px solid rgba(239, 68, 68, 0.25)',
         borderRadius: 8,
-        color: '#991b1b',
+        color: 'rgba(252, 165, 165, 0.95)',
         fontSize: '0.875rem',
       }}
     >
@@ -152,10 +152,10 @@ function TimelineItem({ event }: { event: BookingTimelineEventApi }) {
     >
       <span style={{ fontSize: '1rem' }}>{ui.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)' }}>
           {ui.label}
         </div>
-        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 2 }}>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: 2 }}>
           {event.from && event.to ? `${event.from} → ${event.to}` : null} · {formatTimestamp(event.timestamp)}
         </div>
       </div>
@@ -192,11 +192,11 @@ export default function BookingDecisionTimeline({
     return (
       <section style={{ marginTop: '1rem' }}>
         {showHeader && (
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#111827' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'rgba(226, 232, 240, 0.95)' }}>
             Decision timeline
           </h2>
         )}
-        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+        <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.5rem' }}>
           Read-only · Verified actions
         </p>
         <TimelineSkeleton />
@@ -208,7 +208,7 @@ export default function BookingDecisionTimeline({
     return (
       <section style={{ marginTop: '1rem' }}>
         {showHeader && (
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#111827' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'rgba(226, 232, 240, 0.95)' }}>
             Decision timeline
           </h2>
         )}
@@ -222,11 +222,11 @@ export default function BookingDecisionTimeline({
   return (
     <section style={{ marginTop: '1rem' }}>
       {showHeader && (
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: '#111827' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem', color: 'rgba(226, 232, 240, 0.95)' }}>
           Decision timeline
         </h2>
       )}
-      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.75rem' }}>
         Read-only · Verified actions
       </p>
       {timeline.length === 0 ? (

@@ -77,7 +77,7 @@ export default async function PilotProtocolPage() {
       ]} />
       
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.5rem' }}>
           Pilot Protocol Guide
         </h1>
         <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
@@ -92,7 +92,7 @@ export default async function PilotProtocolPage() {
         padding: '1.5rem',
         marginBottom: '2rem',
       }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
           What is the Pilot?
         </h2>
         <p style={{ color: '#1e40af', fontSize: '0.875rem', lineHeight: '1.6', marginBottom: '1rem' }}>
@@ -116,7 +116,7 @@ export default async function PilotProtocolPage() {
           borderRadius: '0.5rem', 
           padding: '1.25rem',
         }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Active Flows
           </h3>
           <ul style={{ 
@@ -141,7 +141,7 @@ export default async function PilotProtocolPage() {
           borderRadius: '0.5rem', 
           padding: '1.25rem',
         }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Read-Only Operations
           </h3>
           <ul style={{ 
@@ -166,7 +166,7 @@ export default async function PilotProtocolPage() {
           borderRadius: '0.5rem', 
           padding: '1.25rem',
         }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Metrics Tracked
           </h3>
           <ul style={{ 
@@ -218,7 +218,7 @@ export default async function PilotProtocolPage() {
                   <h3 style={{ 
                     fontSize: '1.125rem', 
                     fontWeight: '600', 
-                    color: '#111827',
+                    color: 'rgba(226, 232, 240, 0.95)',
                   }}>
                     {step.title}
                   </h3>

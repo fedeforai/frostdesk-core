@@ -49,7 +49,7 @@ export default function AIDecisionPanel({ eligible, blockers }: AIDecisionPanelP
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Reply Decision
         </h2>
@@ -84,7 +84,7 @@ export default function AIDecisionPanel({ eligible, blockers }: AIDecisionPanelP
                   border: '1px solid #e5e7eb',
                 }}
               >
-                <span style={{ color: '#111827', fontSize: '0.875rem' }}>
+                <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem' }}>
                   {BLOCKER_LABELS[blocker]}
                 </span>
               </div>

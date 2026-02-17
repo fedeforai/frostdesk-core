@@ -27,7 +27,7 @@ export default function MeetingPointsPage() {
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
       const status = e?.status;
-      const raw = e?.message ?? 'Impossibile caricare i luoghi di ritrovo';
+      const raw = e?.message ?? 'Unable to load meeting points';
       if (status === 401 || /UNAUTHORIZED|No session/i.test(raw)) {
         setError('UNAUTHORIZED');
         setMeetingPoints([]);
@@ -42,7 +42,7 @@ export default function MeetingPointsPage() {
       const isConnectionError =
         /Failed to fetch|Load failed|NetworkError|meeting point|meeting points|could not be loaded/i.test(raw);
       setError(isConnectionError
-        ? 'Connessione non riuscita. Verifica che l\'API sia avviata (es. porta 3001) e riprova.'
+        ? 'Connection failed. Verify that the API is running (e.g. port 3001) and retry.'
         : raw);
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function MeetingPointsPage() {
   if (loading && meetingPoints.length === 0 && !error) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Caricamento…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Loading…</p>
       </div>
     );
   }
@@ -79,10 +79,10 @@ export default function MeetingPointsPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-        Luoghi di ritrovo
+        Meeting Points
       </h1>
       <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-        Punti di incontro per le tue lezioni.
+        Meeting points for your lessons.
       </p>
 
       {error && (
@@ -101,7 +101,7 @@ export default function MeetingPointsPage() {
         }}>
           <span>
             {error === 'UNAUTHORIZED' ? (
-              <>Sessione scaduta o non autenticato. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Accedi</Link></>
+              <>Session expired or not authenticated. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Login</Link></>
             ) : (
               error
             )}
@@ -121,7 +121,7 @@ export default function MeetingPointsPage() {
               fontSize: '0.8125rem',
             }}
           >
-            Riprova
+            Retry
           </button>
           )}
         </div>
@@ -129,14 +129,14 @@ export default function MeetingPointsPage() {
 
       {showAddForm || editingMeetingPoint ? (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
           marginBottom: '1.5rem',
         }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
             {editingMeetingPoint ? 'Edit Meeting Point' : 'Add Meeting Point'}
           </h2>
           <MeetingPointForm
@@ -147,10 +147,10 @@ export default function MeetingPointsPage() {
         </div>
       ) : (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}>
           <MeetingPointsTable

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
-const DEFAULT_AFTER_LOGIN = '/instructor/onboarding';
+const DEFAULT_AFTER_LOGIN = '/instructor/gate';
 
 function getAfterLogin(sp: ReturnType<typeof useSearchParams>): string {
   const next = sp.get('next');

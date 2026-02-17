@@ -270,7 +270,7 @@ export async function updateInstructorProfileByUserIdExtended(
         working_language = ${working_language},
         contact_email = ${contact_email},
         updated_at = NOW(),
-        display_name = ${displayNameFinal ?? cur.full_name ?? ''},
+        display_name = ${displayNameFinal ?? cur.display_name ?? null},
         slug = ${slugFinal},
         timezone = ${timezoneFinal},
         languages = ${hasLanguages ? languagesFinal : (cur.languages ?? [])}::text[],

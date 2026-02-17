@@ -18,3 +18,7 @@ export { withTimeout, AI_TIMEOUT, type TimeoutResult } from './ai_timeout.js';
 
 // Loop C: Customer context prompt builder
 export { buildCustomerContextPrompt, type CustomerContextInput } from './customer_context_prompt.js';
+
+// Reschedule field extraction (pure regex, no LLM)
+export { extractRescheduleFields } from './rescheduleFieldExtractor.js';
+export type { ExtractedRescheduleFields, RescheduleExtractionResult } from './rescheduleFieldExtractor.js';

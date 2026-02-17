@@ -13,7 +13,7 @@ export default async function WhatsappInboundPage() {
           { label: 'Admin', href: '/admin' },
           { label: 'WhatsApp Inbound' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           WhatsApp Inbound
         </h1>
         <WhatsappInboundTable items={data.items} />
@@ -26,7 +26,7 @@ export default async function WhatsappInboundPage() {
           { label: 'Admin', href: '/admin' },
           { label: 'WhatsApp Inbound' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           WhatsApp Inbound
         </h1>
         <ErrorState

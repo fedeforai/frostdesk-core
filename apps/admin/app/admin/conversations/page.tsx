@@ -32,7 +32,7 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
           { label: 'Admin', href: '/admin' },
           { label: 'Conversations' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Conversations
         </h1>
         <ConversationsTable conversations={data.items} />
@@ -45,7 +45,7 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
           { label: 'Admin', href: '/admin' },
           { label: 'Conversations' },
         ]} />
-        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
           Conversations
         </h1>
         <ErrorState

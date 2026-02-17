@@ -133,23 +133,29 @@ export function getDraftSemanticStatus(
  * Maps booking.status to semantic booking status.
  *
  * Possible outputs:
- * - proposed (maps from 'pending' or 'proposed')
- * - confirmed
- * - cancelled
+ * - proposed (maps from 'pending', 'proposed', 'draft')
+ * - confirmed (maps from 'confirmed', 'completed')
+ * - cancelled (maps from 'cancelled', 'declined')
+ * - modified
  * - expired
  */
 export function getBookingSemanticStatus(
   booking: Booking
-): 'proposed' | 'confirmed' | 'cancelled' | 'expired' {
+): 'proposed' | 'confirmed' | 'cancelled' | 'modified' | 'expired' {
   switch (booking.status) {
     case 'confirmed':
+    case 'completed':
       return 'confirmed';
     case 'cancelled':
+    case 'declined':
       return 'cancelled';
+    case 'modified':
+      return 'modified';
     case 'expired':
       return 'expired';
     case 'pending':
     case 'proposed':
+    case 'draft':
     default:
       return 'proposed';
   }

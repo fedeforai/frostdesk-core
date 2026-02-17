@@ -22,7 +22,7 @@ export default function PoliciesPage() {
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
       const status = e?.status ?? 500;
-      const raw = e?.message ?? 'Impossibile caricare le policy';
+      const raw = e?.message ?? 'Unable to load policies';
       if (status === 401 || /UNAUTHORIZED|No session/i.test(raw)) {
         setError('UNAUTHORIZED');
         setDocument({
@@ -55,7 +55,7 @@ export default function PoliciesPage() {
       const isConnectionError =
         /Failed to fetch|Load failed|NetworkError|polic(y|ies)|could not be loaded/i.test(raw);
       setError(isConnectionError
-        ? 'Connessione non riuscita. Verifica che l\'API sia avviata (es. porta 3001) e riprova.'
+        ? 'Connection failed. Verify that the API is running (e.g. port 3001) and retry.'
         : raw);
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ export default function PoliciesPage() {
   if (loading && !document) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Caricamento…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Loading…</p>
       </div>
     );
   }
@@ -89,10 +89,10 @@ export default function PoliciesPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-        Regole e policy
+        Policies
       </h1>
       <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-        Termini e condizioni per le tue lezioni.
+        Terms and conditions for your lessons.
       </p>
 
       {error && (
@@ -113,7 +113,7 @@ export default function PoliciesPage() {
         >
           <span>
             {error === 'UNAUTHORIZED' ? (
-              <>Sessione scaduta o non autenticato. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Accedi</Link></>
+              <>Session expired or not authenticated. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Login</Link></>
             ) : (
               error
             )}
@@ -133,14 +133,14 @@ export default function PoliciesPage() {
               fontSize: '0.8125rem',
             }}
           >
-            Riprova
+            Retry
           </button>
           )}
         </div>
       )}
 
       {document && (
-        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+        <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '1rem' }}>
           Version {doc.version}
           {doc.updated_at && ` · Last updated ${new Date(doc.updated_at).toLocaleString()}`}
         </p>
@@ -148,10 +148,10 @@ export default function PoliciesPage() {
 
       <div
         style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}
       >

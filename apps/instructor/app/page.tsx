@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function Home() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/instructor/dashboard');
+    router.replace('/instructor/gate');
   }, [router]);
   return (
     <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>

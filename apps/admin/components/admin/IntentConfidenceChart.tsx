@@ -51,7 +51,7 @@ export default function IntentConfidenceChart({ buckets }: IntentConfidenceChart
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -61,8 +61,8 @@ export default function IntentConfidenceChart({ buckets }: IntentConfidenceChart
         marginBottom: '1.5rem', 
         fontSize: '1.25rem', 
         fontWeight: '600',
-        color: '#111827',
-        borderBottom: '1px solid #e5e7eb',
+        color: 'rgba(226, 232, 240, 0.95)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         Intent Confidence Distribution
@@ -82,7 +82,7 @@ export default function IntentConfidenceChart({ buckets }: IntentConfidenceChart
                   <span style={{ 
                     fontSize: '0.875rem', 
                     fontWeight: '500', 
-                    color: '#374151' 
+                    color: 'rgba(148, 163, 184, 0.9)' 
                   }}>
                     {getBucketLabel(bucket.bucket)}
                   </span>
@@ -125,18 +125,18 @@ export default function IntentConfidenceChart({ buckets }: IntentConfidenceChart
           <div style={{ 
             marginTop: '1rem', 
             paddingTop: '1rem', 
-            borderTop: '1px solid #e5e7eb',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
               Total Classifications
             </span>
             <span style={{ 
               fontSize: '0.875rem', 
               fontFamily: 'monospace',
-              color: '#111827',
+              color: 'rgba(226, 232, 240, 0.95)',
               fontWeight: '600',
             }}>
               {total.toLocaleString()}

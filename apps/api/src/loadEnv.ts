@@ -13,9 +13,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = getRepoRoot(__dirname);
 const apiDir = path.join(repoRoot, 'apps', 'api');
 const candidates = [
+  path.join(repoRoot, '.env.local'),
   path.join(repoRoot, '.env'),
-  path.join(apiDir, '.env'),
   path.join(apiDir, '.env.local'),
+  path.join(apiDir, '.env'),
+  path.resolve(process.cwd(), '.env.local'),
   path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), '../.env'),
   path.resolve(__dirname, '../../.env'),

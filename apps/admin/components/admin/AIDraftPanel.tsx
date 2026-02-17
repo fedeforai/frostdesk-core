@@ -72,10 +72,10 @@ export default function AIDraftPanel({
   if (isSent) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       }}>
       <div style={{ 
@@ -83,13 +83,13 @@ export default function AIDraftPanel({
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Suggestion
         </h2>
@@ -115,10 +115,10 @@ export default function AIDraftPanel({
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
       <div style={{ 
@@ -126,13 +126,13 @@ export default function AIDraftPanel({
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Suggestion
         </h2>
@@ -151,7 +151,7 @@ export default function AIDraftPanel({
           borderRadius: '0.375rem',
           border: '1px solid #bae6fd',
           fontStyle: 'italic',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           fontSize: '0.875rem',
           lineHeight: '1.5',
         }}>
@@ -209,7 +209,7 @@ export default function AIDraftPanel({
         disabled={isSending || !isAuthorized}
         style={{
           padding: '0.625rem 1.25rem',
-          backgroundColor: isSending ? '#d1d5db' : '#3b82f6',
+          backgroundColor: isSending ? 'rgba(255, 255, 255, 0.12)' : '#3b82f6',
           color: '#ffffff',
           border: 'none',
           borderRadius: '0.375rem',

@@ -49,7 +49,7 @@ const labelStyle = {
   marginBottom: '0.5rem',
   fontSize: '0.875rem',
   fontWeight: 500,
-  color: '#374151',
+  color: 'rgba(226, 232, 240, 0.95)',
 };
 const inputStyle = {
   width: '100%' as const,
@@ -268,7 +268,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
 
   return (
     <div style={{ maxWidth: '600px' }}>
-      <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         {tabs.map(({ id, label }) => (
           <button
             key={id}
@@ -282,7 +282,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               cursor: 'pointer',
               fontSize: '0.9375rem',
               fontWeight: activeTab === id ? 600 : 500,
-              color: activeTab === id ? '#1d4ed8' : '#6b7280',
+              color: activeTab === id ? '#1d4ed8' : 'rgba(148, 163, 184, 0.9)',
             }}
             aria-selected={activeTab === id}
             role="tab"
@@ -349,12 +349,12 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               readOnly
               disabled
               aria-readonly
-              title="Slug gestito dal sistema, non modificabile"
+              title="Slug managed by the system, not editable"
               placeholder="—"
-              style={{ ...inputStyle, cursor: 'not-allowed', backgroundColor: '#f3f4f6', color: '#6b7280' }}
+              style={{ ...inputStyle, cursor: 'not-allowed', backgroundColor: 'rgba(255, 255, 255, 0.04)', color: 'rgba(148, 163, 184, 0.9)' }}
             />
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-              Solo lettura (gestito dal sistema)
+            <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem' }}>
+              Read-only (managed by the system)
             </p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
@@ -374,9 +374,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <span style={labelStyle}>Altre località dove puoi fare lezioni</span>
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-              Aggiungi le altre località (oltre al Base Resort) in cui offri lezioni.
+            <span style={labelStyle}>Other locations where you can give lessons</span>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.5rem' }}>
+              Add other locations (in addition to Base Resort) where you offer lessons.
             </p>
             {otherLocations.map((value, i) => (
               <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
@@ -389,7 +389,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                     setOtherLocations(next);
                   }}
                   disabled={savingTab === 'identity'}
-                  placeholder="Nome località"
+                  placeholder="Location name"
                   style={{ ...inputStyle, flex: 1 }}
                   onFocus={focusOutline}
                   onBlur={blurOutline}
@@ -402,12 +402,12 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                     padding: '0.5rem 0.75rem',
                     border: '1px solid #dc2626',
                     borderRadius: '0.375rem',
-                    background: '#fff',
+                    background: 'rgba(255, 255, 255, 0.05)',
                     color: '#dc2626',
                     cursor: savingTab === 'identity' ? 'not-allowed' : 'pointer',
                     fontSize: '0.875rem',
                   }}
-                  aria-label="Rimuovi località"
+                  aria-label="Remove location"
                 >
                   Rimuovi
                 </button>
@@ -422,13 +422,13 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 padding: '0.5rem 0.75rem',
                 border: '1px solid #d1d5db',
                 borderRadius: '0.375rem',
-                background: '#f9fafb',
-                color: '#374151',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: 'rgba(226, 232, 240, 0.95)',
                 cursor: savingTab === 'identity' ? 'not-allowed' : 'pointer',
                 fontSize: '0.875rem',
               }}
             >
-              + Aggiungi località
+              + Add location
             </button>
           </div>
           <div style={{ marginBottom: '1rem' }}>
@@ -614,9 +614,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 disabled={savingTab === 'marketing'}
                 style={{
                   padding: '0.5rem 0.75rem',
-                  backgroundColor: '#e5e7eb',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  color: 'rgba(226, 232, 240, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '0.375rem',
                   cursor: savingTab === 'marketing' ? 'not-allowed' : 'pointer',
                   fontSize: '0.875rem',
@@ -639,9 +639,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                       fontSize: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '9999px',
-                      background: '#f9fafb',
+                      background: 'rgba(255, 255, 255, 0.04)',
                       cursor: savingTab === 'marketing' ? 'not-allowed' : 'pointer',
-                      color: '#374151',
+                      color: 'rgba(226, 232, 240, 0.95)',
                     }}
                   >
                     {s}
@@ -658,8 +658,8 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                     alignItems: 'center',
                     gap: '0.25rem',
                     padding: '0.25rem 0.5rem',
-                    backgroundColor: '#dbeafe',
-                    color: '#1e40af',
+                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                    color: 'rgba(147, 197, 253, 0.95)',
                     borderRadius: '0.375rem',
                     fontSize: '0.875rem',
                   }}

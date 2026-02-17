@@ -7,7 +7,7 @@ interface MessageItemProps {
     message_id: string;
     direction: 'inbound' | 'outbound';
     message_text: string | null;
-    sender_identity: 'customer' | 'human' | 'ai' | null;
+    sender_identity: 'customer' | 'human' | 'ai' | string | null;
     created_at: string;
     intent?: string | null;
     confidence?: number | null;
@@ -86,7 +86,7 @@ export default function MessageItem({ message, formatTimestamp, isAIDraft = fals
           {formatTimestamp(message.created_at)}
         </span>
       </div>
-      <div style={{ color: '#111827', fontSize: '0.875rem', lineHeight: '1.5' }}>
+      <div style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', lineHeight: '1.5' }}>
         {message.message_text || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No text content</span>}
       </div>
       {message.sender_identity && (
@@ -97,13 +97,13 @@ export default function MessageItem({ message, formatTimestamp, isAIDraft = fals
       {message.direction === 'inbound' && (
         <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', fontSize: '0.75rem' }}>
           <strong style={{ color: '#6b7280' }}>Intent: </strong>
-          <span style={{ color: '#111827' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>
             {message.intent || 'Not classified'}
           </span>
           {message.intent && (
             <>
               <span style={{ color: '#6b7280', marginLeft: '0.5rem' }}>
-                (Confidence: {message.confidence !== null ? `${(message.confidence * 100).toFixed(0)}%` : 'N/A'})
+                (Confidence: {message.confidence != null ? `${(message.confidence * 100).toFixed(0)}%` : 'N/A'})
               </span>
               {message.model && (
                 <span style={{ color: '#6b7280', marginLeft: '0.5rem' }}>

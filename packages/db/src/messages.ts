@@ -6,15 +6,20 @@ type InsertMessageInput = {
   content: string;
 };
 
+/**
+ * Inserts a message using canonical schema (direction, message_text, channel).
+ * Maps role 'user' → inbound, 'assistant' → outbound.
+ */
 export async function insertMessage({
   conversation_id,
   role,
   content
 }: InsertMessageInput) {
+  const direction = role === 'user' ? 'inbound' : 'outbound';
   const result = await sql`
-    insert into messages (conversation_id, role, content)
-    values (${conversation_id}, ${role}, ${content})
-    returning *
+    INSERT INTO messages (conversation_id, direction, message_text, channel, created_at)
+    VALUES (${conversation_id}, ${direction}, ${content}, 'whatsapp', NOW())
+    RETURNING *
   `;
 
   return result[0];

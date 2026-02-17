@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { InstructorAvailability, CreateAvailabilityParams, UpdateAvailabilityParams } from '@/lib/instructorApi';
+import type { InstructorAvailability, InstructorMeetingPoint, CreateAvailabilityParams, UpdateAvailabilityParams } from '@/lib/instructorApi';
 import { createAvailability, updateAvailability } from '@/lib/instructorApi';
 
 interface AvailabilityFormProps {
   availability?: InstructorAvailability | null;
+  meetingPoints?: InstructorMeetingPoint[];
   onCancel: () => void;
   onSuccess: () => void;
 }
@@ -20,11 +21,12 @@ const dayOptions = [
   { value: 6, label: 'Saturday' },
 ];
 
-export default function AvailabilityForm({ availability, onCancel, onSuccess }: AvailabilityFormProps) {
+export default function AvailabilityForm({ availability, meetingPoints = [], onCancel, onSuccess }: AvailabilityFormProps) {
   const [dayOfWeek, setDayOfWeek] = useState(availability?.day_of_week?.toString() || '0');
   const [startTime, setStartTime] = useState(availability?.start_time || '09:00');
   const [endTime, setEndTime] = useState(availability?.end_time || '17:00');
   const [isActive, setIsActive] = useState(availability?.is_active ?? true);
+  const [meetingPointId, setMeetingPointId] = useState<string>(availability?.meeting_point_id ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +36,7 @@ export default function AvailabilityForm({ availability, onCancel, onSuccess }: 
       setStartTime(availability.start_time);
       setEndTime(availability.end_time);
       setIsActive(availability.is_active);
+      setMeetingPointId(availability.meeting_point_id ?? '');
     }
   }, [availability]);
 
@@ -52,6 +55,7 @@ export default function AvailabilityForm({ availability, onCancel, onSuccess }: 
           startTime: startTime.trim(),
           endTime: endTime.trim(),
           isActive: isActive,
+          meetingPointId: meetingPointId || null,
         };
         await updateAvailability(params);
       } else {
@@ -61,6 +65,7 @@ export default function AvailabilityForm({ availability, onCancel, onSuccess }: 
           startTime: startTime.trim(),
           endTime: endTime.trim(),
           isActive: isActive,
+          meetingPointId: meetingPointId || null,
         };
         await createAvailability(params);
       }
@@ -135,6 +140,49 @@ export default function AvailabilityForm({ availability, onCancel, onSuccess }: 
           ))}
         </select>
       </div>
+
+      {meetingPoints.length > 0 && (
+        <div style={{ marginBottom: '1rem' }}>
+          <label
+            htmlFor="meeting_point_id"
+            style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#374151',
+            }}
+          >
+            Location (optional)
+          </label>
+          <select
+            id="meeting_point_id"
+            value={meetingPointId}
+            onChange={(e) => setMeetingPointId(e.target.value)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '1rem',
+              outline: 'none',
+              backgroundColor: 'white',
+            }}
+            aria-label="Meeting point for this window"
+          >
+            <option value="">All locations</option>
+            {meetingPoints.map((mp) => (
+              <option key={mp.id} value={mp.id}>
+                {mp.name}
+              </option>
+            ))}
+          </select>
+          <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+            If set, this window is only for that location; otherwise it applies to all.
+          </p>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
         <div>

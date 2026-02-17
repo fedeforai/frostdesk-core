@@ -1,5 +1,26 @@
+.body {
+  margin-bottom: 14px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.label {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.value {
+  color: rgba(226, 232, 240, 0.95);
+  font-weight: 600;
+}
+
 .empty {
-  color: var(--muted, #64748b);
+  color: rgba(148, 163, 184, 0.9);
   font-size: 14px;
   margin-bottom: 14px;
 }
@@ -11,21 +32,31 @@
 }
 
 .btn {
-  border: 1px solid var(--border, #e6ebf2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 10px 14px;
   cursor: pointer;
   font-weight: 800;
   font-size: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
   text-align: center;
   text-decoration: none;
-  color: inherit;
+  color: rgba(226, 232, 240, 0.95);
   display: block;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
 }
 
 .btnPrimary {
-  background: #0f172a;
-  color: #fff;
-  border-color: #0f172a;
+  background: rgba(99, 102, 241, 0.2);
+  color: rgba(165, 180, 252, 1);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.btnPrimary:hover {
+  background: rgba(99, 102, 241, 0.3);
 }

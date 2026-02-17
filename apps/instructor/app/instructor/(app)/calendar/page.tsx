@@ -75,7 +75,7 @@ export default function CalendarPage() {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
         Calendar
       </h1>
 
@@ -83,15 +83,15 @@ export default function CalendarPage() {
         <div style={{
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
           borderRadius: '0.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '0.75rem',
           fontSize: '0.875rem',
-          color: '#991b1b',
+          color: 'rgba(252, 165, 165, 0.95)',
         }}>
           <span>
             {error === 'Not authorized' ? 'Not authorized' : "Couldn't load calendar data. Check your connection and retry."}
@@ -103,8 +103,8 @@ export default function CalendarPage() {
               padding: '0.375rem 0.75rem',
               borderRadius: '0.375rem',
               border: '1px solid #f87171',
-              background: '#fff',
-              color: '#991b1b',
+              background: 'rgba(255, 255, 255, 0.05)',
+              color: 'rgba(252, 165, 165, 0.95)',
               fontWeight: 600,
               cursor: 'pointer',
               fontSize: '0.8125rem',
@@ -122,10 +122,10 @@ export default function CalendarPage() {
 
       {connection && (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}>
           <CalendarEventsTable events={events} />

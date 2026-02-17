@@ -33,7 +33,7 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
   if (error) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
         backgroundColor: '#ffffff',
@@ -50,7 +50,7 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
   if (!flags) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
         backgroundColor: '#ffffff',
@@ -65,7 +65,7 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -76,13 +76,13 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Status
         </h2>
@@ -109,11 +109,11 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Emergency Status
           </span>
           <span style={{
@@ -134,11 +134,11 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             AI Global
           </span>
           <span style={{
@@ -160,11 +160,11 @@ export default function AIStatusPanel({ className }: AIStatusPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             WhatsApp AI
           </span>
           <span style={{

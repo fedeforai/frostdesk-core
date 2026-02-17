@@ -81,7 +81,7 @@
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: #111827;
+  background: rgba(59, 130, 246, 0.25);
   color: white;
   display: grid;
   place-items: center;

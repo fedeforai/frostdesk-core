@@ -60,7 +60,7 @@ export default function AIDebugPanel({
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Snapshot
         </h2>
@@ -89,7 +89,7 @@ export default function AIDebugPanel({
             Relevant
           </span>
           <span style={{ 
-            color: '#111827', 
+            color: 'rgba(226, 232, 240, 0.95)', 
             fontSize: '0.875rem',
             fontWeight: '600',
             fontFamily: 'monospace',
@@ -116,7 +116,7 @@ export default function AIDebugPanel({
             Relevance confidence
           </span>
           <span style={{ 
-            color: '#111827', 
+            color: 'rgba(226, 232, 240, 0.95)', 
             fontSize: '0.875rem',
             fontWeight: '600',
             fontFamily: 'monospace',
@@ -144,7 +144,7 @@ export default function AIDebugPanel({
               Relevance reason
             </span>
             <span style={{ 
-              color: '#111827', 
+              color: 'rgba(226, 232, 240, 0.95)', 
               fontSize: '0.875rem',
               fontWeight: '600',
               fontFamily: 'monospace',
@@ -172,7 +172,7 @@ export default function AIDebugPanel({
             Intent
           </span>
           <span style={{ 
-            color: '#111827', 
+            color: 'rgba(226, 232, 240, 0.95)', 
             fontSize: '0.875rem',
             fontWeight: '600',
             fontFamily: 'monospace',
@@ -199,7 +199,7 @@ export default function AIDebugPanel({
             Intent confidence
           </span>
           <span style={{ 
-            color: '#111827', 
+            color: 'rgba(226, 232, 240, 0.95)', 
             fontSize: '0.875rem',
             fontWeight: '600',
             fontFamily: 'monospace',
@@ -227,7 +227,7 @@ export default function AIDebugPanel({
               Model
             </span>
             <span style={{ 
-              color: '#111827', 
+              color: 'rgba(226, 232, 240, 0.95)', 
               fontSize: '0.875rem',
               fontWeight: '600',
               fontFamily: 'monospace',
