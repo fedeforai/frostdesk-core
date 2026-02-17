@@ -1,11 +1,31 @@
 import type { FastifyInstance } from 'fastify';
-import { getInstructorProfileByUserId, getInstructorServices, createInstructorService, updateInstructorService } from '@frostdesk/db';
+import { getInstructorProfileByUserId, getInstructorServices, createInstructorService, updateInstructorService, type LessonType } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 
 const LESSON_TYPES = ['private', 'semi_private', 'group'] as const;
+const LESSON_TYPES_STR = LESSON_TYPES.join(', ');
+
+/** Missing = null/undefined/empty → default. Provided and valid → value. Provided and invalid → 400 (caller must return). */
+function parseLessonTypeForCreate(s: string | null | undefined): { ok: true; value: LessonType } | { ok: false } {
+  if (s === undefined || s === null || s.trim() === '') return { ok: true, value: 'private' };
+  const found = LESSON_TYPES.find((x) => x === s);
+  if (found) return { ok: true, value: found };
+  return { ok: false };
+}
+
+/** Optional field: missing → keep existing; null/empty → null; valid string → value; invalid string → null. */
+function parseLessonTypeForPatch(
+  s: string | null | undefined,
+  existing: LessonType | null
+): LessonType | null {
+  if (s === undefined) return existing ?? 'private';
+  if (s === null || s.trim() === '') return null;
+  const found = LESSON_TYPES.find((x) => x === s);
+  return found ?? null;
+}
 
 type CreateServiceBody = {
   name?: string | null;
@@ -32,7 +52,7 @@ function isValidCreateServiceBody(body: unknown): body is CreateServiceBody {
     (b.currency === undefined || typeof b.currency === 'string') &&
     (b.notes === undefined || b.notes === null || typeof b.notes === 'string') &&
     (b.name === undefined || b.name === null || typeof b.name === 'string') &&
-    (b.lesson_type === undefined || b.lesson_type === null || (typeof b.lesson_type === 'string' && LESSON_TYPES.includes(b.lesson_type as typeof LESSON_TYPES[number]))) &&
+    (b.lesson_type === undefined || b.lesson_type === null || typeof b.lesson_type === 'string') &&
     (b.min_participants === undefined || typeof b.min_participants === 'number') &&
     (b.max_participants === undefined || typeof b.max_participants === 'number') &&
     (b.short_description === undefined || b.short_description === null || typeof b.short_description === 'string') &&
@@ -63,7 +83,7 @@ function getPatchServiceBody(body: unknown): PatchServiceBody | null {
   const out: PatchServiceBody = {};
   if (b.name === undefined || b.name === null || typeof b.name === 'string') out.name = b.name as string | null;
   if (typeof b.discipline === 'string') out.discipline = b.discipline;
-  if (b.lesson_type === undefined || b.lesson_type === null || (typeof b.lesson_type === 'string' && LESSON_TYPES.includes(b.lesson_type as typeof LESSON_TYPES[number]))) out.lesson_type = b.lesson_type as string | null;
+  if (b.lesson_type === undefined || b.lesson_type === null || typeof b.lesson_type === 'string') out.lesson_type = b.lesson_type as string | null;
   if (typeof b.duration_minutes === 'number') out.duration_minutes = b.duration_minutes;
   if (typeof b.min_participants === 'number') out.min_participants = b.min_participants;
   if (typeof b.max_participants === 'number') out.max_participants = b.max_participants;
@@ -170,11 +190,20 @@ export async function instructorServicesRoutes(app: FastifyInstance): Promise<vo
         });
       }
 
+      const parsed = parseLessonTypeForCreate(body.lesson_type);
+      if (!parsed.ok) {
+        return reply.status(400).send({
+          ok: false,
+          error: { code: ERROR_CODES.INVALID_PAYLOAD },
+          message: `lesson_type must be one of: ${LESSON_TYPES_STR}`,
+        });
+      }
+
       const service = await createInstructorService({
         instructorId: profile.id,
         name: body.name,
         discipline: body.discipline,
-        lesson_type: body.lesson_type ?? 'private',
+        lesson_type: parsed.value,
         duration_minutes: body.duration_minutes,
         min_participants: body.min_participants ?? 1,
         max_participants: body.max_participants ?? 1,
@@ -250,8 +279,7 @@ export async function instructorServicesRoutes(app: FastifyInstance): Promise<vo
         });
       }
 
-      const rawLesson = patch.lesson_type ?? existing.lesson_type ?? 'private';
-      const lesson_type = LESSON_TYPES.includes(rawLesson as typeof LESSON_TYPES[number]) ? (rawLesson as typeof LESSON_TYPES[number]) : 'private';
+      const lesson_type = parseLessonTypeForPatch(patch.lesson_type, existing.lesson_type);
       const service = await updateInstructorService({
         serviceId: id,
         instructorId: profile.id,

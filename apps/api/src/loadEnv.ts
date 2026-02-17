@@ -1,7 +1,7 @@
 /**
  * Load .env before any other app code so process.env is set for @frostdesk/db etc.
  * Repo root is found by walking up from this file until pnpm-workspace.yaml or .git (works for both src/ and dist/).
- * Loads the first existing file in candidates; throws if none found.
+ * If no .env file exists (e.g. Railway injects vars via platform), we do not throw — process.env is left as-is.
  */
 import dotenv from 'dotenv';
 import path from 'path';
@@ -29,12 +29,6 @@ for (const envPath of candidates) {
     dotenv.config({ path: envPath });
     loadedEnvPath = loadedEnvPath ?? envPath;
   }
-}
-
-if (!loadedEnvPath) {
-  throw new Error(
-    `No .env file found. Tried (first existing wins): ${candidates.join(', ')}`
-  );
 }
 
 /** Returns the path of the .env file that was loaded. */
