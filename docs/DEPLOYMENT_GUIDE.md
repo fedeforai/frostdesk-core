@@ -4,6 +4,31 @@
 
 ---
 
+## Passo passo sintetico (ordine di lavoro)
+
+1. **GitHub** — Codice su repo, branch pushato (es. `feature/ai-foundation` o `main`).
+2. **Railway (API)** — New Project da GitHub → stesso repo. Root Directory **vuota**. Build e Start come sotto. Variabili d'ambiente. Generate Domain → salva l'URL.
+3. **Vercel Instructor** — New Project da stesso repo. Root Directory **`apps/instructor`**. Niente override su Install (usa `apps/instructor/vercel.json`). Build/Output come sotto. Variabili. Deploy → salva URL.
+4. **Vercel Admin** — Altro progetto Vercel, stesso repo. Root **`apps/admin`** (o `./` con output esplicito). Variabili. Deploy.
+5. **Railway** — Aggiungi/aggiorna `INSTRUCTOR_APP_URL` con l'URL Vercel instructor.
+6. **Webhook** — Meta (WhatsApp) e Stripe puntano all'URL Railway. Copia i signing secret in Railway.
+7. **Supabase** — Redirect URLs con gli URL Vercel (instructor + admin).
+8. **Test** — Health, login, signup, onboarding.
+
+Dettaglio di ogni passo nelle sezioni sotto.
+
+**Riferimento rapido (copia-incolla)**
+
+| Dove | Root Directory | Build Command | Start / Output |
+|------|----------------|----------------|----------------|
+| **Railway (API)** | *(vuoto)* | `corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/api build` | Start: `node apps/api/dist/index.js` |
+| **Vercel Instructor** | `apps/instructor` | `cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/instructor build` | Output: `.next` |
+| **Vercel Admin** | `apps/admin` | `cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/admin build` | Output: `.next` |
+
+Su Vercel **non** impostare override per Install Command. Instructor e Admin hanno un `vercel.json` nella rispettiva cartella con `"installCommand": "true"` (install avviene nel Build dalla root del repo).
+
+---
+
 ## Prerequisiti
 
 Prima di iniziare, assicurati di avere:
@@ -92,14 +117,15 @@ Railway importera il repo. Ora devi configurarlo:
 1. Clicca sul servizio creato
 2. Vai nella tab **"Settings"**
 3. Imposta:
-   - **Root Directory**: `apps/api`
+   - **Root Directory**: lascia **vuoto** (così build e start partono dalla root del repo, dove c’è `pnpm-lock.yaml`)
    - **Build Command**:
      ```
-     cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/db build && pnpm --filter @frostdesk/ai build && pnpm --filter @frostdesk/api build
+     corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/api build
      ```
+     (Se l’API dipende da db/ai, puoi usare: `pnpm --filter @frostdesk/db build && pnpm --filter @frostdesk/ai build && pnpm --filter @frostdesk/api build` dopo `pnpm install`.)
    - **Start Command**:
      ```
-     node dist/index.js
+     node apps/api/dist/index.js
      ```
    - **Watch Paths**: lascia vuoto (rebuilda su ogni push)
 
@@ -180,17 +206,14 @@ Se non funziona, clicca sulla deployment e leggi i **logs** per capire l'errore.
 
 Nella schermata di setup:
 
-- **Framework Preset**: Next.js (dovrebbe auto-detectare)
-- **Root Directory**: clicca **"Edit"** e scrivi `apps/instructor`
-- **Build Command** (clicca "Override" e inserisci):
+- **Framework Preset**: Next.js (auto-detectato da `apps/instructor/package.json`)
+- **Root Directory**: **`apps/instructor`** (così Vercel trova Next.js e usa `apps/instructor/vercel.json`)
+- **Install Command**: **non** sovrascrivere (in `apps/instructor/vercel.json` c’è `"installCommand": "true"`: install avviene nel Build)
+- **Build Command** (Override):
   ```
-  cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/db build && pnpm --filter @frostdesk/ai build && pnpm --filter @frostdesk/instructor build
+  cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/instructor build
   ```
-- **Output Directory**: lascia default (non toccare)
-- **Install Command** (clicca "Override" e inserisci):
-  ```
-  pnpm install --frozen-lockfile
-  ```
+- **Output Directory** (Override): **`.next`** (relativo a `apps/instructor`)
 
 ### 3.3 Configura le variabili d'ambiente
 
@@ -237,16 +260,14 @@ Dovresti vedere la pagina di login/redirect. Se vedi errori, controlla:
 
 1. Su Vercel, clicca **"Add New..." → "Project"**
 2. Seleziona lo **stesso repo** `frostdesk-core`
-3. Configura:
-   - **Root Directory**: `apps/admin`
+3. Crea **`apps/admin/vercel.json`** in repo con `{"installCommand": "true"}` (come per instructor), poi configura:
+   - **Root Directory**: **`apps/admin`**
+   - **Install Command**: **non** sovrascrivere
    - **Build Command** (Override):
      ```
-     cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/db build && pnpm --filter @frostdesk/admin build
+     cd ../.. && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/admin build
      ```
-   - **Install Command** (Override):
-     ```
-     pnpm install --frozen-lockfile
-     ```
+   - **Output Directory** (Override): **`.next`**
 
 ### 4.2 Variabili d'ambiente
 
