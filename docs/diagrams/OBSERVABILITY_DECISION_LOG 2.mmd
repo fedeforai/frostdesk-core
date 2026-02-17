@@ -1,0 +1,39 @@
+%% Status: FROZEN
+%% Last aligned with code: 2026-02-08
+%% Loop 6: Decision timeline — read-only observability. No writes, no inference.
+%%
+%% NOTE:
+%% A single action may produce multiple timeline events
+%% (operational + audit).
+
+flowchart LR
+  subgraph sources["Persisted sources (read-only)"]
+    BA[booking_audit]
+    AL[audit_log]
+    CH[conversation_handoffs]
+    MS[messages]
+  end
+
+  subgraph api["Instructor API"]
+    CT["GET /instructor/conversations/:id/timeline"]
+    BT["GET /instructor/bookings/:id/timeline"]
+  end
+
+  subgraph rules["Rules"]
+    R1[Every event = real record]
+    R2[No inferred events]
+    R3[Ordered by timestamp]
+    R4[404/403 ownership]
+  end
+
+  BA --> CT
+  AL --> CT
+  CH --> CT
+  MS --> CT
+  BA --> BT
+
+  R1 -.-> CT
+  R2 -.-> CT
+  R3 -.-> CT
+  R4 -.-> CT
+  R4 -.-> BT

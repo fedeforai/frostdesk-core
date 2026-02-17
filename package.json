@@ -11,11 +11,19 @@
   "scripts": {
     "build": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r run build",
     "dev": "pnpm --filter '@frostdesk/db' --filter '@frostdesk/api' -r --parallel run dev",
-    "dev:instructor": "bash scripts/dev-instructor.sh",
-    "dev:admin": "bash scripts/dev-admin.sh",
+    "dev:instructor": "pnpm --filter @frostdesk/instructor dev",
+    "dev:admin": "pnpm --filter @frostdesk/admin dev",
+    "dev:web": "pnpm --filter @frostdesk/web dev",
     "test": "echo 'Add test scripts'",
-    "dev:web": "pnpm -C apps/web dev",
-    "verify:pnpm": "bash scripts/verify_repo.sh"
+    "verify:pnpm": "bash scripts/verify_repo.sh",
+    "build:api": "pnpm --filter @frostdesk/api build",
+    "start:api": "node apps/api/dist/index.js",
+    "build:instructor": "pnpm --filter @frostdesk/instructor build",
+    "start:instructor": "pnpm --filter @frostdesk/instructor start",
+    "build:admin": "pnpm --filter @frostdesk/admin build",
+    "start:admin": "pnpm --filter @frostdesk/admin start",
+    "build:web": "pnpm --filter @frostdesk/web build",
+    "start:web": "pnpm --filter @frostdesk/web start"
   },
   "engines": {
     "node": ">=18.0.0"
