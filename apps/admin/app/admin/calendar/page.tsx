@@ -24,7 +24,7 @@ export default async function CalendarPage() {
           Calendar
         </h1>
         <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-          Calendar view coming next — read-only pilot phase
+          Calendar view coming soon
         </p>
       </div>
     </div>

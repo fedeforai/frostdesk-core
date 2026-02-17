@@ -6,7 +6,7 @@ interface SystemStatusProps {
 }
 
 export default function SystemStatus({ aiEnabled, emergencyDisabled }: SystemStatusProps) {
-  let status: 'ON' | 'OFF' | 'PILOT';
+  let status: 'ON' | 'OFF';
   let statusColor: string;
   let statusBg: string;
   let statusText: string;
@@ -22,10 +22,10 @@ export default function SystemStatus({ aiEnabled, emergencyDisabled }: SystemSta
     statusBg = '#f0fdf4';
     statusText = 'AI Enabled';
   } else {
-    status = 'PILOT';
-    statusColor = '#f59e0b';
-    statusBg = '#fffbeb';
-    statusText = 'Pilot Mode';
+    status = 'OFF';
+    statusColor = '#6b7280';
+    statusBg = '#f3f4f6';
+    statusText = 'AI disabled';
   }
 
   return (

@@ -3,10 +3,10 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 /**
- * In production, /admin/dev-tools and /admin/pilot must return 404.
+ * In production, /admin/dev-tools returns 404.
  * On /admin and /api/admin: refresh Supabase session cookies so the proxy and getServerSession see the session.
  */
-const DEV_ONLY_PATHS = ['/admin/dev-tools', '/admin/pilot'];
+const DEV_ONLY_PATHS = ['/admin/dev-tools'];
 
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
 

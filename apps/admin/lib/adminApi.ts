@@ -56,7 +56,7 @@ export interface HumanInboxDetail {
   conversation_id: string;
   channel: string;
   status: string;
-  // PILOT MODE: ai_enabled removed (column not in schema)
+  // ai_enabled not in schema
   created_at: string;
   booking: {
     booking_id: string;
@@ -1717,7 +1717,7 @@ export interface ConversationDetail {
   conversation_id: string;
   channel: string;
   status: string;
-  // PILOT MODE: ai_enabled removed (column not in schema)
+  // ai_enabled not in schema
   created_at: string;
 }
 
@@ -1750,7 +1750,7 @@ export async function fetchConversationById(
   const data: FetchHumanInboxDetailResponse = await response.json();
   
   // Extract conversation details from human inbox detail response
-  // PILOT MODE: ai_enabled hardcoded to false (column not in schema)
+  // ai_enabled not in schema, hardcoded false
   return {
     conversation_id: data.detail.conversation_id,
     channel: data.detail.channel,

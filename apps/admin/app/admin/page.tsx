@@ -44,16 +44,6 @@ export default async function AdminPage() {
             → Instructor approvals
           </Link>
           <Link 
-            href="/admin/pilot" 
-            style={{ 
-              color: '#2563eb', 
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-            }}
-          >
-            → Pilot Protocol
-          </Link>
-          <Link 
             href="/admin/human-inbox" 
             style={{ 
               color: '#2563eb', 

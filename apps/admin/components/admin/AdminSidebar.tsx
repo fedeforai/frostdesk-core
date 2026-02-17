@@ -15,7 +15,7 @@ const navItems: NavItem[] = [
   { label: 'Bookings', href: '/admin/bookings', icon: 'calendar', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
   { label: 'Calendar', href: '/admin/calendar', icon: 'calendarDays', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
   { label: 'Instructors', href: '/admin/instructor-approvals', icon: 'users', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
-  { label: 'Settings', href: '/admin/pilot', icon: 'settings', roles: ['system_admin'], section: 'sistema' },
+  { label: 'Settings', href: '/admin/settings', icon: 'settings', roles: ['system_admin'], section: 'sistema' },
   { label: 'Logs', href: '/admin/dev-tools', icon: 'logs', roles: ['system_admin'], section: 'sistema' },
 ];
 

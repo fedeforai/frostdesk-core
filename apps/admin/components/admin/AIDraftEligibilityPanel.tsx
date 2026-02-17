@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * AI Draft Eligibility Panel (PILOT-SAFE, READ-ONLY)
+ * AI Draft Eligibility Panel (READ-ONLY)
  * 
  * Displays draft eligibility and escalation status based on AI snapshot.
  * 

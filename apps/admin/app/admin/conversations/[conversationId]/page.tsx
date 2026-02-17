@@ -18,11 +18,11 @@ export default async function ConversationDetailPage({
     fetchConversationById(params.conversationId),
   ]);
 
-  // PILOT MODE: ai_enabled hardcoded to false (column not in schema)
+  // ai_enabled not in schema; treat as disabled
   const aiEnabled = false;
 
   // Determine if AI was paused by human:
-  // - AI is always disabled in pilot mode
+  // - when AI is disabled
   // - AND the latest outbound message was sent by a human (human_approved event exists)
   const hasHumanOutbound = data.events.some(
     (event) => event.type === 'human_approved' && event.actor === 'human'
@@ -63,7 +63,7 @@ export default async function ConversationDetailPage({
       </h1>
 
       <div style={{ marginBottom: '1rem' }}>
-        {/* PILOT MODE: AI lifecycle disabled, toggle hidden */}
+        {/* AI lifecycle toggle hidden (ai_enabled not in schema) */}
         {/* <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
           <ConversationAIModeToggle
             conversationId={params.conversationId}

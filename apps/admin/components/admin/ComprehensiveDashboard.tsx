@@ -523,9 +523,9 @@ export default function ComprehensiveDashboard() {
       </SectionGroup>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* D) INSTRUCTORS & PILOT                                     */}
+      {/* D) INSTRUCTORS                                             */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <SectionGroup id="instructors-pilot" title="Instructors & Pilot" icon="👥" defaultOpen={false}>
+      <SectionGroup id="instructors-pilot" title="Instructors" icon="👥" defaultOpen={false}>
         <div className={s.cardGrid3}>
           {/* Active Instructors */}
           <div className={s.card}>
@@ -536,10 +536,10 @@ export default function ComprehensiveDashboard() {
             <CardRow label="Offline" value={presence.offline} color={presence.offline > 0 ? 'var(--admin-text-muted)' : undefined} />
             <div className={s.presenceBadge}>Presence: estimated from auth.sessions</div>
           </div>
-          {/* Pilot & Onboarding */}
+          {/* Onboarding */}
           <div className={s.card}>
-            <div className={s.cardTitle}><span>🚀</span> Pilot & Onboarding</div>
-            <CardRow label="Active pilots" value={instructors.pilot_count} />
+            <div className={s.cardTitle}><span>🚀</span> Onboarding</div>
+            <CardRow label="Active instructors" value={instructors.pilot_count} />
             <CardRow label="Onboarded" value={`${instructors.onboarded_profiles} (${instructors.total_profiles > 0 ? Math.round((instructors.onboarded_profiles / instructors.total_profiles) * 100) : 0}%)`} />
             <CardRow label="Active (7d)" value={instructors.active_7d} />
             <CardRow label="Customer notes (7d)" value={instructors.customer_notes_7d} />
@@ -576,7 +576,7 @@ export default function ComprehensiveDashboard() {
           <div className={s.card}>
             <div className={s.cardTitle}><span>🚩</span> Feature Flags</div>
             <div className={s.flagRow}>
-              <span className={s.flagLabel}>Pilot X Instructors</span>
+              <span className={s.flagLabel}>Instructor slots</span>
               <span className={`${s.flagBadge} ${s.flagCount}`}>{system.pilot_instructor_count}/{system.pilot_max ?? 100}</span>
             </div>
             <div className={s.flagRow}>
