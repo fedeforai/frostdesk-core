@@ -1,4 +1,5 @@
 import './globals.css';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
