@@ -1,21 +1,28 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
 const DEFAULT_AFTER_LOGIN = '/admin/dashboard';
 
 function getAfterLogin(sp: ReturnType<typeof useSearchParams>): string {
-  const next = sp.get('next');
-  if (!next) return DEFAULT_AFTER_LOGIN;
-  if (!next.startsWith('/')) return DEFAULT_AFTER_LOGIN;
-  if (next.startsWith('//')) return DEFAULT_AFTER_LOGIN;
+  const raw = sp.get('next');
+  let next = '';
+  try {
+    next = raw ? decodeURIComponent(raw) : '';
+  } catch {
+    return DEFAULT_AFTER_LOGIN;
+  }
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('http') || next.includes(':')) {
+    return DEFAULT_AFTER_LOGIN;
+  }
   return next;
 }
 
 function AdminLoginForm() {
+  const router = useRouter();
   const sp = useSearchParams();
 
   const [email, setEmail] = useState('');
@@ -27,6 +34,14 @@ function AdminLoginForm() {
   const afterLogin = useMemo(() => getAfterLogin(sp), [sp]);
 
   const supabase = useMemo(() => getSupabaseBrowser(), []);
+
+  // If already logged in, redirect to next path (or default)
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace(afterLogin);
+    });
+  }, [supabase, afterLogin, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +68,7 @@ function AdminLoginForm() {
         return;
       }
 
-      window.location.href = afterLogin;
+      router.replace(afterLogin);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Accesso fallito');
     } finally {

@@ -1,9 +1,11 @@
-import { redirect } from 'next/navigation';
+import AdminLoginPage from '@/app/login/page';
+
+export const dynamic = 'force-dynamic';
 
 /**
- * Redirect /admin/login → /login so the login form is always reachable
- * (root /login is outside the admin layout and does not depend on x-pathname).
+ * Public admin login page. Renders the same login form as root /login
+ * so /admin/login responds 200 and avoids redirect loops with (protected) layout.
  */
-export default function AdminLoginRedirect() {
-  redirect('/login?next=/admin/dashboard');
+export default function AdminLoginRoute() {
+  return <AdminLoginPage />;
 }
