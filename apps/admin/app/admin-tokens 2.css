@@ -1,0 +1,35 @@
+/* ── Admin Design Tokens (global) ────────────────────────────────────── */
+/* Aligned with instructor app dark theme (blue accent, matching radii)  */
+
+:root {
+  --admin-bg: #0b1220;
+  --admin-bg-card: rgba(255, 255, 255, 0.05);
+  --admin-bg-card-hover: rgba(15, 23, 42, 0.75);
+  --admin-border: rgba(255, 255, 255, 0.1);
+  --admin-border-light: rgba(148, 163, 184, 0.2);
+
+  --admin-text-primary: rgba(226, 232, 240, 0.95);
+  --admin-text-secondary: rgba(148, 163, 184, 0.9);
+  --admin-text-muted: #64748b;
+  --admin-text-dim: #475569;
+
+  --admin-accent: #3b82f6;
+  --admin-accent-dim: rgba(59, 130, 246, 0.15);
+
+  --admin-ok: #10b981;
+  --admin-ok-dim: rgba(16, 185, 129, 0.15);
+  --admin-warn: #f59e0b;
+  --admin-warn-dim: rgba(245, 158, 11, 0.15);
+  --admin-critical: #ef4444;
+  --admin-critical-dim: rgba(239, 68, 68, 0.15);
+  --admin-info: #3b82f6;
+  --admin-info-dim: rgba(59, 130, 246, 0.15);
+
+  --admin-radius-sm: 6px;
+  --admin-radius-md: 8px;
+  --admin-radius-lg: 12px;
+  --admin-radius-pill: 9999px;
+
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --admin-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
