@@ -1,6 +1,6 @@
 {
   "build": {
-    "cmd": "npm i -g pnpm@9.15.0 && cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/admin build"
+    "cmd": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @frostdesk/admin build"
   },
   "deploy": {
     "startCommand": "pnpm start"
