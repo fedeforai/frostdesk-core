@@ -1,133 +1,111 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import {
-  fetchInstructorPolicyDocument,
-  type InstructorPolicyDocumentApi,
-} from '@/lib/instructorApi';
-import PolicyDocumentForm from '@/components/PolicyDocumentForm';
+import { useRouter } from 'next/navigation';
+import { fetchInstructorPolicies } from '@/lib/instructorApi';
+import type { InstructorPolicy } from '@/lib/instructorApi';
+import PoliciesTable from '@/components/PoliciesTable';
+import PolicyForm from '@/components/PolicyForm';
 
 export default function PoliciesPage() {
-  const [document, setDocument] = useState<InstructorPolicyDocumentApi | null>(null);
+  const router = useRouter();
+  const [policies, setPolicies] = useState<InstructorPolicy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const loadPolicies = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchInstructorPolicyDocument();
-      setDocument(data);
-    } catch (err: unknown) {
-      const e = err as { status?: number; message?: string };
-      const status = e?.status ?? 500;
-      const raw = e?.message ?? 'Unable to load policies';
-      if (status === 401 || /UNAUTHORIZED|No session/i.test(raw)) {
-        setError('UNAUTHORIZED');
-        setDocument({
-          structured: {},
-          freeform: '',
-          version: 1,
-          updated_by: null,
-          updated_at: '',
-        });
-        return;
-      }
-      if (status === 403) {
-        setError(raw || 'Non autorizzato');
-        setDocument({
-          structured: {},
-          freeform: '',
-          version: 1,
-          updated_by: null,
-          updated_at: '',
-        });
-        return;
-      }
-      setDocument({
-        structured: {},
-        freeform: '',
-        version: 1,
-        updated_by: null,
-        updated_at: '',
-      });
-      const isConnectionError =
-        /Failed to fetch|Load failed|NetworkError|polic(y|ies)|could not be loaded/i.test(raw);
-      setError(isConnectionError
-        ? 'Connection failed. Verify that the API is running (e.g. port 3001) and retry.'
-        : raw);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [editingPolicy, setEditingPolicy] = useState<InstructorPolicy | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     loadPolicies();
   }, []);
 
-  const handleSuccess = () => {
-    void loadPolicies();
+  const loadPolicies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchInstructorPolicies();
+      setPolicies(data);
+    } catch (err: any) {
+      const status = err.status || 500;
+
+      // 401 → redirect to login
+      if (status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      // 403 → static "Not authorized"
+      if (status === 403) {
+        setError('Not authorized');
+        return;
+      }
+
+      // 500 → static error
+      setError('Unable to load policies');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading && !document) {
+  const handleEdit = (policy: InstructorPolicy) => {
+    setEditingPolicy(policy);
+    setShowAddForm(false);
+  };
+
+  const handleAdd = () => {
+    setShowAddForm(true);
+    setEditingPolicy(null);
+  };
+
+  const handleCancel = () => {
+    setShowAddForm(false);
+    setEditingPolicy(null);
+  };
+
+  const handleSuccess = () => {
+    window.location.reload();
+  };
+
+  if (loading && policies.length === 0 && !error) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Loading…</p>
+        <p>Loading...</p>
       </div>
     );
   }
 
-  const doc: InstructorPolicyDocumentApi = document ?? {
-    structured: {},
-    freeform: '',
-    version: 1,
-    updated_by: null,
-    updated_at: '',
-  };
-
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-        Policies
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+        Rules & Policies
       </h1>
-      <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-        Terms and conditions for your lessons.
-      </p>
 
       {error && (
-        <div
-          style={{
-            padding: '0.75rem 1rem',
-            marginBottom: '1.5rem',
-            backgroundColor: 'rgba(185, 28, 28, 0.2)',
-            border: '1px solid rgba(248, 113, 113, 0.5)',
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.75rem',
-            fontSize: '0.875rem',
-            color: '#fca5a5',
-          }}
-        >
+        <div style={{
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '0.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.75rem',
+          fontSize: '0.875rem',
+          color: '#991b1b',
+        }}>
           <span>
-            {error === 'UNAUTHORIZED' ? (
-              <>Session expired or not authenticated. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Login</Link></>
-            ) : (
-              error
-            )}
+            {error === 'Not authorized' ? 'Not authorized' : "Couldn't load policies. Check your connection and retry."}
           </span>
-          {error !== 'UNAUTHORIZED' && (
           <button
             type="button"
             onClick={() => void loadPolicies()}
             style={{
               padding: '0.375rem 0.75rem',
-              borderRadius: 6,
-              border: '1px solid rgba(248, 113, 113, 0.6)',
-              background: 'transparent',
-              color: '#fca5a5',
+              borderRadius: '0.375rem',
+              border: '1px solid #f87171',
+              background: '#fff',
+              color: '#991b1b',
               fontWeight: 600,
               cursor: 'pointer',
               fontSize: '0.8125rem',
@@ -135,28 +113,43 @@ export default function PoliciesPage() {
           >
             Retry
           </button>
-          )}
         </div>
       )}
 
-      {document && (
-        <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '1rem' }}>
-          Version {doc.version}
-          {doc.updated_at && ` · Last updated ${new Date(doc.updated_at).toLocaleString()}`}
-        </p>
-      )}
-
-      <div
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+      {showAddForm || editingPolicy ? (
+        <div style={{
+          border: '1px solid #e5e7eb',
           borderRadius: '0.5rem',
           padding: '1.5rem',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: '#ffffff',
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <PolicyDocumentForm document={doc} onSuccess={handleSuccess} />
-      </div>
+          marginBottom: '1.5rem',
+        }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+            {editingPolicy ? 'Edit Policy' : 'Add Policy'}
+          </h2>
+          <PolicyForm
+            policy={editingPolicy}
+            existingPolicies={policies}
+            onCancel={handleCancel}
+            onSuccess={handleSuccess}
+          />
+        </div>
+      ) : (
+        <div style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        }}>
+          <PoliciesTable
+            policies={policies}
+            onEdit={handleEdit}
+            onAdd={handleAdd}
+          />
+        </div>
+      )}
     </div>
   );
 }
