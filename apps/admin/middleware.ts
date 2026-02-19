@@ -53,5 +53,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  // Exclude /api/admin so API routes run without middleware (avoid 404 when middleware throws e.g. missing env on Vercel)
+  matcher: ['/admin/:path*'],
 };

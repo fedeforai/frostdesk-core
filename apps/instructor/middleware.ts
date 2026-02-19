@@ -89,5 +89,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Exclude /api so API routes run without middleware (avoid 404 when middleware throws e.g. missing env on Vercel)
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 };
