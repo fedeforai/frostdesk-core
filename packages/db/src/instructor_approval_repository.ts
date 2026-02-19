@@ -90,7 +90,7 @@ export async function listAllInstructorProfiles(
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id), 0)::int AS total_bookings,
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'confirmed'), 0)::int AS confirmed_bookings,
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'cancelled'), 0)::int AS cancelled_bookings,
-        COALESCE((SELECT COUNT(*) FROM conversation_threads ct WHERE ct.instructor_id = ip.id), 0)::int AS total_conversations,
+        COALESCE((SELECT COUNT(*) FROM conversations c WHERE c.instructor_id = ip.id), 0)::int AS total_conversations,
         COUNT(*) OVER()::text AS _total
       FROM instructor_profiles ip
       WHERE ip.approval_status = ${approval_status}
@@ -112,7 +112,7 @@ export async function listAllInstructorProfiles(
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id), 0)::int AS total_bookings,
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'confirmed'), 0)::int AS confirmed_bookings,
         COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'cancelled'), 0)::int AS cancelled_bookings,
-        COALESCE((SELECT COUNT(*) FROM conversation_threads ct WHERE ct.instructor_id = ip.id), 0)::int AS total_conversations,
+        COALESCE((SELECT COUNT(*) FROM conversations c WHERE c.instructor_id = ip.id), 0)::int AS total_conversations,
         COUNT(*) OVER()::text AS _total
       FROM instructor_profiles ip
       ORDER BY ip.created_at DESC
