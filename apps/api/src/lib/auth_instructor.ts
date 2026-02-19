@@ -56,14 +56,32 @@ export async function getUserIdFromJwt(request: {
 
 /**
  * Validates Supabase JWT and enforces admin role. Use for all /admin/* routes.
+ * In development (NODE_ENV !== 'production'), any authenticated user is treated as admin
+ * so you can access the admin app without a row in admin_users.
  */
 export async function requireAdminUser(request: {
   headers?: { authorization?: string };
+  log?: { warn: (a: unknown, b?: string) => void };
 }): Promise<string> {
   const userId = await getUserIdFromJwt(request);
-  const admin = await isAdmin(userId);
-  if (!admin) {
-    throw new AdminOnlyError('Admin access required');
+
+  if (process.env.NODE_ENV !== 'production') {
+    const admin = await isAdmin(userId);
+    if (!admin) {
+      request.log?.warn?.(
+        { userId, hint: 'Add this user_id to public.admin_users or rely on dev bypass' },
+        '[requireAdminUser] user not in admin_users'
+      );
+      // In development only: treat any authenticated user as admin so you can use the admin app
+      return userId;
+    }
+  } else {
+    const admin = await isAdmin(userId);
+    if (!admin) {
+      request.log?.warn?.({ userId }, '[requireAdminUser] 403: user_id not in admin_users');
+      throw new AdminOnlyError('Admin access required');
+    }
   }
+
   return userId;
 }

@@ -6,6 +6,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const AUTH_TRACE = process.env.AUTH_TRACE === '1';
 
+/** Timeout for upstream fetch to avoid FUNCTION_INVOCATION_TIMEOUT (return 504 instead). */
+const UPSTREAM_TIMEOUT_MS = 15_000;
+
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
 
 function trace(msg: string, extra?: Record<string, unknown>) {
@@ -124,14 +127,34 @@ async function proxy(
     if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
   }
 
+  const startMs = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+
   let upstream: Response;
   try {
     upstream = await fetch(backendUrl, {
       method,
       headers,
       body: body ?? undefined,
+      signal: controller.signal,
     });
   } catch (e) {
+    clearTimeout(timeoutId);
+    const durationMs = Date.now() - startMs;
+    const isAbort = e instanceof Error && e.name === 'AbortError';
+    const baseHost = API_BASE.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || '***';
+    console.log('[instructor-proxy]', { handler: 'proxy', baseHost, durationMs, aborted: isAbort });
+    if (isAbort) {
+      const res = NextResponse.json(
+        { ok: false, error: 'UPSTREAM_TIMEOUT', code: 'GATEWAY_TIMEOUT', message: 'Upstream did not respond in time' },
+        { status: 504 }
+      );
+      for (const c of cookieChanges) {
+        res.cookies.set(c.name, c.value, c.options as Record<string, unknown>);
+      }
+      return res;
+    }
     trace('upstream-fetch-failed', { backendUrl });
     const res = NextResponse.json(
       { ok: false, error: 'UPSTREAM_DOWN', message: 'API server unreachable at ' + API_BASE },
@@ -142,6 +165,11 @@ async function proxy(
     }
     return res;
   }
+
+  clearTimeout(timeoutId);
+  const durationMs = Date.now() - startMs;
+  const baseHost = API_BASE.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || '***';
+  console.log('[instructor-proxy]', { handler: 'proxy', baseHost, durationMs });
 
   trace('upstream-status', { status: upstream.status, upstreamStatus: upstream.status });
 
