@@ -37,3 +37,24 @@ export async function getCustomerStats(customerId: string): Promise<{
   const notesCount = notesResult.length > 0 ? parseInt(notesResult[0].count, 10) || 0 : 0;
   return { notesCount, bookingsCount };
 }
+
+/**
+ * Sum of amount_cents for all bookings linked to this customer (customer_id).
+ * Used for "total revenue" on customer profile. Currency is the first non-null from those bookings.
+ */
+export async function getCustomerRevenue(customerId: string): Promise<{
+  total_amount_cents: number;
+  currency: string | null;
+}> {
+  const result = await sql<{ total_cents: string; currency: string | null }[]>`
+    SELECT
+      COALESCE(SUM(amount_cents), 0)::text AS total_cents,
+      (SELECT currency FROM bookings WHERE customer_id = ${customerId} AND currency IS NOT NULL LIMIT 1) AS currency
+    FROM bookings
+    WHERE customer_id = ${customerId}
+  `;
+  const row = result[0];
+  const total_amount_cents = row ? parseInt(row.total_cents, 10) || 0 : 0;
+  const currency = row?.currency?.trim() || null;
+  return { total_amount_cents, currency };
+}

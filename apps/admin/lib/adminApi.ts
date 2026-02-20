@@ -56,7 +56,7 @@ export interface HumanInboxDetail {
   conversation_id: string;
   channel: string;
   status: string;
-  // PILOT MODE: ai_enabled removed (column not in schema)
+  // ai_enabled not in schema
   created_at: string;
   booking: {
     booking_id: string;
@@ -143,7 +143,29 @@ export async function fetchHumanInbox(params?: {
   status?: string;
   channel?: string;
 }): Promise<FetchHumanInboxResponse> {
-  const supabase = getSupabaseClient();
+  const useProxy = typeof window !== 'undefined';
+
+  if (useProxy) {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.channel) queryParams.append('channel', params.channel);
+    const qs = queryParams.toString();
+    const response = await fetch(`/api/admin/human-inbox${qs ? `?${qs}` : ''}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const { message } = parseAdminErrorBody(errorData, 'Failed to fetch human inbox');
+      const errorObj = new Error(message);
+      (errorObj as any).status = response.status;
+      throw errorObj;
+    }
+    return response.json();
+  }
+
+  const supabase = getSessionClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -621,7 +643,25 @@ export interface FetchConversationTimelineEventsResponse {
 export async function fetchHumanInboxDetail(
   conversationId: string
 ): Promise<FetchHumanInboxDetailResponse> {
-  const supabase = getSupabaseClient();
+  const useProxy = typeof window !== 'undefined';
+
+  if (useProxy) {
+    const response = await fetch(`/api/admin/human-inbox/${conversationId}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const { message } = parseAdminErrorBody(errorData, 'Failed to fetch human inbox detail');
+      const errorObj = new Error(message);
+      (errorObj as any).status = response.status;
+      throw errorObj;
+    }
+    return response.json();
+  }
+
+  const supabase = getSessionClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -1317,19 +1357,28 @@ export interface FetchBookingLifecycleResponse {
 export async function fetchBookingLifecycle(
   bookingId: string
 ): Promise<BookingLifecycleEvent[]> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
 
-  if (!session) {
-    throw new Error('No session found');
+  try {
+    if (useProxy) {
+      response = await fetch(`/api/admin/bookings/${bookingId}/lifecycle`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session found');
+      response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/lifecycle`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch (e) {
+    throw e instanceof Error ? e : new Error('Network error');
   }
-
-  const url = `${API_BASE_URL}/admin/bookings/${bookingId}/lifecycle`;
-
-  const response = await fetch(url, {
-    method: 'GET',
-    ...getAdminFetchOptions(session),
-  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -1366,7 +1415,30 @@ export async function sendOutboundMessage(params: {
   conversationId: string;
   text: string;
 }): Promise<void> {
-  const supabase = getSupabaseClient();
+  const useProxy = typeof window !== 'undefined';
+  const body = JSON.stringify({
+    conversation_id: params.conversationId,
+    text: params.text,
+  });
+
+  if (useProxy) {
+    const response = await fetch('/api/admin/messages/outbound', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body,
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const { message } = parseAdminErrorBody(errorData, 'Failed to send outbound message');
+      const errorObj = new Error(message);
+      (errorObj as any).status = response.status;
+      throw errorObj;
+    }
+    return;
+  }
+
+  const supabase = getSessionClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -1378,10 +1450,7 @@ export async function sendOutboundMessage(params: {
   const response = await fetch(url, {
     method: 'POST',
     ...getAdminFetchOptions(session),
-    body: JSON.stringify({
-      conversation_id: params.conversationId,
-      text: params.text,
-    }),
+    body,
   });
 
   if (!response.ok) {
@@ -1648,7 +1717,7 @@ export interface ConversationDetail {
   conversation_id: string;
   channel: string;
   status: string;
-  // PILOT MODE: ai_enabled removed (column not in schema)
+  // ai_enabled not in schema
   created_at: string;
 }
 
@@ -1681,7 +1750,7 @@ export async function fetchConversationById(
   const data: FetchHumanInboxDetailResponse = await response.json();
   
   // Extract conversation details from human inbox detail response
-  // PILOT MODE: ai_enabled hardcoded to false (column not in schema)
+  // ai_enabled not in schema, hardcoded false
   return {
     conversation_id: data.detail.conversation_id,
     channel: data.detail.channel,
@@ -1690,19 +1759,22 @@ export async function fetchConversationById(
   };
 }
 
-export interface AdminBookingDetail {
+export interface AdminBookingSummary {
   id: string;
-  instructor_id: number;
-  customer_name: string;
-  phone: string;
+  instructor_id: string;
+  customer_name: string | null;
+  phone: string | null;
   status: string;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
+  booking_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   calendar_event_id: string | null;
   payment_intent_id: string | null;
-  conversation_id: string | null;
   created_at: string;
+}
+
+export interface AdminBookingDetail extends AdminBookingSummary {
+  conversation_id: string | null;
 }
 
 export interface BookingAuditEntry {
@@ -1740,19 +1812,28 @@ export interface FetchAdminBookingDetailResponse {
 export async function fetchAdminBookingDetail(
   bookingId: string
 ): Promise<FetchAdminBookingDetailResponse['data']> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
 
-  if (!session) {
-    throw new Error('No session found');
+  try {
+    if (useProxy) {
+      response = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session found');
+      response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch (e) {
+    throw e instanceof Error ? e : new Error('Network error');
   }
-
-  const url = `${API_BASE_URL}/admin/bookings/${bookingId}`;
-
-  const response = await fetch(url, {
-    method: 'GET',
-    ...getAdminFetchOptions(session),
-  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -1765,4 +1846,512 @@ export async function fetchAdminBookingDetail(
 
   const data: FetchAdminBookingDetailResponse = await response.json();
   return data.data;
+}
+
+export interface FetchAdminBookingsResponse {
+  ok: true;
+  data: {
+    items: AdminBookingSummary[];
+    limit: number;
+    offset: number;
+    total?: number;
+  };
+}
+
+export async function fetchAdminBookings(params?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  instructorId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<FetchAdminBookingsResponse['data']> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  const qp = new URLSearchParams();
+  if (params?.limit != null) qp.set('limit', String(params.limit));
+  if (params?.offset != null) qp.set('offset', String(params.offset));
+  if (params?.status) qp.set('status', params.status);
+  if (params?.instructorId) qp.set('instructorId', params.instructorId);
+  if (params?.dateFrom) qp.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) qp.set('dateTo', params.dateTo);
+  const qs = qp.toString();
+
+  try {
+    if (useProxy) {
+      response = await fetch(`/api/admin/bookings${qs ? `?${qs}` : ''}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session found');
+      response = await fetch(`${API_BASE_URL}/admin/bookings${qs ? `?${qs}` : ''}`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error('Network error');
+    throw err;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch bookings');
+    const errorObj = new Error(message);
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+
+  const json: FetchAdminBookingsResponse = await response.json();
+  return json.data;
+}
+
+/** Conversation list item from GET /admin/conversations. */
+export interface ConversationSummary {
+  id: string;
+  customer_phone?: string | null;
+  customer_name?: string | null;
+  instructor_id?: string;
+  status?: string;
+  created_at?: string;
+}
+
+/** GET /admin/conversations — list conversations (admin). */
+export async function fetchAdminConversations(params?: {
+  limit?: number;
+  offset?: number;
+  instructorId?: string;
+  status?: string;
+}): Promise<{ items: any[]; limit: number; offset: number }> {
+  const useProxy = typeof window !== 'undefined';
+  const qp = new URLSearchParams();
+  if (params?.limit != null) qp.set('limit', String(params.limit));
+  if (params?.offset != null) qp.set('offset', String(params.offset));
+  if (params?.instructorId) qp.set('instructorId', params.instructorId);
+  if (params?.status) qp.set('status', params.status);
+  const qs = qp.toString();
+  let response: Response;
+  if (useProxy) {
+    response = await fetch(`/api/admin/conversations${qs ? `?${qs}` : ''}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/conversations${qs ? `?${qs}` : ''}`, {
+      method: 'GET',
+      ...getAdminFetchOptions(session),
+    });
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to fetch conversations');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+  const json = await response.json();
+  const data = json?.data ?? { items: [], limit: params?.limit ?? 50, offset: params?.offset ?? 0 };
+  return { items: data.items ?? [], limit: data.limit ?? 50, offset: data.offset ?? 0 };
+}
+
+/** POST /admin/bookings/:id/override-status — admin override booking status. */
+export async function overrideAdminBookingStatus(
+  bookingId: string,
+  body: { newStatus: string; reason?: string }
+): Promise<void> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+  if (useProxy) {
+    response = await fetch(`/api/admin/bookings/${bookingId}/override-status`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/override-status`, {
+      method: 'POST',
+      ...getAdminFetchOptions(session),
+      body: JSON.stringify(body),
+    });
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to override booking status');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+}
+
+/** GET /admin/system-degradation — system degradation signals. */
+export async function fetchSystemDegradationSignals(): Promise<{ ok: boolean; snapshot: any }> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+  if (useProxy) {
+    response = await fetch('/api/admin/system-degradation', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/system-degradation`, {
+      method: 'GET',
+      ...getAdminFetchOptions(session),
+    });
+  }
+  if (!response.ok) throw new Error('Failed to fetch system degradation');
+  return response.json();
+}
+
+/** GET /admin/ai-quota — AI quota status. */
+export async function fetchAIQuota(params?: { channel?: string; period?: string }): Promise<{ ok: boolean; quota: any }> {
+  const qp = new URLSearchParams();
+  if (params?.channel) qp.set('channel', params.channel);
+  if (params?.period) qp.set('period', params.period);
+  const qs = qp.toString();
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+  if (useProxy) {
+    response = await fetch(`/api/admin/ai-quota${qs ? `?${qs}` : ''}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/ai-quota${qs ? `?${qs}` : ''}`, {
+      method: 'GET',
+      ...getAdminFetchOptions(session),
+    });
+  }
+  if (!response.ok) throw new Error('Failed to fetch AI quota');
+  return response.json();
+}
+
+/** Channel identity mapping row (for table display). */
+export interface ChannelIdentityMapping {
+  id?: string;
+  channel?: string;
+  external_identity?: string;
+  conversation_id?: string;
+  first_seen_at?: string;
+  last_seen_at?: string;
+}
+
+/** Channel identity mappings — stub until backend route exists. */
+export async function fetchChannelIdentityMappings(): Promise<{ items: ChannelIdentityMapping[] }> {
+  return Promise.resolve({ items: [] });
+}
+
+/** Inbound message row (for table display). */
+export interface InboundMessage {
+  id?: string;
+  channel?: string;
+  conversation_id?: string;
+  external_message_id?: string;
+  sender_identity?: string;
+  message_type?: string;
+  message_text?: string | null;
+  received_at?: string;
+  created_at?: string;
+}
+
+/** Inbound messages — stub until backend route exists. */
+export async function fetchInboundMessages(_params?: { conversationId?: string; limit?: number }): Promise<{ items: InboundMessage[] }> {
+  return Promise.resolve({ items: [] });
+}
+
+/** WhatsApp inbound raw row (for table display). */
+export interface WhatsappInboundRaw {
+  id?: string;
+  received_at?: string;
+  sender_id?: string | null;
+  message_id?: string | null;
+  signature_valid?: boolean;
+}
+
+/** WhatsApp inbound raw — stub until backend route exists. */
+export async function fetchWhatsappInboundRaw(): Promise<{ items: WhatsappInboundRaw[] }> {
+  return Promise.resolve({ items: [] });
+}
+
+/** Admin message summary (for messages table). */
+export interface AdminMessageSummary {
+  id: string;
+  created_at?: string;
+  role?: string;
+  direction?: string;
+  instructor_id?: string;
+  content?: string | null;
+}
+
+/** System degradation signals snapshot (from GET /admin/system-degradation). */
+export interface SystemDegradationSignals {
+  webhook: {
+    inbound_received_24h: number;
+    inbound_errors_24h: number;
+    last_error_at?: string | null;
+  };
+  ai_drafts: {
+    drafts_generated_24h: number;
+    draft_errors_24h: number;
+  };
+  quota: {
+    quota_exceeded_24h: number;
+    last_quota_block_at?: string | null;
+  };
+  escalation: {
+    escalations_24h: number;
+  };
+}
+
+// ── Comprehensive Dashboard ─────────────────────────────────────────────────
+
+export interface ComprehensiveDashboardData {
+  system: {
+    ai_global_enabled: boolean;
+    ai_whatsapp_enabled: boolean;
+    emergency_disabled: boolean;
+    pilot_instructor_count: number;
+    pilot_max?: number;
+    quota: {
+      channel: 'whatsapp';
+      limit: number | null;
+      used_today: number | null;
+      percentage: number | null;
+      status: 'ok' | 'exceeded' | 'not_configured';
+    };
+  };
+  today: {
+    conversations_new: number;
+    conversations_open: number;
+    messages_inbound: number;
+    messages_outbound: number;
+    bookings_created: number;
+    bookings_cancelled: number;
+    customer_notes_added: number;
+    human_overrides: number;
+  };
+  yesterday?: {
+    conversations_open: number;
+    escalations: number;
+    draft_approval_rate: number | null;
+    draft_errors: number;
+    bookings_created: number;
+    instructors_online: number;
+  };
+  ai: {
+    drafts_generated_today: number;
+    drafts_sent_today: number;
+    drafts_pending: number;
+    draft_approval_rate: number | null;
+    draft_errors_today: number;
+    escalations_today: number;
+    conversations_ai_eligible_today: number;
+    avg_latency_ms_7d: number;
+    total_cost_cents_7d: number;
+    total_calls_7d: number;
+    error_rate_7d: number;
+  };
+  instructors: {
+    total_profiles: number;
+    onboarded_profiles: number;
+    active_7d: number;
+    pilot_count: number;
+    total_bookings: number;
+    active_bookings: number;
+    bookings_by_status: Array<{ status: string; count: number }>;
+    bookings_created_7d: number;
+    customer_notes_7d: number;
+  };
+  presence?: {
+    online_now: number;
+    last_30m: number;
+    offline: number;
+  };
+  user_access?: {
+    logins_today: number;
+    unique_users_today: number;
+    active_sessions: number;
+    logouts_today: number;
+  };
+  health_24h: {
+    webhook_inbound: number;
+    webhook_errors: number;
+    webhook_last_error_at: string | null;
+    ai_draft_errors: number;
+    quota_exceeded: number;
+    escalations: number;
+  };
+  recent_events: Array<{
+    id: string;
+    created_at: string;
+    actor_type: string;
+    actor_id: string | null;
+    action: string;
+    entity_type: string;
+    entity_id: string | null;
+    severity: string;
+  }>;
+  ai_adoption?: {
+    toggles_on_today: number;
+    toggles_off_today: number;
+    toggles_7d_total: number;
+    toggles_grouped_by_instructor_7d: Array<{ instructor_id: string; toggles: number }>;
+    recent_ai_behavior_events: Array<{
+      created_at: string;
+      instructor_id: string;
+      action: string;
+      new_state: boolean;
+    }>;
+  };
+  generated_at: string;
+}
+
+export async function fetchComprehensiveDashboard(): Promise<ComprehensiveDashboardData | null> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  try {
+    if (useProxy) {
+      response = await fetch('/api/admin/dashboard-comprehensive', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      response = await fetch(`${API_BASE_URL}/admin/dashboard-comprehensive`, {
+        method: 'GET',
+        ...getAdminFetchOptions(session),
+      });
+    }
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+  const json = await response.json();
+  return json.ok && json.data ? json.data : null;
+}
+
+// ── Report Archive ──────────────────────────────────────────────────────
+
+export type ReportArchiveType = 'daily' | 'weekly' | 'investor';
+
+export interface ReportArchiveItem {
+  name: string;
+  path: string;
+  created_at: string | null;
+  size: number | null;
+  download_url: string | null;
+}
+
+export interface ReportArchiveResponse {
+  type: ReportArchiveType;
+  items: ReportArchiveItem[];
+  count: number;
+  limit: number;
+}
+
+/**
+ * Fetches the list of archived reports from Supabase Storage.
+ */
+export async function fetchReportArchive(
+  type: ReportArchiveType,
+  limit: number = 20,
+): Promise<ReportArchiveResponse | null> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  try {
+    if (useProxy) {
+      response = await fetch(`/api/admin/reports/archive?type=${type}&limit=${limit}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      response = await fetch(
+        `${API_BASE_URL}/admin/reports/archive?type=${type}&limit=${limit}`,
+        { method: 'GET', ...getAdminFetchOptions(session) },
+      );
+    }
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+  const json = await response.json();
+  return json.ok && json.data ? json.data : null;
+}
+
+// ── Feature flags (Control Room toggles) ───────────────────────────────────
+
+export type FeatureFlagKey = 'ai_enabled' | 'ai_whatsapp_enabled';
+
+export interface UpdateFeatureFlagResult {
+  key: string;
+  enabled: boolean;
+}
+
+/**
+ * Sets a feature flag (AI Global = ai_enabled, AI WhatsApp = ai_whatsapp_enabled).
+ * Requires admin session. Call after success to refresh dashboard data.
+ */
+export async function updateFeatureFlag(
+  key: FeatureFlagKey,
+  enabled: boolean
+): Promise<UpdateFeatureFlagResult | null> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  try {
+    if (useProxy) {
+      response = await fetch('/api/admin/feature-flags', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ key, enabled }),
+      });
+    } else {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      response = await fetch(`${API_BASE_URL}/admin/feature-flags`, {
+        method: 'PATCH',
+        ...getAdminFetchOptions(session),
+        body: JSON.stringify({ key, enabled }),
+      });
+    }
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+  const json = await response.json();
+  return json.ok && json.data ? json.data : null;
 }

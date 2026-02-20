@@ -8,6 +8,7 @@ export { insertMessage } from './messages.js';
 export {
   createMessage,
   persistOutboundMessage,
+  persistOutboundMessageFromEcho,
   persistInboundMessageWithInboxBridge,
   getMessagesByConversation,
 } from './message_repository.js';
@@ -17,6 +18,7 @@ export type {
   CreateMessageParams,
   PersistInboundMessageWithInboxBridgeParams,
   PersistOutboundMessageParams,
+  PersistOutboundMessageFromEchoParams,
 } from './message_repository.js';
 
 // Channel identity mapping
@@ -52,6 +54,22 @@ export {
   getConversationCustomerId,
 } from './conversation_customer_link.js';
 
+// Conversation decision timeline (read-only)
+export { getConversationDecisionTimeline } from './conversation_decision_timeline_repository.js';
+export type {
+  DecisionTimelineEventType,
+  DecisionTimelineActorType,
+  ConversationDecisionTimelineEvent,
+} from './conversation_decision_timeline_repository.js';
+
+// Conversation handoff
+export {
+  recordHandoff,
+  HandoffNotOwnerError,
+  HandoffConflictError,
+} from './conversation_handoff_repository.js';
+export type { RecordHandoffParams, RecordHandoffResult } from './conversation_handoff_repository.js';
+
 // Inbound messages
 export {
   findInboundMessageByExternalId,
@@ -65,6 +83,7 @@ export {
   createBooking,
   getBookingById,
   listInstructorBookings,
+  getUpcomingBookingsByConversation,
   updateBookingState,
   updateBooking,
   updateBookingDetails,
@@ -74,6 +93,7 @@ export {
   getConfirmedOrModifiedBookingsInRange,
 } from './booking_repository.js';
 export { BookingNotFoundError } from './booking_repository.js';
+export type { ListInstructorBookingsFilters } from './booking_repository.js';
 export type { UpdateBookingDetailsPatch } from './booking_repository.js';
 export type { BookingState } from './booking_state_machine.js';
 export {
@@ -85,7 +105,12 @@ export {
 } from './booking_state_machine.js';
 
 // Feature flags
-export { getFeatureFlag, isFeatureEnabled } from './feature_flag_repository.js';
+export {
+  getFeatureFlag,
+  isFeatureEnabled,
+  setFeatureFlag,
+} from './feature_flag_repository.js';
+export type { AdminFeatureFlagKey } from './feature_flag_repository.js';
 
 // Booking expiry (read + apply pending→declined if expired)
 export { getBookingByIdWithExpiryCheck } from './booking_expiry.js';
@@ -101,7 +126,6 @@ export { normalizePhoneE164 } from './phone_normalize.js';
 export {
   listInstructorCustomers,
   getCustomerById,
-  findCustomerByPhone,
   upsertCustomer,
   computeCustomerValueScore,
 } from './customer_profile_repository.js';
@@ -111,11 +135,12 @@ export {
   createCustomerNote,
 } from './customer_notes_repository.js';
 export type { CustomerNoteRow } from './customer_notes_repository.js';
-export { countBookingsByCustomerId, getCustomerStats } from './customer_repository.js';
+export { countBookingsByCustomerId, getCustomerStats, getCustomerRevenue } from './customer_repository.js';
 
 // Booking audit (state change log)
 export { recordBookingAudit } from './booking_audit.js';
 export type { RecordBookingAuditParams } from './booking_audit.js';
+export { listInstructorBookingAuditLogs } from './booking_audit_log_repository.js';
 
 // Booking lifecycle
 export { getBookingLifecycle } from './booking_lifecycle_repository.js';
@@ -175,6 +200,9 @@ export { RoleNotAllowedError, AuthenticationRequiredError } from './admin_access
 // Admin read models / services
 export { getAdminDashboardMetricsReadModel } from './admin_dashboard_service.js';
 export { getAdminKPISnapshotReadModel } from './admin_kpi_service.js';
+export { getComprehensiveDashboardReadModel } from './admin_comprehensive_dashboard_service.js';
+export { getComprehensiveDashboard } from './admin_comprehensive_dashboard_repository.js';
+export type { ComprehensiveDashboard } from './admin_comprehensive_dashboard_repository.js';
 export { getAdminConversations } from './admin_conversation_service.js';
 export { getAdminBookings, adminOverrideBookingStatus } from './admin_booking_service.js';
 export type { GetAdminBookingsParams, AdminOverrideBookingStatusParams } from './admin_booking_service.js';
@@ -205,9 +233,17 @@ export type {
   UpdateInstructorProfileByUserIdExtendedParams,
 } from './instructor_profile_repository.js';
 
+// Instructor referrals (trusted peers)
+export { listReferralsForInstructor, isReferredInstructor } from './instructor_referrals_repository.js';
+export type { InstructorReferralRow, ReferralWithProfile } from './instructor_referrals_repository.js';
+
 // Instructor dashboard (read-only aggregated data)
 export { getInstructorDashboardData } from './instructor_dashboard_repository.js';
 export type { InstructorDashboardData } from './instructor_dashboard_repository.js';
+
+// Instructor KPIs (read-only aggregation)
+export { getRevenueKpi, getFunnelKpi, getBusinessKpi, parseWindow } from './instructor_kpi_repository.js';
+export type { RevenueKpi, FunnelKpi, BusinessKpi } from './instructor_kpi_repository.js';
 
 // Instructor availability (repository)
 export {
@@ -241,9 +277,20 @@ export type {
   ConflictProvider,
 } from './calendar_conflict_repository.js';
 
+// Availability enforcement (conflict validation before booking creation)
+export { validateAvailability, AvailabilityConflictError } from './availability_validation.js';
+export type { ValidateAvailabilityParams } from './availability_validation.js';
+
 // Availability overrides (date-specific add/remove)
-export { listAvailabilityOverridesInRange } from './availability_overrides_repository.js';
-export type { InstructorAvailabilityOverride } from './availability_overrides_repository.js';
+export {
+  listAvailabilityOverridesInRange,
+  createAvailabilityOverride,
+  deleteAvailabilityOverride,
+} from './availability_overrides_repository.js';
+export type {
+  InstructorAvailabilityOverride,
+  CreateAvailabilityOverrideParams,
+} from './availability_overrides_repository.js';
 
 // Calendar connections (Google etc.)
 export {
@@ -317,6 +364,7 @@ export type {
   AiConfigProfile,
   Compliance,
   PatchProfileBody,
+  BillingStatus,
 } from './instructor_profile_definitive_domain.js';
 export {
   marketingFieldsSchema,
@@ -342,6 +390,7 @@ export type {
   InstructorService,
   CreateInstructorServiceParams,
   UpdateInstructorServiceParams,
+  LessonType,
 } from './instructor_services_repository.js';
 
 // Instructor meeting points (repository)
@@ -441,15 +490,113 @@ export type {
   InstructorDraftKpiSummary,
 } from './instructor_draft_events_repository.js';
 
-// Instructor approval (admin)
+// Instructor approval (admin) & ensure-profile (gate)
 export {
   listPendingInstructors,
   setInstructorApprovalStatus,
+  listAllInstructorProfiles,
+  ensureInstructorProfile,
 } from './instructor_approval_repository.js';
 export type {
   PendingInstructor,
   InstructorApprovalRow,
+  AdminInstructorRow,
+  ListAllInstructorProfilesParams,
+  ListAllInstructorProfilesResult,
+  EnsureInstructorProfileRow,
 } from './instructor_approval_repository.js';
+
+// Booking field extraction (pure regex, no LLM)
+export { extractBookingFields } from './booking_field_extractor.js';
+export type { ExtractedBookingFields, BookingExtractionResult } from './booking_field_extractor.js';
+
+// AI Booking Drafts (structured booking proposals from AI)
+export {
+  insertAIBookingDraft,
+  listAIBookingDrafts,
+  getAIBookingDraftById,
+  confirmAIBookingDraft as confirmAIBookingDraftV2,
+  rejectAIBookingDraft,
+  countPendingBookingDrafts,
+  getPendingBookingDraftByConversation,
+  getConfirmedBookingIdsByConversation,
+} from './ai_booking_draft_repository_v2.js';
+export type {
+  AIBookingDraftRow,
+  BookingDraftStatus,
+  InsertAIBookingDraftParams,
+} from './ai_booking_draft_repository_v2.js';
+
+// Conversation suggested actions (inbox: when human action needed)
+export { getSuggestedActionsForConversation } from './conversation_suggested_actions.js';
+export type { SuggestedAction } from './conversation_suggested_actions.js';
+
+// P2.1: AI Draft → Booking (atomic confirmation)
+export { confirmAIBookingDraftWithAudit } from './ai_booking_confirm_repository.js';
+export type {
+  ConfirmAIBookingDraftInput,
+  ConfirmAIBookingDraftResult,
+} from './ai_booking_confirm_repository.js';
+
+// Instructor Stripe Connect (repository)
+export {
+  getInstructorStripeInfo,
+  saveStripeAccountId,
+  updateStripeConnectStatus,
+  findInstructorByStripeAccountId,
+} from './instructor_stripe_repository.js';
+export type {
+  StripeConnectStatus,
+  InstructorStripeInfo,
+} from './instructor_stripe_repository.js';
+
+// Booking payment Connect (repository)
+export {
+  getBookingPayment,
+  setBookingPaymentPending,
+  setBookingPaymentPaid,
+  setBookingPaymentFailed,
+  getBookingByCheckoutSession,
+} from './booking_payment_connect_repository.js';
+export type {
+  PaymentStatus,
+  BookingPaymentRow,
+} from './booking_payment_connect_repository.js';
+
+// Stripe webhook idempotency
+export { tryInsertStripeWebhookEvent } from './stripe_webhook_repository.js';
+
+// AI behavior events (instructor actions for tracking)
+export { insertAiBehaviorEvent } from './ai_behavior_events_repository.js';
+export type { AiBehaviorEventRow } from './ai_behavior_events.js';
+
+// Booking auto-confirm on payment
+export { autoConfirmBookingIfEligible } from './booking_auto_confirm.js';
+
+// Instructor subscriptions (Stripe billing)
+export {
+  getInstructorSubscription,
+  findInstructorSubscriptionByStripeSubId,
+  upsertInstructorSubscription,
+} from './instructor_subscription_repository.js';
+export type { SubscriptionStatus } from './instructor_subscription_repository.js';
+
+// Dev-only: Simulation harness helpers
+export {
+  createOrGetCustomerProfile,
+  normalizePhone,
+  listAuditSince,
+  listBookingsSince,
+  listConversationAuditSince,
+  seedBookingForTest,
+} from './dev/sim_harness_repository.js';
+export type {
+  CustomerSource,
+  SimCustomerProfile,
+  SimAuditRow,
+  SimBookingRow,
+  SeedBookingParams,
+} from './dev/sim_harness_repository.js';
 
 // Loop B: AI usage telemetry
 export {
@@ -473,6 +620,10 @@ export type {
 // Loop C: Customer booking context (read-only suggestion memory)
 export { getLastCompletedBookingContext } from './customer_booking_context.js';
 export type { CustomerBookingContext } from './customer_booking_context.js';
+
+// Reschedule context (read-only booking lookup for AI draft enrichment)
+export { findActiveBookingForReschedule } from './reschedule_context_repository.js';
+export type { ActiveBookingForReschedule } from './reschedule_context_repository.js';
 
 // Rolling Summary (token control)
 export {

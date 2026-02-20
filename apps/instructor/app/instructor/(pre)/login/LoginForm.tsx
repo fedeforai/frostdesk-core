@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
-const DEFAULT_AFTER_LOGIN = '/instructor/onboarding';
+const DEFAULT_AFTER_LOGIN = '/instructor/gate';
 
 function getAfterLogin(sp: ReturnType<typeof useSearchParams>): string {
   const next = sp.get('next');
@@ -54,6 +54,12 @@ export default function LoginForm() {
         return;
       }
 
+      // Full-page redirect so the server (gate/dashboard) sees the new session cookies.
+      // router.replace() can run before cookies are sent on the next RSC request, causing gate to redirect back to login.
+      if (typeof window !== 'undefined') {
+        window.location.replace(afterLogin);
+        return;
+      }
       router.replace(afterLogin);
       router.refresh();
     } catch (err) {

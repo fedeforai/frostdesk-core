@@ -8,8 +8,10 @@ export type AuditEventEntityType =
   | 'whatsapp_account'
   | 'feature_flag'
   | 'instructor'
+  | 'instructor_profile'
   | 'instructor_policy'
-  | 'customer';
+  | 'customer'
+  | 'ai_booking_draft';
 export type AuditEventSeverity = 'info' | 'warn' | 'error';
 
 export interface InsertAuditEventParams {
@@ -23,18 +25,23 @@ export interface InsertAuditEventParams {
   ip?: string | null;
   user_agent?: string | null;
   payload?: Record<string, unknown> | null;
+  /** Optional: maps to audit_log.event_type. Defaults to params.action when omitted. */
+  event_type?: string | null;
 }
 
 /**
  * Inserts one row into audit_log. Append-only; no updates/deletes.
+ * event_type is written explicitly: uses params.event_type if provided, else falls back to params.action.
  * Throws on DB errors (caller must handle fail-open).
  */
 export async function insertAuditEvent(params: InsertAuditEventParams): Promise<void> {
+  const eventType = params.event_type ?? params.action;
   await sql`
     INSERT INTO audit_log (
       actor_type,
       actor_id,
       action,
+      event_type,
       entity_type,
       entity_id,
       severity,
@@ -47,6 +54,7 @@ export async function insertAuditEvent(params: InsertAuditEventParams): Promise<
       ${params.actor_type},
       ${params.actor_id},
       ${params.action},
+      ${eventType},
       ${params.entity_type},
       ${params.entity_id},
       ${params.severity ?? 'info'},
@@ -64,6 +72,7 @@ export interface AuditLogRow {
   actor_type: string;
   actor_id: string | null;
   action: string;
+  event_type: string | null;
   entity_type: string;
   entity_id: string | null;
   severity: string;
@@ -111,7 +120,7 @@ export async function listAuditLog(params: ListAuditLogParams): Promise<ListAudi
   let rows: AuditLogRow[];
   if (cursorCreatedAt && cursorId) {
     rows = await sql<AuditLogRow[]>`
-      SELECT id, created_at, actor_type, actor_id, action, entity_type, entity_id, severity, request_id, ip, user_agent, payload
+      SELECT id, created_at, actor_type, actor_id, action, event_type, entity_type, entity_id, severity, request_id, ip, user_agent, payload
       FROM audit_log
       WHERE (${et}::text IS NULL OR entity_type = ${et})
         AND (${eid}::text IS NULL OR entity_id = ${eid})
@@ -121,7 +130,7 @@ export async function listAuditLog(params: ListAuditLogParams): Promise<ListAudi
     `;
   } else {
     rows = await sql<AuditLogRow[]>`
-      SELECT id, created_at, actor_type, actor_id, action, entity_type, entity_id, severity, request_id, ip, user_agent, payload
+      SELECT id, created_at, actor_type, actor_id, action, event_type, entity_type, entity_id, severity, request_id, ip, user_agent, payload
       FROM audit_log
       WHERE (${et}::text IS NULL OR entity_type = ${et})
         AND (${eid}::text IS NULL OR entity_id = ${eid})

@@ -11,19 +11,22 @@ import {
   mapConfidenceToBand,
   // Loop C: customer context prompt builder
   buildCustomerContextPrompt,
+  // Reschedule field extraction (pure regex, no LLM)
+  extractRescheduleFields,
 } from '@frostdesk/ai';
 import type { RelevanceAndIntentSnapshot, GenerateAIReplyOutput, ConfidenceBand, AiUsageEvent } from '@frostdesk/ai';
-import { extractBookingFields } from './booking_field_extractor.js';
 import { insertAISnapshot, findAISnapshotByMessageId } from './ai_snapshot_repository.js';
 import { insertDraftOnce, findDraftByMessageId } from './ai_draft_repository.js';
 import { upsertProposedDraft } from './instructor_draft_repository.js';
 import { insertAuditEvent } from './audit_log_repository.js';
-import { insertAIBookingDraft } from './ai_booking_draft_repository_v2.js';
 // Loop B: telemetry persistence
 import { insertAiUsageEvent } from './ai_usage_repository.js';
 // Loop C: customer booking context (read-only suggestion memory)
 import { getLastCompletedBookingContext } from './customer_booking_context.js';
 import { getConversationCustomerId } from './conversation_customer_link.js';
+// Reschedule context (read-only booking lookup + availability check)
+import { findActiveBookingForReschedule } from './reschedule_context_repository.js';
+import { validateAvailability, AvailabilityConflictError } from './availability_validation.js';
 // Rolling summary (token control)
 import { getConversationSummary, getMessageCountSinceLastSummary, getRecentMessagesForSummary, updateConversationSummary } from './conversation_summary_repository.js';
 import { shouldUpdateSummary, estimateTokens } from './summary_policy.js';
@@ -151,6 +154,11 @@ export interface InboundDraftOrchestratorResult {
   summaryUsed?: boolean;
   /** True if the summary was regenerated during this invocation. */
   summaryUpdated?: boolean;
+  // Reschedule context
+  /** True if the AI draft was enriched with verified reschedule availability data. */
+  rescheduleVerified?: boolean;
+  /** Booking ID being rescheduled (if found). */
+  rescheduleBookingId?: string | null;
 }
 
 /**
@@ -339,8 +347,32 @@ export async function orchestrateInboundDraft(
       } catch { /* fail-open */ }
       return { snapshotId, draftGenerated: false, confidenceBand, timedOut: classificationTimedOut, classificationElapsedMs };
     }
-    case 'ai_reply':
+    case 'ai_reply': {
+      // Do not generate or persist draft when classification timed out (safety: avoid low-confidence draft)
+      if (classificationTimedOut) {
+        const snapshotId = await insertAISnapshot(snapshotParams);
+        try {
+          await insertAuditEvent({
+            actor_type: 'system',
+            actor_id: null,
+            action: 'ai_classification',
+            entity_type: 'conversation',
+            entity_id: conversationId,
+            severity: 'info',
+            request_id: requestId ?? null,
+            payload: {
+              decision: 'ai_reply_skipped_timeout',
+              confidence_band: confidenceBand,
+              timed_out: true,
+              classification_ms: classificationElapsedMs,
+              model: classificationModel,
+            },
+          });
+        } catch { /* fail-open */ }
+        return { snapshotId, draftGenerated: false, confidenceBand, timedOut: true, classificationElapsedMs };
+      }
       break;
+    }
   }
 
   // Step 4: Apply confidence policy (ai_reply path only)
@@ -397,6 +429,105 @@ export async function orchestrateInboundDraft(
       customerContextUsed = customerContextPrompt !== null;
     }
   } catch { /* fail-open: customer context is never critical */ }
+
+  // ── Reschedule context: booking lookup + availability verification ──────
+  // Only when intent = RESCHEDULE. Read-only. Fail-open.
+  // Does NOT import booking_repository for mutations — only SELECT queries.
+  let rescheduleContext: string | null = null;
+  let rescheduleVerified = false;
+  let rescheduleBookingId: string | null = null;
+  if (classification.intent === 'RESCHEDULE' && resolvedInstructorId) {
+    try {
+      const rescheduleExtraction = extractRescheduleFields(messageText);
+      if (rescheduleExtraction.usable) {
+        const rFields = rescheduleExtraction.fields;
+        const customerId = await getConversationCustomerId(conversationId);
+        if (customerId) {
+          const activeBooking = await findActiveBookingForReschedule(
+            resolvedInstructorId,
+            customerId,
+            rFields.date,
+          );
+          if (activeBooking && rFields.newStart) {
+            rescheduleBookingId = activeBooking.id;
+
+            // Compute new UTC times from extracted fields
+            // Use the booking's existing date if no date extracted
+            const bookingDate = rFields.date ?? activeBooking.startTime.slice(0, 10);
+            const newStartUtc = `${bookingDate}T${rFields.newStart}:00Z`;
+
+            // Compute newEnd: use extracted end, or infer from current booking duration
+            let newEndUtc: string;
+            if (rFields.newEnd) {
+              newEndUtc = `${bookingDate}T${rFields.newEnd}:00Z`;
+            } else {
+              const currentDurationMs = new Date(activeBooking.endTime).getTime() - new Date(activeBooking.startTime).getTime();
+              const newEndDate = new Date(new Date(newStartUtc).getTime() + currentDurationMs);
+              newEndUtc = newEndDate.toISOString();
+            }
+
+            try {
+              await validateAvailability({
+                instructorId: resolvedInstructorId,
+                startUtc: newStartUtc,
+                endUtc: newEndUtc,
+                excludeBookingId: activeBooking.id,
+              });
+              // Slot is FREE
+              rescheduleVerified = true;
+              const displayNewStart = rFields.newStart;
+              const displayNewEnd = rFields.newEnd ?? newEndUtc.slice(11, 16);
+              const displayCurrentStart = activeBooking.startTime.slice(11, 16);
+              const displayCurrentEnd = activeBooking.endTime.slice(11, 16);
+              rescheduleContext =
+                `[RESCHEDULE VERIFIED] The customer wants to move their lesson ` +
+                `from ${displayCurrentStart}-${displayCurrentEnd} to ${displayNewStart}-${displayNewEnd}` +
+                (rFields.date ? ` on ${rFields.date}` : '') + `. ` +
+                `The system has verified: the new slot is FREE (no conflicts). ` +
+                (activeBooking.meetingPointName && rFields.sameLocation
+                  ? `Same meeting point: ${activeBooking.meetingPointName}. `
+                  : '') +
+                `You may confirm the reschedule to the customer with specific times. ` +
+                `Customer name: ${activeBooking.customerDisplayName ?? 'unknown'}.`;
+            } catch (err) {
+              if (err instanceof AvailabilityConflictError) {
+                // Slot has CONFLICTS — do not verify, generate helpful context
+                rescheduleContext =
+                  `[RESCHEDULE CONFLICT] The customer wants to move their lesson ` +
+                  `to ${rFields.newStart}${rFields.newEnd ? '-' + rFields.newEnd : ''}` +
+                  (rFields.date ? ` on ${rFields.date}` : '') + `, ` +
+                  `but the system detected a scheduling conflict for that time. ` +
+                  `Suggest the customer that you will check for alternative times and get back to them.`;
+              }
+            }
+          } else if (!activeBooking) {
+            rescheduleContext =
+              `[RESCHEDULE NO BOOKING] The customer is asking to reschedule, ` +
+              `but no active (confirmed/modified) booking was found for them. ` +
+              `Ask them to clarify which lesson they want to reschedule.`;
+          }
+        }
+      }
+
+      // Audit: reschedule context enrichment
+      try {
+        await insertAuditEvent({
+          actor_type: 'system',
+          actor_id: null,
+          action: 'ai_reschedule_context_enriched',
+          entity_type: 'conversation',
+          entity_id: conversationId,
+          severity: 'info',
+          request_id: requestId ?? null,
+          payload: {
+            reschedule_verified: rescheduleVerified,
+            booking_id: rescheduleBookingId,
+            has_context: rescheduleContext !== null,
+          },
+        });
+      } catch { /* fail-open */ }
+    } catch { /* fail-open: reschedule context is never critical */ }
+  }
 
   // ── Rolling Summary: evaluate trigger policy, regenerate if needed ─────
   // Feature flag: ENABLE_AI_SUMMARY (default ON, set to '0' to disable)
@@ -486,89 +617,15 @@ export async function orchestrateInboundDraft(
     try {
       const instructorId = resolvedInstructorId ?? await getConversationInstructorId(conversationId);
 
-      // ── NEW: Booking field extraction for NEW_BOOKING intent ──────────
-      // If the message contains ALL required booking fields, create a structured
-      // booking draft (ai_booking_drafts) and generate a "booking received" reply
-      // instead of the generic AI text suggestion.
-      if (
-        instructorId &&
-        (classification.intent === 'NEW_BOOKING' || classification.intent === 'RESCHEDULE')
-      ) {
-        const extraction = extractBookingFields(messageText);
-
-        if (extraction.complete) {
-          // All required fields present → create structured booking draft
-          const customerPhone = await getConversationCustomerIdentifier(conversationId);
-          const customerReply = generateBookingReceivedReply(language);
-
-          try {
-            const bookingDraft = await insertAIBookingDraft({
-              conversationId,
-              instructorId,
-              messageId,
-              customerName: extraction.fields.customerName,
-              customerPhone,
-              bookingDate: extraction.fields.date!,
-              startTime: extraction.fields.startTime!,
-              endTime: extraction.fields.endTime!,
-              durationMinutes: extraction.fields.durationMinutes,
-              partySize: extraction.fields.partySize ?? 1,
-              skillLevel: extraction.fields.skillLevel,
-              lessonType: extraction.fields.lessonType,
-              sport: extraction.fields.sport,
-              resort: extraction.fields.resort,
-              meetingPointText: extraction.fields.meetingPointText,
-              rawExtraction: JSON.parse(JSON.stringify(extraction.fields)) as Record<string, unknown>,
-              extractionConfidence: extraction.extractionConfidence,
-              draftReason: `AI auto-extracted ${Object.values(extraction.fields).filter((v) => v !== null).length} fields from customer message`,
-              aiCustomerReply: customerReply,
-            });
-
-            bookingDraftId = bookingDraft.id;
-            bookingDraftReply = customerReply;
-
-            // Also write the customer reply as the Inbox AI draft (so instructor sees it)
-            await upsertProposedDraft({
-              conversationId,
-              instructorId,
-              draftText: customerReply,
-              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h TTL
-            });
-            draftGenerated = true;
-
-            try {
-              await insertAuditEvent({
-                actor_type: 'system',
-                actor_id: null,
-                action: 'ai_booking_draft_created',
-                entity_type: 'conversation',
-                entity_id: conversationId,
-                severity: 'info',
-                request_id: requestId ?? null,
-                payload: {
-                  booking_draft_id: bookingDraft.id,
-                  extraction_confidence: extraction.extractionConfidence,
-                  fields_extracted: Object.entries(extraction.fields)
-                    .filter(([, v]) => v !== null)
-                    .map(([k]) => k),
-                  missing_fields: extraction.missingFields,
-                },
-              });
-            } catch {
-              // Fail-open: audit best-effort
-            }
-          } catch {
-            // Booking draft insert failed — fall through to generic text draft below
-          }
-        }
-      }
-
-      // ── Generic text draft (fallback if no booking draft was created) ──
-      if (!draftGenerated) {
-        // Build enriched context: summary (if available) + customer memory
+      // ── Generic text draft generation ──────────────────────────────────
+      {
+        // Build enriched context: summary (if available) + customer memory + reschedule
         let enrichedContext = customerContextPrompt ?? '';
         if (existingSummaryText) {
           enrichedContext = `Conversation summary (compact, factual):\n${existingSummaryText}\n\n${enrichedContext}`;
+        }
+        if (rescheduleContext) {
+          enrichedContext = `${enrichedContext}\n\n${rescheduleContext}`;
         }
 
         // Route through AI Router + Timeout
@@ -620,6 +677,7 @@ export async function orchestrateInboundDraft(
               rawDraftText: draftReplyText,
               intent: classification.intent || null,
               language,
+              rescheduleVerified,
             })
           : { safeDraftText: null, violations: [], was_truncated: false, violations_count: 0 };
 
@@ -670,6 +728,9 @@ export async function orchestrateInboundDraft(
                 // Loop C: context enrichment telemetry
                 detected_language: detectedLanguage,
                 customer_context_used: customerContextUsed,
+                // Reschedule context enrichment
+                reschedule_verified: rescheduleVerified,
+                reschedule_booking_id: rescheduleBookingId,
                 // Rolling summary
                 summary_used: existingSummaryText !== null,
                 summary_updated: summaryUpdated,
@@ -724,5 +785,8 @@ export async function orchestrateInboundDraft(
     // Rolling summary
     summaryUsed: existingSummaryText !== null,
     summaryUpdated,
+    // Reschedule context
+    rescheduleVerified,
+    rescheduleBookingId,
   };
 }

@@ -37,10 +37,10 @@ export async function sendHumanReply(
     throw new Error(`Conversation not found: ${conversationId}`);
   }
 
-  // Persist message with direction='outbound', role='human'
+  // Persist message with direction='outbound', message_text (canonical schema; no role column)
   const result = await sql<Array<{ id: string }>>`
-    INSERT INTO messages (conversation_id, direction, role, content, raw_payload, created_at)
-    VALUES (${conversationId}, 'outbound', 'human', ${content}, '{}', NOW())
+    INSERT INTO messages (conversation_id, direction, message_text, channel, raw_payload, created_at)
+    VALUES (${conversationId}, 'outbound', ${content}, 'whatsapp', '{}', NOW())
     RETURNING id
   `;
 

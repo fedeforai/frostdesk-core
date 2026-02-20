@@ -120,7 +120,7 @@ export default function HumanInboxDetailView({
       }}>
         <div style={{ 
           marginBottom: '1.5rem', 
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
           display: 'flex',
           alignItems: 'center',
@@ -129,7 +129,7 @@ export default function HumanInboxDetailView({
           <h2 style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
             margin: 0,
           }}>
             Conversation
@@ -143,11 +143,11 @@ export default function HumanInboxDetailView({
         <div style={{ display: 'grid', gap: '1rem' }}>
           <div>
             <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Conversation ID</strong>
-            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#111827' }}>{detail.conversation_id}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>{detail.conversation_id}</span>
           </div>
           <div>
             <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Channel</strong>
-            <span style={{ color: '#111827' }}>{detail.channel}</span>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{detail.channel}</span>
           </div>
           <div>
             <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Status</strong>
@@ -167,7 +167,7 @@ export default function HumanInboxDetailView({
           </div>
           <div>
             <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Created At</strong>
-            <span style={{ color: '#111827' }}>{formatTimestamp(detail.created_at)}</span>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(detail.created_at)}</span>
           </div>
         </div>
       </div>
@@ -185,8 +185,8 @@ export default function HumanInboxDetailView({
             marginBottom: '1.5rem', 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
-            borderBottom: '1px solid #e5e7eb',
+            color: 'rgba(226, 232, 240, 0.95)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             paddingBottom: '0.75rem',
           }}>
             Booking
@@ -194,7 +194,7 @@ export default function HumanInboxDetailView({
           <div style={{ display: 'grid', gap: '1rem' }}>
             <div>
               <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Booking ID</strong>
-              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#111827' }}>{detail.booking.booking_id}</span>
+              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>{detail.booking.booking_id}</span>
             </div>
             <div>
               <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Status</strong>
@@ -213,11 +213,11 @@ export default function HumanInboxDetailView({
             </div>
             <div>
               <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Instructor ID</strong>
-              <span style={{ color: '#111827' }}>{detail.booking.instructor_id}</span>
+              <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{detail.booking.instructor_id}</span>
             </div>
             <div>
               <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Created At</strong>
-              <span style={{ color: '#111827' }}>{formatTimestamp(detail.booking.created_at)}</span>
+              <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(detail.booking.created_at)}</span>
             </div>
           </div>
         </div>

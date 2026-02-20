@@ -117,11 +117,11 @@ export default function ConversationsTable({ conversations }: ConversationsTable
                       fontWeight: '500',
                       border: '1px solid #e5e7eb',
                     }}>
-                      {formatStatus(conv.status)}
+                      {formatStatus(conv.status ?? '')}
                     </span>
                   </td>
                   <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
-                    {new Date(conv.created_at).toLocaleString()}
+                    {conv.created_at ? new Date(conv.created_at).toLocaleString() : '—'}
                   </td>
                 </tr>
               );

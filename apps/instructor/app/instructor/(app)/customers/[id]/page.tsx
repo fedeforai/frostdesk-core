@@ -6,9 +6,11 @@ import Link from 'next/link';
 import {
   fetchInstructorCustomer,
   createInstructorCustomerNote,
+  fetchInstructorBookings,
   type InstructorCustomerDetailResponse,
 } from '@/lib/instructorApi';
 import { getValueScoreAndWhy } from '@/lib/valueScore';
+import styles from './customerProfile.module.css';
 
 function formatDateTime(value?: string | null): string {
   if (!value) return '—';
@@ -33,11 +35,40 @@ function displayLabel(c: { display_name?: string | null; phone_number?: string |
   return `Customer ${c.id.slice(0, 8)}`;
 }
 
-function valueBadge(score: number): string {
+function avatarInitial(c: { display_name?: string | null; phone_number?: string | null; id: string }): string {
+  const label = displayLabel(c);
+  const first = label.replace(/^Customer\s*/i, '').trim() || c.id;
+  if (/^[a-zA-Z]/.test(first)) return first.slice(0, 2).toUpperCase();
+  return (c.id.slice(0, 2) || '?').toUpperCase();
+}
+
+function valueBadge(score: number): 'Platinum' | 'Gold' | 'Silver' | 'Bronze' {
   if (score >= 90) return 'Platinum';
   if (score >= 70) return 'Gold';
   if (score >= 40) return 'Silver';
   return 'Bronze';
+}
+
+function valueBadgeClass(score: number): string {
+  const tier = valueBadge(score);
+  return (
+    styles.valueBadge +
+    ' ' +
+    (tier === 'Platinum'
+      ? styles.valuePlatinum
+      : tier === 'Gold'
+        ? styles.valueGold
+        : tier === 'Silver'
+          ? styles.valueSilver
+          : styles.valueBronze)
+  );
+}
+
+function formatRevenue(cents: number | undefined, currency: string | null | undefined): string {
+  if (cents == null || cents === 0) return '—';
+  const cur = (currency || 'EUR').toUpperCase();
+  const sym = cur === 'EUR' ? '€' : cur === 'GBP' ? '£' : cur === 'CHF' ? 'CHF' : cur;
+  return `${sym} ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function InstructorCustomerDetailPage() {
@@ -48,6 +79,8 @@ export default function InstructorCustomerDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState('');
   const [submittingNote, setSubmittingNote] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -59,7 +92,7 @@ export default function InstructorCustomerDetailPage() {
     } catch (e: unknown) {
       if ((e as any)?.status === 404) {
         setData(null);
-        setError('Cliente non trovato');
+        setError('Customer not found');
       } else {
         setError(e instanceof Error ? e.message : 'Failed to load customer');
       }
@@ -72,6 +105,27 @@ export default function InstructorCustomerDetailPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!id || !data) return;
+    let cancelled = false;
+    setBookingsLoading(true);
+    fetchInstructorBookings()
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.items) ? res.items : [];
+        setBookings(list.filter((b: any) => b.customer_id === id));
+      })
+      .catch(() => {
+        if (!cancelled) setBookings([]);
+      })
+      .finally(() => {
+        if (!cancelled) setBookingsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, data]);
+
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
     const content = noteContent.trim();
@@ -83,142 +137,231 @@ export default function InstructorCustomerDetailPage() {
       setNoteContent('');
       load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to add note');
+      if ((e as any)?.code === 'BILLING_BLOCKED') {
+        setError('Subscription required. Contact support to activate billing.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to add note');
+      }
     } finally {
       setSubmittingNote(false);
     }
   };
 
-  const darkBase = { background: '#0f172a', color: 'rgba(226, 232, 240, 0.92)', padding: '1.5rem', borderRadius: 12 };
-  const darkLink = { color: '#7dd3fc', textDecoration: 'none' as const };
-
   if (!id) {
     return (
-      <section style={darkBase}>
-        <p>ID mancante.</p>
-        <Link href="/instructor/customers" style={darkLink}>← Customers</Link>
-      </section>
+      <div className={styles.section}>
+        <div className={styles.baseWrap}>
+          <p>ID mancante.</p>
+          <Link href="/instructor/customers" className={styles.backLink}>
+            ← Customers
+          </Link>
+        </div>
+      </div>
     );
   }
 
   if (loading) {
     return (
-      <section style={darkBase}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.9)' }}>Caricamento…</p>
-      </section>
+      <div className={styles.section}>
+        <div className={styles.baseWrap}>
+          <Link href="/instructor/customers" className={styles.backLink}>
+            ← Customers
+          </Link>
+          <div className={styles.loadingWrap}>Loading…</div>
+        </div>
+      </div>
     );
   }
 
   if (error && !data) {
     return (
-      <section style={darkBase}>
-        <p style={{ color: '#fca5a5' }}>{error}</p>
-        <Link href="/instructor/customers" style={darkLink}>← Customers</Link>
-      </section>
+      <div className={styles.section}>
+        <div className={styles.baseWrap}>
+          <Link href="/instructor/customers" className={styles.backLink}>
+            ← Customers
+          </Link>
+          <div className={styles.errorBanner}>{error}</div>
+        </div>
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <section style={darkBase}>
-        <p>Cliente non trovato.</p>
-        <Link href="/instructor/customers" style={darkLink}>← Customers</Link>
-      </section>
+      <div className={styles.section}>
+        <div className={styles.baseWrap}>
+          <Link href="/instructor/customers" className={styles.backLink}>
+            ← Customers
+          </Link>
+          <p>Customer not found.</p>
+        </div>
+      </div>
     );
   }
 
   const { customer, notes, stats } = data;
-
-  const dark = {
-    section: { background: '#0f172a', color: 'rgba(226, 232, 240, 0.92)', padding: '1.5rem', borderRadius: 12, border: '1px solid rgba(148, 163, 184, 0.2)' },
-    muted: { color: 'rgba(148, 163, 184, 0.9)' },
-    link: { color: '#7dd3fc', textDecoration: 'none', fontSize: '0.875rem' },
-    error: { marginBottom: '1rem', padding: '0.75rem', background: 'rgba(185, 28, 28, 0.2)', color: '#fca5a5', borderRadius: 8 },
-    card: { marginBottom: '1.5rem', padding: '1rem', background: 'rgba(30, 41, 59, 0.6)', borderRadius: 8, border: '1px solid rgba(148, 163, 184, 0.2)' },
-    textarea: { width: '100%', maxWidth: 400, padding: '0.5rem', borderRadius: 8, border: '1px solid rgba(148, 163, 184, 0.3)', background: 'rgba(15, 23, 42, 0.8)', color: 'rgba(226, 232, 240, 0.92)', marginBottom: '0.5rem', boxSizing: 'border-box' as const },
-    btn: { padding: '0.5rem 1rem', borderRadius: 8, background: '#0b7bd6', color: '#fff', border: 0, cursor: 'pointer' },
-    btnDisabled: { padding: '0.5rem 1rem', borderRadius: 8, background: 'rgba(148, 163, 184, 0.3)', color: 'rgba(226, 232, 240, 0.5)', border: 0, cursor: 'not-allowed' },
-    noteItem: { padding: '0.75rem', borderBottom: '1px solid rgba(148, 163, 184, 0.2)', background: 'rgba(30, 41, 59, 0.4)' },
-  };
+  const valueInfo = getValueScoreAndWhy({
+    lastSeenAt: customer.last_seen_at ?? null,
+    notesCount: stats.notes_count,
+    firstSeenAt: customer.first_seen_at ?? null,
+    bookingsCount: stats.bookings_count,
+  });
+  const tier = valueBadge(stats.value_score);
 
   return (
-    <section style={dark.section}>
-      <div style={{ marginBottom: '1rem' }}>
-        <Link href="/instructor/customers" style={dark.link}>
+    <div className={styles.section}>
+      <div className={styles.baseWrap}>
+        <Link href="/instructor/customers" className={styles.backLink}>
           ← Customers
         </Link>
-      </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{displayLabel(customer)}</h1>
-        <div style={{ fontSize: '0.875rem', ...dark.muted }}>
-          {customer.phone_number && <span>Phone: {customer.phone_number}</span>}
-          {customer.phone_number && ' · '}
-          Source: {customer.source}
+        <header className={styles.hero}>
+          <div className={styles.avatar} aria-hidden>
+            {avatarInitial(customer)}
+          </div>
+          <div className={styles.heroBody}>
+            <div className={styles.heroTop}>
+              <h1 className={styles.heroTitle}>{displayLabel(customer)}</h1>
+              <span
+                className={valueBadgeClass(stats.value_score)}
+                title={valueInfo.why}
+              >
+                {tier}
+              </span>
+            </div>
+            <div className={styles.heroMeta}>
+              {customer.phone_number && <span>{customer.phone_number}</span>}
+              {customer.source && (
+                <span className={styles.sourceChip}>{customer.source}</span>
+              )}
+            </div>
+            <div className={styles.actions}>
+              <Link
+                href={`/instructor/bookings/new?customer_id=${encodeURIComponent(id)}`}
+                className={styles.primaryBtn}
+              >
+                New booking
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {error && <div className={styles.errorBanner}>{error}</div>}
+
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>First seen</div>
+            <div className={styles.statValue}>{formatDateTime(customer.first_seen_at)}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>Last seen</div>
+            <div className={styles.statValue}>{formatDateTime(customer.last_seen_at)}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>Notes</div>
+            <div className={styles.statValue}>{stats.notes_count}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>Bookings</div>
+            <div className={styles.statValue}>{stats.bookings_count}</div>
+          </div>
+          <div className={styles.statCard} title={valueInfo.why}>
+            <div className={styles.statLabel}>Value</div>
+            <div className={styles.statValue}>
+              {tier} ({stats.value_score})
+            </div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>Revenue</div>
+            <div className={styles.statValue}>
+              {formatRevenue(stats.total_amount_cents, stats.currency)}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Add note</h2>
+          <form onSubmit={handleAddNote}>
+            <textarea
+              className={styles.textarea}
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Preferences, follow-up…"
+              rows={3}
+            />
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={submittingNote || !noteContent.trim()}
+            >
+              {submittingNote ? 'Saving…' : 'Add note'}
+            </button>
+          </form>
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Notes</h2>
+          {notes.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyStateIcon} aria-hidden>📝</div>
+              No notes yet. Add one above to keep track of preferences and follow-ups.
+            </div>
+          ) : (
+            <ul className={styles.notesList}>
+              {notes.map((n) => (
+                <li key={n.id} className={styles.noteCard}>
+                  <div className={styles.noteContent}>{n.content}</div>
+                  <div className={styles.noteTime}>{formatDateTime(n.created_at)}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Prenotazioni</h2>
+          {bookingsLoading ? (
+            <div className={styles.loadingWrap}>Caricamento…</div>
+          ) : bookings.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyStateIcon} aria-hidden>📅</div>
+              Nessuna prenotazione.{' '}
+              <Link href={`/instructor/bookings/new?customer_id=${encodeURIComponent(id)}`} className={styles.backLink}>
+                Crea prenotazione
+              </Link>
+            </div>
+          ) : (
+            <div className={styles.bookingsWrap}>
+              <table className={styles.bookingsTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.bookingsTh}>Data</th>
+                    <th className={styles.bookingsTh}>Stato</th>
+                    <th className={styles.bookingsTh}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((b) => (
+                    <tr key={b.id} className={styles.bookingsTr}>
+                      <td className={styles.bookingsTd}>
+                        {formatDateTime(b.start_time ?? b.created_at)}
+                      </td>
+                      <td className={styles.bookingsTd}>
+                        <span className={styles.statusPill}>{b.status ?? '—'}</span>
+                      </td>
+                      <td className={styles.bookingsTd}>
+                        <Link href={`/instructor/bookings/${b.id}`} className={styles.tableLink}>
+                          Dettaglio
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
-
-      {error && (
-        <div style={dark.error}>
-          {error}
-        </div>
-      )}
-
-      <div style={dark.card}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Stats</h2>
-        <p style={{ margin: 0, fontSize: '0.875rem' }}>
-          First seen: {formatDateTime(customer.first_seen_at)} · Last seen: {formatDateTime(customer.last_seen_at)}
-        </p>
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem' }}>
-          Notes: <strong>{stats.notes_count}</strong> · Bookings: <strong>{stats.bookings_count}</strong>
-          {' · '}
-          <span
-            title={getValueScoreAndWhy({
-              lastSeenAt: customer.last_seen_at ?? null,
-              notesCount: stats.notes_count,
-              firstSeenAt: customer.first_seen_at ?? null,
-              bookingsCount: stats.bookings_count,
-            }).why}
-            style={{ cursor: 'help' }}
-          >
-            Value: <strong>{valueBadge(stats.value_score)}</strong> ({stats.value_score}) ⓘ
-          </span>
-        </p>
-      </div>
-
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Add note</h2>
-        <form onSubmit={handleAddNote}>
-          <textarea
-            value={noteContent}
-            onChange={(e) => setNoteContent(e.target.value)}
-            placeholder="Preferences, follow-up..."
-            rows={2}
-            style={dark.textarea}
-          />
-          <button type="submit" disabled={submittingNote || !noteContent.trim()} style={submittingNote || !noteContent.trim() ? dark.btnDisabled : dark.btn}>
-            {submittingNote ? '…' : 'Add note'}
-          </button>
-        </form>
-      </div>
-
-      <div>
-        <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Note</h2>
-        {notes.length === 0 ? (
-          <p style={{ ...dark.muted, fontSize: '0.875rem' }}>Nessuna nota. Aggiungine una sopra.</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {notes.map((n) => (
-              <li key={n.id} style={dark.noteItem}>
-                <div style={{ fontSize: '0.875rem' }}>{n.content}</div>
-                <div style={{ fontSize: '0.75rem', ...dark.muted, marginTop: '0.25rem' }}>
-                  {formatDateTime(n.created_at)}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+    </div>
   );
 }

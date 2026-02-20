@@ -1,146 +1,191 @@
-import { fetchBookingLifecycleByIdServer } from '@/lib/instructorApiServer';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { fetchInstructorBooking, fetchBookingTimeline } from '@/lib/instructorApi';
+import type { BookingTimelineEventApi } from '@/lib/instructorApi';
 import { BookingLifecycleHeader } from '@/components/bookings/BookingLifecycleHeader';
 import { BookingLifecycleTimeline } from '@/components/bookings/BookingLifecycleTimeline';
-import Link from 'next/link';
 
 /**
- * FORBIDDEN BEHAVIOR VERIFICATION CHECKLIST
- * 
- * ✅ NO POST / PUT / DELETE - Only GET via fetchBookingLifecycleById
- * ✅ NO createBooking - Not imported or called
- * ✅ NO updateBooking - Not imported or called
- * ✅ NO confirmBooking - Not imported or called
- * ✅ NO mutations of any kind - Read-only data flow
- * ✅ NO AI calls - No AI-related imports or calls
- * ✅ NO availability logic - No availability imports or logic
- * ✅ NO phase inference - No state derivation or phase detection
- * ✅ NO status labeling - Raw status display only
- * ✅ NO buttons or click handlers - Pure presentation components
- * ✅ NO side effects - Server component, no client-side effects
- * ✅ NO logging - No console.log or logging calls
- * 
- * VERIFIED: 2026-01-23
- * This page is READ-ONLY observability only.
+ * Booking Lifecycle page — read-only observability.
+ *
+ * Fetches:
+ *   1. Booking detail (GET /instructor/bookings/:id)
+ *   2. State transition timeline (GET /instructor/bookings/:id/timeline)
+ *
+ * Shows the booking header + chronological state changes (from → to).
+ * No mutations, no side effects.
  */
 
-type PageProps = {
-  searchParams: { bookingId?: string };
-};
+export default function BookingLifecyclePage() {
+  const searchParams = useSearchParams();
+  const bookingId = searchParams.get('bookingId');
 
-const EMPTY_LIFECYCLE = {
-  booking: null as unknown as { id: string; status: string; [key: string]: unknown },
-  auditLog: [] as Array<{ id: string; [key: string]: unknown }>,
-};
+  const [booking, setBooking] = useState<any | null>(null);
+  const [timeline, setTimeline] = useState<BookingTimelineEventApi[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-export default async function BookingLifecyclePage({ searchParams }: PageProps) {
-  const bookingId = searchParams.bookingId;
+  useEffect(() => {
+    if (!bookingId) {
+      setLoading(false);
+      return;
+    }
 
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+
+      try {
+        const [bookingData, timelineData] = await Promise.all([
+          fetchInstructorBooking(bookingId!),
+          fetchBookingTimeline(bookingId!),
+        ]);
+
+        if (cancelled) return;
+
+        // bookingData may be wrapped in { ok, booking } or be the booking directly
+        const b = bookingData?.booking ?? bookingData;
+        setBooking(b);
+        setTimeline(timelineData.timeline ?? []);
+      } catch (err: unknown) {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : '';
+        if (message === 'NOT_FOUND' || message === 'BOOKING_NOT_FOUND') {
+          setNotFound(true);
+        } else {
+          setError(message || 'Impossibile caricare il booking.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [bookingId]);
+
+  // ── No bookingId ──────────────────────────────────────────────────────────
   if (!bookingId) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-          Ciclo di vita prenotazione
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-          Visualizza lo stato e lo storico di una prenotazione.
+        <h1 style={headingStyle}>Booking Lifecycle</h1>
+        <p style={subtitleStyle}>
+          Visualizza lo stato e la cronologia di un booking.
         </p>
         <p style={{ color: 'rgba(203, 213, 225, 0.92)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-          È necessario indicare l&apos;ID di una prenotazione (es. tramite link dalla lista prenotazioni).
+          Specifica un booking ID (es. dal link nella lista bookings).
         </p>
-        <Link
-          href="/instructor/bookings"
-          style={{
-            display: 'inline-block',
-            padding: '0.5rem 1rem',
-            borderRadius: 6,
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            color: '#7dd3fc',
-            fontWeight: 600,
-            textDecoration: 'none',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
-          }}
-        >
-          Vai alle prenotazioni
+        <Link href="/instructor/bookings" style={linkBtnStyle}>
+          Vai ai bookings
         </Link>
       </div>
     );
   }
 
-  let data = EMPTY_LIFECYCLE;
-  let loadFailed = false;
-  let notFound = false;
-
-  try {
-    data = await fetchBookingLifecycleByIdServer(bookingId);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : '';
-    if (message === 'UNAUTHORIZED') {
-      return <meta httpEquiv="refresh" content="0;url=/instructor/login" />;
-    }
-    if (message === 'BOOKING_NOT_FOUND') {
-      notFound = true;
-    } else {
-      loadFailed = true;
-    }
+  // ── Loading ───────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={headingStyle}>Booking Lifecycle</h1>
+        <p style={{ color: 'rgba(148, 163, 184, 0.75)', fontSize: '0.875rem' }}>
+          Caricamento…
+        </p>
+      </div>
+    );
   }
 
+  // ── Not Found ─────────────────────────────────────────────────────────────
   if (notFound) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-          Ciclo di vita prenotazione
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-          Prenotazione non trovata.
-        </p>
-        <Link
-          href="/instructor/bookings"
-          style={{
-            display: 'inline-block',
-            padding: '0.5rem 1rem',
-            borderRadius: 6,
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            color: '#7dd3fc',
-            fontWeight: 600,
-            textDecoration: 'none',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
-          }}
-        >
-          Vai alle prenotazioni
+        <h1 style={headingStyle}>Booking Lifecycle</h1>
+        <p style={subtitleStyle}>Booking non trovato.</p>
+        <Link href="/instructor/bookings" style={linkBtnStyle}>
+          Vai ai bookings
         </Link>
       </div>
     );
   }
 
-  return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-        Ciclo di vita prenotazione
-      </h1>
-      <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-        Stato e storico per la prenotazione selezionata.
-      </p>
-      {loadFailed && (
-        <div style={{
-          padding: '0.75rem 1rem',
-          marginBottom: '1.5rem',
-          backgroundColor: 'rgba(185, 28, 28, 0.2)',
-          border: '1px solid rgba(248, 113, 113, 0.5)',
-          borderRadius: 8,
-          fontSize: '0.875rem',
-          color: '#fca5a5',
-        }}>
-          Impossibile caricare il ciclo di vita.{' '}
-          <Link
-            href={`/instructor/booking-lifecycle?bookingId=${bookingId}`}
-            style={{ color: '#7dd3fc', textDecoration: 'underline', fontWeight: 600 }}
+  // ── Error ─────────────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={headingStyle}>Booking Lifecycle</h1>
+        <div style={errorBannerStyle}>
+          {error}{' '}
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginLeft: 8,
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid rgba(248, 113, 113, 0.4)',
+              background: 'rgba(239, 68, 68, 0.15)',
+              color: '#fca5a5',
+              fontWeight: 600,
+              fontSize: '0.8125rem',
+              cursor: 'pointer',
+            }}
           >
             Riprova
-          </Link>
+          </button>
         </div>
-      )}
-      {data.booking && <BookingLifecycleHeader booking={data.booking} />}
-      <BookingLifecycleTimeline auditLog={data.auditLog ?? []} />
+      </div>
+    );
+  }
+
+  // ── Main view ─────────────────────────────────────────────────────────────
+  return (
+    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1 style={headingStyle}>Booking Lifecycle</h1>
+      <p style={subtitleStyle}>Stato e cronologia per il booking selezionato.</p>
+
+      {booking && <BookingLifecycleHeader booking={booking} />}
+      <BookingLifecycleTimeline timeline={timeline} />
     </div>
   );
 }
+
+// ── Shared styles ────────────────────────────────────────────────────────────
+
+const headingStyle: React.CSSProperties = {
+  fontSize: '1.5rem',
+  fontWeight: 800,
+  color: 'rgba(226, 232, 240, 0.95)',
+  marginBottom: '0.25rem',
+};
+
+const subtitleStyle: React.CSSProperties = {
+  fontSize: '0.875rem',
+  color: 'rgba(148, 163, 184, 0.92)',
+  marginBottom: '1.5rem',
+};
+
+const linkBtnStyle: React.CSSProperties = {
+  display: 'inline-block',
+  padding: '0.5rem 1rem',
+  borderRadius: 6,
+  backgroundColor: 'rgba(59, 130, 246, 0.2)',
+  color: '#7dd3fc',
+  fontWeight: 600,
+  textDecoration: 'none',
+  border: '1px solid rgba(59, 130, 246, 0.4)',
+};
+
+const errorBannerStyle: React.CSSProperties = {
+  padding: '0.75rem 1rem',
+  marginBottom: '1.5rem',
+  backgroundColor: 'rgba(185, 28, 28, 0.2)',
+  border: '1px solid rgba(248, 113, 113, 0.5)',
+  borderRadius: 8,
+  fontSize: '0.875rem',
+  color: '#fca5a5',
+};

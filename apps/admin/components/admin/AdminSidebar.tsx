@@ -1,53 +1,42 @@
-import { getUserRole } from '@/lib/getUserRole';
 import AdminSidebarNav from './AdminSidebarNav';
+import type { AdminSidebarIconName } from './AdminSidebarIcons';
 
-interface NavItem {
+export interface NavItem {
   label: string;
   href: string;
-  roles: string[]; // Roles that can see this item
+  icon: AdminSidebarIconName;
+  roles: string[];
+  section: 'menu' | 'sistema';
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/admin/dashboard', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'Instructor approvals', href: '/admin/instructor-approvals', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'Pilot', href: '/admin/pilot', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'Inbox', href: '/admin/human-inbox', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'Bookings', href: '/admin/bookings', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'Calendar', href: '/admin/calendar', roles: ['system_admin', 'human_approver', 'human_operator'] },
-  { label: 'System', href: '/admin/system-health', roles: ['system_admin'] },
+  { label: 'Dashboard', href: '/admin/dashboard', icon: 'dashboard', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
+  { label: 'AI & Inbox', href: '/admin/human-inbox', icon: 'inbox', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
+  { label: 'Bookings', href: '/admin/bookings', icon: 'calendar', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
+  { label: 'Calendar', href: '/admin/calendar', icon: 'calendarDays', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
+  { label: 'Instructors', href: '/admin/instructor-approvals', icon: 'users', roles: ['system_admin', 'human_approver', 'human_operator'], section: 'menu' },
+  { label: 'Settings', href: '/admin/settings', icon: 'settings', roles: ['system_admin'], section: 'sistema' },
+  { label: 'Logs', href: '/admin/dev-tools', icon: 'logs', roles: ['system_admin'], section: 'sistema' },
 ];
 
-export default async function AdminSidebar() {
-  const role = await getUserRole();
-
-  // Filter nav items based on role
-  const visibleItems = navItems.filter(item => {
+export default function AdminSidebar({
+  role,
+  collapsed,
+  onToggleCollapse,
+}: {
+  role?: string | null;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}) {
+  const visibleItems = navItems.filter((item) => {
     if (!role) return false;
     return item.roles.includes(role);
   });
-
   return (
-    <div style={{
-      width: '200px',
-      minHeight: '100vh',
-      backgroundColor: '#ffffff',
-      borderRight: '1px solid #e5e7eb',
-      padding: '1rem 0',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      zIndex: 10,
-    }}>
-      <div style={{ padding: '0 1rem', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
-          FrostDesk
-        </div>
-        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-          Admin
-        </div>
-      </div>
-      
-      <AdminSidebarNav items={visibleItems} />
-    </div>
+    <AdminSidebarNav
+      items={visibleItems}
+      collapsed={collapsed ?? false}
+      onToggleCollapse={onToggleCollapse}
+    />
   );
 }

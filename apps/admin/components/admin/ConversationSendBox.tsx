@@ -73,10 +73,10 @@ export default function ConversationSendBox({
   return (
     <div
       style={{
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '1rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
       }}
     >
       <div style={{ marginBottom: '0.75rem' }}>
@@ -93,7 +93,7 @@ export default function ConversationSendBox({
             width: '100%',
             minHeight: '80px',
             padding: '0.75rem',
-            border: '1px solid #d1d5db',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '6px',
             fontSize: '0.875rem',
             fontFamily: 'inherit',
@@ -104,7 +104,7 @@ export default function ConversationSendBox({
             e.currentTarget.style.borderColor = '#3b82f6';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#d1d5db';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
           }}
         />
       </div>

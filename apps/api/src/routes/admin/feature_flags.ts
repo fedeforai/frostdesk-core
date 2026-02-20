@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { setFeatureFlag } from '@frostdesk/db';
 import { getFeatureFlagStatus } from '../../services/feature_flag_service.js';
 import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
@@ -50,6 +51,34 @@ export async function adminFeatureFlagsRoutes(app: FastifyInstance) {
         ok: true,
         enabled
       });
+    } catch (error) {
+      const normalized = normalizeError(error);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
+    }
+  });
+
+  app.patch('/admin/feature-flags', async (request, reply) => {
+    try {
+      await requireAdminUser(request);
+      const body = request.body as { key?: string; enabled?: boolean };
+
+      if (!body || typeof body.key !== 'string' || typeof body.enabled !== 'boolean') {
+        const normalized = normalizeError({ code: ERROR_CODES.MISSING_PARAMETERS });
+        const httpStatus = mapErrorToHttp(normalized.error);
+        return reply.status(httpStatus).send({
+          ok: false,
+          error: normalized.error,
+          message: 'Body must include { key: string, enabled: boolean }. key must be ai_enabled or ai_whatsapp_enabled.',
+        });
+      }
+
+      const result = await setFeatureFlag(body.key, body.enabled);
+      return reply.send({ ok: true, data: result });
     } catch (error) {
       const normalized = normalizeError(error);
       const httpStatus = mapErrorToHttp(normalized.error);

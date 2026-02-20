@@ -36,7 +36,6 @@ export default async function GatePage({
   }
 
   const userId = session.user.id;
-  const userEmail = session.user.email ?? null;
 
   // 1) Load instructor_profiles by user_id (reconciled) or id (legacy)
   let { data: instructor } = await supabase
@@ -54,45 +53,26 @@ export default async function GatePage({
     instructor = byId.data ?? null;
   }
 
-  // 2) If no row, insert minimal profile (schema may have user_id or id = userId)
-  if (!instructor) {
-    const withUserId = await supabase
-      .from('instructor_profiles')
-      .insert({
-        user_id: userId,
-        approval_status: 'pending',
-        profile_status: 'draft',
-        full_name: '',
-        contact_email: userEmail ?? '',
-      })
-      .select('id, approval_status, onboarding_status, profile_status')
-      .maybeSingle<InstructorRow>();
-
-    if (withUserId.data) {
-      instructor = withUserId.data;
-    } else {
-      const legacy = await supabase
-        .from('instructor_profiles')
-        .insert({
-          id: userId,
-          approval_status: 'pending',
-          onboarding_status: 'pending',
-          contact_email: userEmail ?? '',
-          full_name: '',
-          working_language: 'en',
-          onboarding_payload: {},
-        })
-        .select('id, approval_status, onboarding_status, profile_status')
-        .maybeSingle<InstructorRow>();
-      instructor = legacy.data ?? null;
-    }
-    if (!instructor) {
-      const retry = await supabase
-        .from('instructor_profiles')
-        .select('id, approval_status, onboarding_status, profile_status')
-        .or(`user_id.eq.${userId},id.eq.${userId}`)
-        .maybeSingle<InstructorRow>();
-      instructor = retry.data ?? null;
+  // 2) If no row, ensure profile via API (same DB as admin; no RLS).
+  if (!instructor && session.access_token) {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? 'http://localhost:3001';
+    try {
+      const res = await fetch(`${apiBase}/instructor/ensure-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: '{}',
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { ok?: boolean; profile?: InstructorRow };
+        if (data?.ok && data?.profile) instructor = data.profile;
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('[gate] ensure-profile', res.status);
+      }
+    } catch (e) {
+      console.error('[gate] ensure-profile request failed:', e);
     }
   }
 
@@ -100,20 +80,18 @@ export default async function GatePage({
     redirect('/instructor/login?next=/instructor/gate');
   }
 
-  // 3) Redirect by state
-  if (instructor.approval_status !== 'approved') {
-    redirect('/instructor/approval-pending');
-  }
-  const onboardingDone =
-    instructor.onboarding_status === 'completed' || instructor.profile_status === 'active';
-  if (!onboardingDone) {
-    redirect('/instructor/onboarding');
-  }
-
+  // TEMPORARY: any instructor with a profile → dashboard (demo for colleagues). To restore full flow, uncomment the block below and remove the redirect to dashboard.
   const params = await searchParams;
   const nextParam = typeof params.next === 'string' ? params.next : Array.isArray(params.next) ? params.next[0] : undefined;
   if (isSafeNext(nextParam)) {
     redirect(nextParam!);
   }
   redirect('/instructor/dashboard');
+
+  // 3) Full redirect by state (restore when removing temporary bypass above):
+  // if (instructor.approval_status !== 'approved') redirect('/instructor/approval-pending');
+  // const onboardingDone = instructor.onboarding_status === 'completed' || instructor.profile_status === 'active';
+  // if (!onboardingDone) redirect('/instructor/onboarding');
+  // if (isSafeNext(nextParam)) redirect(nextParam!);
+  // redirect('/instructor/dashboard');
 }

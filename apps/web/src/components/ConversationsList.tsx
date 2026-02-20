@@ -25,12 +25,13 @@ export default function ConversationsList() {
       setLoading(false);
       return;
     }
+    const token = accessToken;
 
     async function fetchConversations() {
       setLoading(true);
       setError(null);
       try {
-        const data: AdminListResponse<ConversationSummary> = await getAdminConversations(accessToken, {
+        const data: AdminListResponse<ConversationSummary> = await getAdminConversations(token, {
           limit,
           offset,
         });

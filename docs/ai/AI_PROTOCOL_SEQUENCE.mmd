@@ -69,6 +69,23 @@ sequenceDiagram
     end
 
     ORC->>ORC: extractBookingFields(text, intent)
+
+    alt intent = RESCHEDULE
+        ORC->>ORC: extractRescheduleFields(text)
+        ORC->>DB: findActiveBookingForReschedule(instructorId, customerId, date)
+        alt Booking found + new times extracted
+            ORC->>DB: validateAvailability(newStart, newEnd, excludeBookingId)
+            alt Slot FREE
+                Note over ORC: rescheduleVerified=true, context=[VERIFIED]
+            else Slot CONFLICT
+                Note over ORC: rescheduleVerified=false, context=[CONFLICT]
+            end
+        else No booking found
+            Note over ORC: context=[NO BOOKING], ask clarification
+        end
+        ORC->>AUD: Audit: ai_reschedule_context_enriched
+    end
+
     alt Structured booking draft (NEW_BOOKING/RESCHEDULE + fields complete)
         ORC->>DB: insertAIBookingDraft (status=pending_review)
         ORC->>AUD: Audit: ai_booking_draft_created
@@ -81,8 +98,9 @@ sequenceDiagram
             ORC-->>WH: Return (no draft)
         end
 
-        ORC->>GRD: sanitizeDraftText(rawDraftText)
+        ORC->>GRD: sanitizeDraftText(rawDraftText, rescheduleVerified)
         GRD-->>ORC: { safeDraftText, violations }
+        Note over GRD: If rescheduleVerified=true, bypass commitment/date/time rules
 
         alt Blocked by guardrails
             ORC->>AUD: Audit: ai_draft_skipped (quality_blocked)

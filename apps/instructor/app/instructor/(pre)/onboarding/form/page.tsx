@@ -16,9 +16,9 @@ export default async function OnboardingFormPage() {
   const supabase = await getSupabaseServer();
   if (!supabase) {
     return (
-      <div style={{ padding: '2rem', maxWidth: '640px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Completa onboarding</h1>
-        <p style={{ color: '#991b1b' }}>Errore di configurazione.</p>
+      <div style={{ padding: '2rem', maxWidth: '640px', margin: '0 auto', background: '#0b1220', color: '#e5e7eb', minHeight: '100vh' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Complete onboarding</h1>
+        <p style={{ color: '#fecaca' }}>Configuration error.</p>
       </div>
     );
   }
@@ -85,7 +85,8 @@ export default async function OnboardingFormPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
+        background: '#0b1220',
+        color: '#e5e7eb',
         padding: '2.5rem 1.5rem',
       }}
     >
@@ -95,52 +96,52 @@ export default async function OnboardingFormPage() {
             fontSize: '1.75rem',
             fontWeight: 700,
             letterSpacing: '-0.02em',
-            color: '#0f172a',
+            color: '#e5e7eb',
             marginBottom: '0.5rem',
           }}
         >
-          Completa il tuo profilo
+          Complete your profile
         </h1>
         <p
           style={{
-            color: '#475569',
+            color: '#94a3b8',
             fontSize: '1rem',
             lineHeight: 1.6,
-            marginBottom: '0.5rem',
+            marginBottom: '1rem',
           }}
         >
-          Inserisci i dati richiesti qui sotto. Serviranno per la tua scheda e per i contatti con gli allievi.
+          Enter the required data below. It will be used for your card and for contacts with students.
         </p>
         <div
           style={{
             marginBottom: '1.5rem',
             padding: '1rem 1.25rem',
-            background: '#fff',
+            background: 'rgba(15, 23, 42, 0.85)',
             borderRadius: '12px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            border: '1px solid rgba(148, 163, 184, 0.25)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }}
         >
-          <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#e5e7eb', marginBottom: '0.25rem' }}>
             Privacy
           </p>
-          <p style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-            I dati sono trattati nel rispetto della privacy e utilizzati solo per il servizio FrostDesk.
+          <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
+            Your data is processed in compliance with privacy regulations and used only for the FrostDesk service.
           </p>
         </div>
 
         <InstructorOnboardingForm userEmail={session.user.email ?? null} initialDraft={initialDraft} />
 
-        <p style={{ marginTop: '1.5rem', fontSize: '0.875rem' }}>
+        <p style={{ marginTop: '1.5rem', fontSize: '12px', color: '#94a3b8' }}>
           <Link
             href="/instructor/onboarding"
             style={{
-              color: '#2563eb',
+              color: '#e5e7eb',
               textDecoration: 'none',
               fontWeight: 500,
             }}
           >
-            ← Torna alla pagina onboarding
+            ← Back to onboarding page
           </Link>
         </p>
       </div>

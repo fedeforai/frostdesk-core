@@ -16,6 +16,8 @@ import type { ComputeSellableSlotsInput } from './instructor_domain.js';
 export interface SellableSlot {
   start_utc: string;
   end_utc: string;
+  /** When set, this slot is only for this meeting point. */
+  meeting_point_id?: string | null;
 }
 
 /** One excluded range with reason (for debugging). */
@@ -71,7 +73,7 @@ export function computeSellableSlotsFromInput(
   for (const o of overrides) {
     const block = { start: new Date(o.start_utc).getTime(), end: new Date(o.end_utc).getTime() };
     if (o.is_available) {
-      slots = mergeSlots(slots, [{ start_utc: o.start_utc, end_utc: o.end_utc }]);
+      slots = mergeSlots(slots, [{ start_utc: o.start_utc, end_utc: o.end_utc, meeting_point_id: null }]);
     } else {
       if (options?.includeExclusionReasons) {
         excluded.push({ start_utc: o.start_utc, end_utc: o.end_utc, reason: 'availability_override_block' });
@@ -138,6 +140,7 @@ export async function computeSellableSlots(
       start_time: r.start_time,
       end_time: r.end_time,
       is_active: r.is_active,
+      meeting_point_id: r.meeting_point_id ?? null,
     })),
     overrides: overrides.map((o) => ({ start_utc: o.start_utc, end_utc: o.end_utc, is_available: o.is_available })),
     bookings: bookings.map((b) => ({ start_time: b.start_time, end_time: b.end_time })),
@@ -153,7 +156,7 @@ export async function computeSellableSlots(
  * Exported for unit tests only.
  */
 export function expandRecurringToUtcSlots(
-  recurring: Array<{ day_of_week: number; start_time: string; end_time: string }>,
+  recurring: Array<{ day_of_week: number; start_time: string; end_time: string; meeting_point_id?: string | null }>,
   fromUtc: string,
   toUtc: string,
   _timezone: string
@@ -179,6 +182,7 @@ export function expandRecurringToUtcSlots(
         slots.push({
           start_utc: new Date(slotStart).toISOString(),
           end_utc: new Date(slotEnd).toISOString(),
+          meeting_point_id: w.meeting_point_id ?? undefined,
         });
       }
     }
@@ -205,6 +209,12 @@ function timeOfDayToUtcMs(date: Date, time: string): number {
   );
 }
 
+function slotWithRange(slot: SellableSlot, start_utc: string, end_utc: string): SellableSlot {
+  return slot.meeting_point_id != null
+    ? { start_utc, end_utc, meeting_point_id: slot.meeting_point_id }
+    : { start_utc, end_utc };
+}
+
 function subtractBlockFromSlots(
   slots: SellableSlot[],
   block: { start: number; end: number }
@@ -218,10 +228,10 @@ function subtractBlockFromSlots(
       continue;
     }
     if (start < block.start) {
-      out.push({ start_utc: s.start_utc, end_utc: new Date(block.start).toISOString() });
+      out.push(slotWithRange(s, s.start_utc, new Date(block.start).toISOString()));
     }
     if (end > block.end) {
-      out.push({ start_utc: new Date(block.end).toISOString(), end_utc: s.end_utc });
+      out.push(slotWithRange(s, new Date(block.end).toISOString(), s.end_utc));
     }
   }
   return normalizeAndSort(out);
@@ -233,20 +243,35 @@ function mergeSlots(existing: SellableSlot[], toAdd: SellableSlot[]): SellableSl
 
 function normalizeAndSort(slots: SellableSlot[]): SellableSlot[] {
   if (slots.length === 0) return [];
-  const asRanges = slots
-    .map((s) => ({ start: new Date(s.start_utc).getTime(), end: new Date(s.end_utc).getTime() }))
-    .filter((r) => r.end > r.start)
-    .sort((a, b) => a.start - b.start);
-  const merged: Array<{ start: number; end: number }> = [];
-  for (const r of asRanges) {
-    if (merged.length > 0 && r.start <= merged[merged.length - 1].end) {
-      merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, r.end);
-    } else {
-      merged.push({ start: r.start, end: r.end });
+  const key = (s: SellableSlot) => s.meeting_point_id ?? '';
+  const groups = new Map<string, SellableSlot[]>();
+  for (const s of slots) {
+    const k = key(s);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push(s);
+  }
+  const out: SellableSlot[] = [];
+  for (const [, group] of groups) {
+    const asRanges = group
+      .map((s) => ({ start: new Date(s.start_utc).getTime(), end: new Date(s.end_utc).getTime() }))
+      .filter((r) => r.end > r.start)
+      .sort((a, b) => a.start - b.start);
+    const merged: Array<{ start: number; end: number }> = [];
+    for (const r of asRanges) {
+      if (merged.length > 0 && r.start <= merged[merged.length - 1].end) {
+        merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, r.end);
+      } else {
+        merged.push({ start: r.start, end: r.end });
+      }
+    }
+    const mpId = group[0]?.meeting_point_id ?? undefined;
+    for (const r of merged) {
+      out.push({
+        start_utc: new Date(r.start).toISOString(),
+        end_utc: new Date(r.end).toISOString(),
+        ...(mpId != null ? { meeting_point_id: mpId } : {}),
+      });
     }
   }
-  return merged.map((r) => ({
-    start_utc: new Date(r.start).toISOString(),
-    end_utc: new Date(r.end).toISOString(),
-  }));
+  return out.sort((a, b) => new Date(a.start_utc).getTime() - new Date(b.start_utc).getTime());
 }

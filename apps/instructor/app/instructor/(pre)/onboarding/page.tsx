@@ -1,113 +1,103 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getSupabaseServer, getServerSession } from '@/lib/supabaseServer';
-
-type InstructorRow = {
-  id: string;
-  contact_email: string | null;
-  created_at: string | null;
-  onboarding_status: string | null;
-  approval_status: string | null;
-  profile_status: string | null;
-};
+import { requireInstructorAccess } from '@/lib/access/requireInstructorAccess';
 
 /**
- * Onboarding: gate ensures instructor_profiles row. Redirect to gate if no row; approval-pending if not approved; dashboard if completed.
+ * Instructor Onboarding — gate-aware (inverted: 'ready' redirects OUT).
  */
 export default async function InstructorOnboardingPage() {
-  const session = await getServerSession();
-  if (!session?.user?.id) {
-    redirect('/instructor/login?next=/instructor/gate');
-  }
+  const access = await requireInstructorAccess();
 
-  const supabase = await getSupabaseServer();
-  if (!supabase) {
+  // ── unauthenticated ──────────────────────────────────────────────────────
+  if (access.gate === 'unauthenticated') {
     return (
-      <div style={{ padding: '2rem', maxWidth: '600px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Instructor onboarding</h1>
-        <p style={{ color: '#991b1b' }}>Configuration error</p>
+      <div style={{ padding: '2rem', maxWidth: 600 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'rgba(226,232,240,0.95)', marginBottom: '0.75rem' }}>
+          Session expired
+        </h1>
+        <p style={{ color: 'rgba(148,163,184,0.85)', marginBottom: '1rem' }}>
+          {access.errorMessage ?? 'Log in to complete onboarding.'}
+        </p>
+        <Link
+          href="/instructor/login?next=/instructor/onboarding"
+          style={{
+            display: 'inline-block',
+            padding: '10px 20px',
+            background: 'rgba(59,130,246,0.15)',
+            color: '#93c5fd',
+            border: '1px solid rgba(59,130,246,0.4)',
+            borderRadius: 8,
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            textDecoration: 'none',
+          }}
+        >
+          Login
+        </Link>
       </div>
     );
   }
 
-  const uid = session.user.id;
-  let { data: row, error: fetchError } = await supabase
-    .from('instructor_profiles')
-    .select('id, contact_email, created_at, onboarding_status, approval_status, profile_status')
-    .eq('user_id', uid)
-    .maybeSingle();
-  if (!row && !fetchError) {
-    const byId = await supabase
-      .from('instructor_profiles')
-      .select('id, contact_email, created_at, onboarding_status, approval_status, profile_status')
-      .eq('id', uid)
-      .maybeSingle();
-    row = byId.data;
-    fetchError = byId.error ?? fetchError;
-  }
-
-  if (fetchError) {
+  // ── pending_approval ─────────────────────────────────────────────────────
+  if (access.gate === 'pending_approval') {
     return (
-      <div style={{ padding: '2rem', maxWidth: '600px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Instructor onboarding</h1>
-        <p style={{ color: '#991b1b' }}>{fetchError.message ?? 'Failed to load instructor'}</p>
+      <div style={{ padding: '2rem', maxWidth: 600 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'rgba(226,232,240,0.95)', marginBottom: '0.75rem' }}>
+          Account in attesa di approvazione
+        </h1>
+        <p style={{ color: 'rgba(148,163,184,0.85)', marginBottom: '1rem' }}>
+          Your instructor profile is under review. You will be able to complete onboarding after approval.
+        </p>
+        <div style={{
+          padding: '12px 16px',
+          background: 'rgba(251,191,36,0.08)',
+          border: '1px solid rgba(251,191,36,0.25)',
+          borderRadius: 8,
+          color: '#fbbf24',
+          fontSize: '0.8125rem',
+        }}>
+          Stato: {access.instructor?.approval_status ?? 'pending'}
+        </div>
       </div>
     );
   }
 
-  if (!row) {
-    redirect('/instructor/gate');
-  }
-
-  const instructor = row as InstructorRow;
-  const status =
-    instructor.onboarding_status ??
-    (instructor.profile_status === 'active' ? 'completed' : null) ??
-    'pending';
-  const approvalStatus = instructor.approval_status ?? 'pending';
-
-  if (approvalStatus !== 'approved') {
-    redirect('/instructor/approval-pending');
-  }
-  if (status === 'completed') {
+  // ── ready → onboarding already done, go to dashboard ─────────────────────
+  if (access.gate === 'ready') {
     redirect('/instructor/dashboard');
   }
 
-  const id = instructor.id;
-  const email = instructor.email ?? session.user.email ?? '—';
-  const whatsapp = instructor.whatsapp_connected === true;
+  // ── needs_onboarding → render the onboarding UI ──────────────────────────
+  const instructor = access.instructor!;
+  const email = instructor.id ? (access.session?.user?.email ?? '—') : '—';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '600px' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem', color: 'rgba(226,232,240,0.95)' }}>
         Instructor onboarding
       </h1>
 
       <div
         style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: '0.375rem',
+          border: '1px solid rgba(71,85,105,0.4)',
+          borderRadius: '0.5rem',
           padding: '1rem',
           marginBottom: '1rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(30,41,59,0.4)',
         }}
       >
         <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div>
-            <span style={{ color: '#6b7280' }}>Instructor ID: </span>
-            <span>{id}</span>
+            <span style={{ color: 'rgba(148,163,184,0.85)' }}>Instructor ID: </span>
+            <code style={{ fontSize: '0.8125rem', color: '#7dd3fc' }}>{instructor.id}</code>
           </div>
           <div>
-            <span style={{ color: '#6b7280' }}>Email: </span>
-            <span>{email}</span>
+            <span style={{ color: 'rgba(148,163,184,0.85)' }}>Email: </span>
+            <span style={{ color: 'rgba(226,232,240,0.92)' }}>{email}</span>
           </div>
           <div>
-            <span style={{ color: '#6b7280' }}>Onboarding status: </span>
-            <span>{status}</span>
-          </div>
-          <div>
-            <span style={{ color: '#6b7280' }}>WhatsApp connected: </span>
-            <span>{whatsapp ? 'yes' : 'no'}</span>
+            <span style={{ color: 'rgba(148,163,184,0.85)' }}>Onboarding status: </span>
+            <span style={{ color: '#fbbf24' }}>{instructor.onboarding_status ?? 'pending'}</span>
           </div>
         </div>
       </div>
@@ -117,22 +107,16 @@ export default async function InstructorOnboardingPage() {
           href="/instructor/onboarding/form"
           style={{
             display: 'inline-block',
-            padding: '0.5rem 1rem',
+            padding: '10px 20px',
             backgroundColor: '#3b82f6',
             color: '#ffffff',
             textDecoration: 'none',
-            borderRadius: '0.375rem',
+            borderRadius: '0.5rem',
             fontSize: '0.875rem',
-            fontWeight: 500,
+            fontWeight: 600,
           }}
         >
-          Vai al form di onboarding
-        </Link>
-      </p>
-
-      <p style={{ marginTop: '0.5rem' }}>
-        <Link href="/instructor/gate" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-          Back to gate
+          Go to onboarding form
         </Link>
       </p>
     </div>

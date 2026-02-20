@@ -13,6 +13,7 @@ import {
   computeCustomerValueScore,
   upsertCustomer,
   getCustomerStats,
+  getCustomerRevenue,
   insertAuditEvent,
 } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
@@ -24,15 +25,20 @@ import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 import { isPilotInstructor } from '../../lib/pilot_instructor.js';
+import { checkBillingGate } from '../../lib/billing_gate.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function getInstructorId(request: { headers?: { authorization?: string } }): Promise<string> {
+/**
+ * Resolve instructor id + billing status from JWT.
+ * Tries definitive profile first (has billing_status), then legacy (defaults to 'pilot').
+ */
+async function getInstructorId(request: { headers?: { authorization?: string } }): Promise<{ id: string; billingStatus: string }> {
   const userId = await getUserIdFromJwt(request);
   const definitive = await getInstructorProfileDefinitiveByUserId(userId);
-  if (definitive) return definitive.id;
+  if (definitive) return { id: definitive.id, billingStatus: definitive.billing_status ?? 'pilot' };
   const legacy = await getInstructorProfileByUserId(userId);
-  if (legacy) return legacy.id;
+  if (legacy) return { id: legacy.id, billingStatus: 'pilot' };
   const e = new Error('Instructor profile not found');
   (e as any).code = ERROR_CODES.NOT_FOUND;
   throw e;
@@ -48,7 +54,7 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
     '/instructor/customers',
     async (request, reply) => {
       try {
-        const instructorId = await getInstructorId(request);
+        const { id: instructorId } = await getInstructorId(request);
         const q = request.query || {};
         const limit = Math.min(500, Math.max(1, parseInt(String(q.limit || '100'), 10) || 100));
         const offset = Math.max(0, parseInt(String(q.offset || '0'), 10) || 0);
@@ -70,7 +76,7 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
   // GET /instructor/customers/:id — detail (customer + notes + stats)
   app.get<{ Params: { id: string } }>('/instructor/customers/:id', async (request, reply) => {
     try {
-      const instructorId = await getInstructorId(request);
+      const { id: instructorId } = await getInstructorId(request);
       const id = (request.params as { id: string }).id?.trim();
       if (!id || !isValidUUID(id)) {
         return reply.status(400).send({
@@ -88,7 +94,10 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
         });
       }
       const notes = await listNotesByCustomerId(id, 50);
-      const statsRow = await getCustomerStats(id);
+      const [statsRow, revenue] = await Promise.all([
+        getCustomerStats(id),
+        getCustomerRevenue(id),
+      ]);
       const value_score = computeCustomerValueScore({
         lastSeenAt: customer.last_seen_at,
         notesCount: statsRow.notesCount,
@@ -99,6 +108,8 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
         notes_count: statsRow.notesCount,
         bookings_count: statsRow.bookingsCount,
         value_score,
+        total_amount_cents: revenue.total_amount_cents,
+        currency: revenue.currency,
       };
       return reply.send({ customer, notes, stats });
     } catch (err) {
@@ -113,13 +124,17 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
     '/instructor/customers/:id/notes',
     async (request, reply) => {
       try {
-        const instructorId = await getInstructorId(request);
+        const { id: instructorId, billingStatus } = await getInstructorId(request);
         if (!isPilotInstructor(instructorId)) {
           return reply.status(402).send({
             ok: false,
             error: ERROR_CODES.PILOT_ONLY,
             message: 'This feature is only available for pilot instructors.',
           });
+        }
+        const billingBlock = checkBillingGate(billingStatus);
+        if (billingBlock) {
+          return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
         }
         const id = (request.params as { id: string }).id?.trim();
         if (!id || !isValidUUID(id)) {
@@ -172,13 +187,17 @@ export async function instructorCustomersRoutes(app: FastifyInstance): Promise<v
     '/instructor/customers',
     async (request, reply) => {
       try {
-        const instructorId = await getInstructorId(request);
+        const { id: instructorId, billingStatus } = await getInstructorId(request);
         if (!isPilotInstructor(instructorId)) {
           return reply.status(402).send({
             ok: false,
             error: ERROR_CODES.PILOT_ONLY,
             message: 'This feature is only available for pilot instructors.',
           });
+        }
+        const billingBlock = checkBillingGate(billingStatus);
+        if (billingBlock) {
+          return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
         }
         const b = request.body || {};
         const phoneNumber =

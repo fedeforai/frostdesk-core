@@ -33,9 +33,9 @@ export default function BookingLifecycleEventComponent({ event }: BookingLifecyc
     switch (type) {
       case 'booking_created':
         return {
-          backgroundColor: '#f3f4f6',
-          color: '#374151',
-          border: '1px solid #d1d5db',
+          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+          color: 'rgba(148, 163, 184, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
         };
       case 'status_transition':
         return {
@@ -51,9 +51,9 @@ export default function BookingLifecycleEventComponent({ event }: BookingLifecyc
         };
       default:
         return {
-          backgroundColor: '#f3f4f6',
-          color: '#374151',
-          border: '1px solid #d1d5db',
+          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+          color: 'rgba(148, 163, 184, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
         };
     }
   };
@@ -92,18 +92,18 @@ export default function BookingLifecycleEventComponent({ event }: BookingLifecyc
         height: '0.75rem',
         borderRadius: '50%',
         backgroundColor: '#6b7280',
-        border: '2px solid #ffffff',
-        boxShadow: '0 0 0 2px #d1d5db',
+        border: '2px solid rgba(255, 255, 255, 0.05)',
+        boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.12)',
         flexShrink: 0,
       }} />
       
       {/* Event content */}
       <div style={{
         flex: 1,
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.375rem',
         padding: '1rem',
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* Header: Time and Type */}
@@ -132,7 +132,7 @@ export default function BookingLifecycleEventComponent({ event }: BookingLifecyc
             <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '60px' }}>
               Actor:
             </strong>
-            <span style={{ color: '#111827', fontSize: '0.875rem' }}>{event.actor}</span>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem' }}>{event.actor}</span>
           </div>
 
           {/* State change (if present) */}
@@ -141,7 +141,7 @@ export default function BookingLifecycleEventComponent({ event }: BookingLifecyc
               <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '60px' }}>
                 State:
               </strong>
-              <span style={{ color: '#111827', fontSize: '0.875rem', fontFamily: 'monospace' }}>
+              <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontFamily: 'monospace' }}>
                 {event.from ?? 'null'} → {event.to ?? 'null'}
               </span>
             </div>

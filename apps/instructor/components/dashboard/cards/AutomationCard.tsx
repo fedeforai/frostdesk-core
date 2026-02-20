@@ -4,11 +4,14 @@ import styles from './AutomationCard.module.css';
 export default function AutomationCard({
   automationOn,
   onToggle,
+  disabled = false,
   kpis,
   integrations,
 }: {
   automationOn: boolean;
   onToggle: () => void;
+  /** When true, the Turn ON/OFF button is disabled (e.g. while loading AI status). */
+  disabled?: boolean;
   kpis: Array<{ value: number | string; label: string }>;
   integrations: Array<{ name: string; status: string }>;
 }) {
@@ -19,19 +22,22 @@ export default function AutomationCard({
           {automationOn ? 'ON' : 'OFF'}
         </div>
         <div className={styles.center}>
-          <div className={styles.stateLabel}>
-            Automation {automationOn ? 'ON' : 'OFF'}
+          <div className={styles.stateLabel} role="status" aria-live="polite">
+            {automationOn ? 'Automation is ON' : 'Automation is OFF'}
           </div>
           <div className={styles.desc}>
             {automationOn
-              ? 'AI is handling requests. Turn OFF to pause automation.'
-              : 'Automation is paused. Turn ON to resume.'}
+              ? 'AI is handling requests. Click the button below to pause.'
+              : 'Automation is paused. Click the button below to resume.'}
           </div>
         </div>
         <button
           type="button"
           className={`${styles.toggleBtn} ${automationOn ? styles.toggleOn : styles.toggleOff}`}
           onClick={onToggle}
+          disabled={disabled}
+          aria-busy={disabled}
+          aria-label={automationOn ? 'Pause automation' : 'Resume automation'}
         >
           {automationOn ? 'Turn OFF' : 'Turn ON'}
         </button>

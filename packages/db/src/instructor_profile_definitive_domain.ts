@@ -99,6 +99,7 @@ export type ProfileStatus = 'draft' | 'active' | 'suspended';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 export type AvailabilityMode = 'manual' | 'gcal_sync' | 'hybrid';
 export type AccountHealth = 'ok' | 'watch' | 'restricted';
+export type BillingStatus = 'pilot' | 'active' | 'past_due' | 'cancelled';
 
 export interface InstructorProfileDefinitive {
   id: string;
@@ -120,6 +121,13 @@ export interface InstructorProfileDefinitive {
   internal_notes: string | null;
   account_health: AccountHealth;
   fraud_flag: boolean;
+  billing_status: BillingStatus;
+  /** Stripe customer ID (nullable until Stripe integration). */
+  stripe_customer_id?: string | null;
+  /** Stripe subscription ID (nullable until Stripe integration). */
+  stripe_subscription_id?: string | null;
+  /** Current plan name (nullable until Stripe integration). */
+  current_plan?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +136,7 @@ export const profileStatusSchema = z.enum(['draft', 'active', 'suspended']);
 export const approvalStatusSchema = z.enum(['pending', 'approved', 'rejected']);
 export const availabilityModeSchema = z.enum(['manual', 'gcal_sync', 'hybrid']);
 export const accountHealthSchema = z.enum(['ok', 'watch', 'restricted']);
+export const billingStatusSchema = z.enum(['pilot', 'active', 'past_due', 'cancelled']);
 
 export const instructorProfileDefinitiveSchema = z.object({
   id: z.string().uuid(),
@@ -149,6 +158,7 @@ export const instructorProfileDefinitiveSchema = z.object({
   internal_notes: z.string().nullable(),
   account_health: accountHealthSchema,
   fraud_flag: z.boolean(),
+  billing_status: billingStatusSchema,
   created_at: z.string(),
   updated_at: z.string(),
 });

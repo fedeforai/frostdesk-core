@@ -1,0 +1,363 @@
+/* Customer profile — professional layout, aligned with instructor theme */
+
+.section {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #7dd3fc;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: #bae6fd;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.heroBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.heroTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: rgba(226, 232, 240, 0.98);
+  margin: 0;
+}
+
+.valueBadge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.valuePlatinum {
+  background: rgba(148, 163, 184, 0.25);
+  color: #e2e8f0;
+}
+
+.valueGold {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.valueSilver {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.valueBronze {
+  background: rgba(120, 53, 15, 0.3);
+  color: #d6d3d1;
+}
+
+.heroMeta {
+  font-size: 0.875rem;
+  color: rgba(148, 163, 184, 0.95);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.sourceChip {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(59, 130, 246, 0.15);
+  color: rgba(147, 197, 253, 0.95);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.primaryBtn:hover {
+  background: #2563eb;
+}
+
+.errorBanner {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+}
+
+.statLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.9);
+  margin-bottom: 0.25rem;
+}
+
+.statValue {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+}
+
+.cardTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(226, 232, 240, 0.9);
+  margin: 0 0 1rem 0;
+}
+
+.textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(226, 232, 240, 0.95);
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+}
+
+.textarea::placeholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.submitBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.submitBtn:disabled {
+  background: rgba(148, 163, 184, 0.25);
+  color: rgba(148, 163, 184, 0.6);
+  cursor: not-allowed;
+}
+
+.notesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.noteCard {
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  background: rgba(30, 41, 59, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+}
+
+.noteCard:last-child {
+  margin-bottom: 0;
+}
+
+.noteContent {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.noteTime {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.85);
+  margin-top: 0.5rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: rgba(148, 163, 184, 0.85);
+  font-size: 0.875rem;
+}
+
+.emptyStateIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.6;
+}
+
+.loadingWrap {
+  padding: 2rem;
+  text-align: center;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.baseWrap {
+  padding: 1.5rem;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.baseWrap a {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.baseWrap a:hover {
+  text-decoration: underline;
+}
+
+.bookingsWrap {
+  overflow-x: auto;
+}
+
+.bookingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.bookingsTh {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(148, 163, 184, 0.9);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.bookingsTr {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.bookingsTd {
+  padding: 0.75rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.statusPill {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(148, 163, 184, 0.2);
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.tableLink {
+  color: #7dd3fc;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.tableLink:hover {
+  text-decoration: underline;
+}

@@ -16,6 +16,6 @@ export async function completeOnboardingAction(): Promise<{ ok: boolean; error?:
     .select('id')
     .maybeSingle();
   if (error) return { ok: false, error: error.message };
-  if (!data) return { ok: false, error: 'Nessuna riga aggiornata (RLS?).' };
+  if (!data) return { ok: false, error: 'No row updated (RLS?).' };
   return { ok: true };
 }

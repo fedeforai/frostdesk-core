@@ -24,18 +24,18 @@ export default function BookingAuditTrail({ auditTrail }: BookingAuditTrailProps
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
       <h2 style={{ 
         marginBottom: '1.5rem', 
         fontSize: '1.25rem', 
         fontWeight: '600',
-        color: '#111827',
-        borderBottom: '1px solid #e5e7eb',
+        color: 'rgba(226, 232, 240, 0.95)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         Audit Trail
@@ -51,7 +51,7 @@ export default function BookingAuditTrail({ auditTrail }: BookingAuditTrailProps
             top: '0.5rem',
             bottom: '0.5rem',
             width: '2px',
-            backgroundColor: '#d1d5db',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
           }} />
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -74,41 +74,41 @@ export default function BookingAuditTrail({ auditTrail }: BookingAuditTrailProps
                   height: '0.75rem',
                   borderRadius: '50%',
                   backgroundColor: '#6b7280',
-                  border: '2px solid #ffffff',
-                  boxShadow: '0 0 0 2px #d1d5db',
+                  border: '2px solid rgba(255, 255, 255, 0.05)',
+                  boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.12)',
                   flexShrink: 0,
                 }} />
                 
                 {/* Entry content */}
                 <div style={{
                   flex: 1,
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '0.375rem',
                   padding: '1.25rem',
-                  backgroundColor: '#f9fafb',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
                 }}>
                   <div style={{ display: 'grid', gap: '0.875rem' }}>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                       <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '130px' }}>Previous State:</strong>
-                      <span style={{ color: '#111827', fontFamily: 'monospace', fontSize: '0.875rem' }}>{entry.previous_state}</span>
+                      <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontFamily: 'monospace', fontSize: '0.875rem' }}>{entry.previous_state}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                       <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '130px' }}>New State:</strong>
-                      <span style={{ color: '#111827', fontFamily: 'monospace', fontSize: '0.875rem' }}>{entry.new_state}</span>
+                      <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontFamily: 'monospace', fontSize: '0.875rem' }}>{entry.new_state}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                       <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '130px' }}>Actor:</strong>
-                      <span style={{ color: '#111827' }}>{entry.actor}</span>
+                      <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{entry.actor}</span>
                     </div>
                     <div style={{ 
                       display: 'flex', 
                       gap: '0.75rem',
                       paddingTop: '0.75rem',
                       marginTop: '0.25rem',
-                      borderTop: '1px solid #e5e7eb',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                     }}>
                       <strong style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500', minWidth: '130px' }}>Created At:</strong>
-                      <span style={{ color: '#111827' }}>{formatTimestamp(entry.created_at)}</span>
+                      <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(entry.created_at)}</span>
                     </div>
                   </div>
                 </div>

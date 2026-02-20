@@ -6,13 +6,24 @@ import { DraftSafetyNotice } from '@/components/ai-booking-draft/DraftSafetyNoti
 import { HumanConfirmBookingButton } from '@/components/ai-booking-draft/HumanConfirmBookingButton';
 import { HumanConfirmDangerModal } from '@/components/ai-booking-draft/HumanConfirmDangerModal';
 import { confirmAIBookingDraft } from '@/lib/instructorApi';
-import { AIBookingDraft } from '../../../../../packages/db/src/ai_booking_draft_types';
+
+/** Preview/mock shape for AI booking draft (matches backend AIBookingDraft) */
+interface PreviewDraft {
+  instructor_id: string;
+  start_time: string;
+  end_time: string;
+  service_id?: string | null;
+  meeting_point_id?: string | null;
+  customer_name?: string | null;
+  draft_reason: string;
+  created_at: string;
+}
 
 export default function AIBookingDraftPreviewPage() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const draft: AIBookingDraft = {
+  const draft: PreviewDraft = {
     instructor_id: 'preview',
     start_time: '2026-02-01T09:00:00Z',
     end_time: '2026-02-01T11:00:00Z',

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { saveOnboardingDraft, submitOnboardingComplete } from '@/lib/instructorApi';
 
 function isValidWhatsAppPhone(value: string): boolean {
@@ -134,10 +135,10 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
       });
       setStep(2);
     } catch (err: unknown) {
-      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Errore di salvataggio. Riprova.' : 'Save failed. Try again.');
+      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Save error. Please retry.' : 'Save failed. Try again.');
       if (msg === 'Failed to fetch' || msg === 'No session found') {
         msg = ui_language === 'it'
-          ? 'Impossibile contattare l\'API o sessione scaduta. Verifica che l\'API sia avviata (es. porta 3001) e di essere loggato.'
+          ? 'Unable to contact API or session expired. Verify that the API is running (e.g. port 3001) and that you are logged in.'
           : 'Cannot reach API or session expired. Ensure the API is running (e.g. port 3001) and you are logged in.';
       }
       setError(msg);
@@ -161,10 +162,10 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
       });
       setStep(3);
     } catch (err: unknown) {
-      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Errore di salvataggio. Riprova.' : 'Save failed. Try again.');
+      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Save error. Please retry.' : 'Save failed. Try again.');
       if (msg === 'Failed to fetch' || msg === 'No session found') {
         msg = ui_language === 'it'
-          ? 'Impossibile contattare l\'API o sessione scaduta. Verifica che l\'API sia avviata (es. porta 3001) e di essere loggato.'
+          ? 'Unable to contact API or session expired. Verify that the API is running (e.g. port 3001) and that you are logged in.'
           : 'Cannot reach API or session expired. Ensure the API is running (e.g. port 3001) and you are logged in.';
       }
       setError(msg);
@@ -189,10 +190,10 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
       router.refresh();
       router.push('/instructor/dashboard');
     } catch (err: unknown) {
-      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Errore di salvataggio. Riprova.' : 'Save failed. Try again.');
+      let msg = err instanceof Error ? err.message : (ui_language === 'it' ? 'Save error. Please retry.' : 'Save failed. Try again.');
       if (msg === 'Failed to fetch' || msg === 'No session found') {
         msg = ui_language === 'it'
-          ? 'Impossibile contattare l\'API o sessione scaduta. Verifica che l\'API sia avviata (es. porta 3001) e di essere loggato.'
+          ? 'Unable to contact API or session expired. Verify that the API is running (e.g. port 3001) and that you are logged in.'
           : 'Cannot reach API or session expired. Ensure the API is running (e.g. port 3001) and you are logged in.';
       }
       setError(msg);
@@ -202,28 +203,31 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
   }
 
   const inputBase = {
-    width: '100%',
-    padding: '0.625rem 0.875rem',
+    width: '100%' as const,
+    marginTop: 6,
+    marginBottom: 12,
+    padding: '10px 12px',
     fontSize: '0.9375rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
+    border: '1px solid rgba(148, 163, 184, 0.25)',
+    borderRadius: 12,
     boxSizing: 'border-box' as const,
     outline: 'none',
-    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    background: '#0f172a',
+    color: '#e5e7eb',
   };
-  const labelStyle = { display: 'block' as const, marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 600, color: '#334155' };
+  const labelStyle = { display: 'block' as const, fontSize: 12, color: '#94a3b8', marginBottom: 6 };
   const sectionStyle = {
     marginBottom: 0,
-    padding: '1.5rem 1.75rem',
-    backgroundColor: '#fff',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04)',
+    padding: 20,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderRadius: 16,
+    border: '1px solid rgba(148, 163, 184, 0.25)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
     position: 'relative' as const,
     zIndex: 1,
   };
-  const sectionTitle = { fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', letterSpacing: '-0.01em' };
-  const errStyle = { fontSize: '0.8125rem', color: '#dc2626', marginTop: '0.375rem', display: 'block' as const };
+  const sectionTitle = { fontSize: '1rem', fontWeight: 700, color: '#e5e7eb', marginBottom: '1.25rem', letterSpacing: '-0.01em' };
+  const errStyle = { fontSize: 12, color: '#fecaca', marginTop: 4, display: 'block' as const };
 
   const stepIndicator = (
     <div
@@ -242,7 +246,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
             width: 10,
             height: 10,
             borderRadius: '50%',
-            backgroundColor: step === s ? '#2563eb' : step > s ? '#94a3b8' : '#e2e8f0',
+            backgroundColor: step === s ? '#e5e7eb' : step > s ? '#94a3b8' : 'rgba(148, 163, 184, 0.25)',
             transition: 'background-color 0.2s ease',
             pointerEvents: 'none',
           }}
@@ -253,23 +257,27 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
   );
 
   const copy = ui_language === 'it' ? {
-    step1Title: 'Profilo',
-    step2Title: 'Profilo professionale',
+    step1Title: 'Profile',
+    step2Title: 'Professional profile',
     step3Title: 'Riepilogo',
     fullName: 'Nome completo',
-    baseResort: 'Località / comprensorio',
+    baseResort: 'Location / resort',
     workingLanguage: 'Lingua di lavoro',
     emailReadOnly: 'Email (dal tuo account)',
     whatsappPhone: 'Telefono WhatsApp',
     whatsappHint: 'Numero con prefisso internazionale (es. +39...)',
+    whatsappLinkShort: 'Collegato alla tua Inbox.',
+    whatsappLinkFull: 'Questo numero verrà collegato al tuo account FrostDesk. I messaggi che i clienti inviano a questo numero arriveranno nella tua Inbox.',
     yearsExperience: 'Anni di esperienza',
     shortBio: 'Breve presentazione',
     uiLanguage: 'Lingua interfaccia FrostDesk',
     back: 'Indietro',
     next: 'Avanti',
     complete: 'Completa onboarding',
-    saving: 'Salvataggio in corso…',
-    retry: 'Riprova',
+    saving: 'Saving…',
+    retry: 'Retry',
+    privacyConsent: 'Continuando accetti la nostra ',
+    privacyPolicy: 'Privacy Policy',
   } : {
     step1Title: 'Profile',
     step2Title: 'Professional profile',
@@ -280,6 +288,8 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
     emailReadOnly: 'Email (from your account)',
     whatsappPhone: 'WhatsApp phone',
     whatsappHint: 'Number with country code (e.g. +39...)',
+    whatsappLinkShort: 'Linked to your Inbox.',
+    whatsappLinkFull: 'This number will be linked to your FrostDesk account. Messages that customers send to this number will appear in your Inbox.',
     yearsExperience: 'Years of experience',
     shortBio: 'Short bio',
     uiLanguage: 'FrostDesk UI language',
@@ -288,28 +298,29 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
     complete: 'Complete onboarding',
     saving: 'Saving…',
     retry: 'Retry',
+    privacyConsent: 'By continuing you accept our ',
+    privacyPolicy: 'Privacy Policy',
   };
 
   const primaryBtn = {
-    padding: '0.625rem 1.25rem',
-    backgroundColor: '#2563eb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '10px',
+    padding: '10px 12px',
+    borderRadius: 12,
+    border: '1px solid rgba(148, 163, 184, 0.25)',
+    background: '#e5e7eb',
+    color: '#0b1220',
     fontSize: '0.9375rem',
-    fontWeight: 600,
+    fontWeight: 900,
     cursor: 'pointer',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   };
-  const primaryBtnDisabled = { ...primaryBtn, backgroundColor: '#94a3b8', cursor: 'not-allowed', boxShadow: 'none' };
+  const primaryBtnDisabled = { ...primaryBtn, background: '#111827', color: '#94a3b8', cursor: 'not-allowed' as const };
   const secondaryBtn = {
-    padding: '0.625rem 1.25rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
+    padding: '10px 12px',
+    borderRadius: 12,
+    border: '1px solid rgba(148, 163, 184, 0.25)',
+    background: '#0f172a',
+    color: '#94a3b8',
     fontSize: '0.9375rem',
     fontWeight: 500,
-    backgroundColor: '#fff',
-    color: '#475569',
     cursor: 'pointer',
   };
 
@@ -320,20 +331,20 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
         <div
           role="alert"
           style={{
-            marginBottom: '1.25rem',
-            padding: '0.75rem 1rem',
-            backgroundColor: '#fef2f2',
-            color: '#991b1b',
-            borderRadius: '0.5rem',
-            border: '1px solid #fecaca',
-            fontSize: '0.875rem',
+            marginBottom: 12,
+            padding: 10,
+            fontSize: 12,
+            color: '#fecaca',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            borderRadius: 12,
           }}
         >
           <div>{error}</div>
           <button
             type="button"
             onClick={() => { setError(null); setSaving(false); }}
-            style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.8125rem', cursor: 'pointer' }}
+            style={{ marginTop: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer', border: '1px solid rgba(148, 163, 184, 0.25)', borderRadius: 8, background: '#0f172a', color: '#e5e7eb' }}
           >
             {copy.retry}
           </button>
@@ -351,7 +362,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                   type="text"
                   value={userEmail}
                   readOnly
-                  style={{ ...inputBase, backgroundColor: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
+                  style={{ ...inputBase, background: '#0f172a', color: '#94a3b8', cursor: 'not-allowed' }}
                 />
               </div>
             )}
@@ -364,7 +375,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 onChange={(e) => setFullName(e.target.value)}
                 onInput={(e) => setFullName((e.target as HTMLInputElement).value)}
                 onBlur={() => setTouched((t) => ({ ...t, full_name: true }))}
-                style={{ ...inputBase, ...(err.full_name ? { borderColor: '#dc2626' } : {}) }}
+                style={{ ...inputBase, ...(err.full_name ? { borderColor: 'rgba(239, 68, 68, 0.6)' } : {}) }}
                 placeholder={ui_language === 'it' ? 'Mario Rossi' : 'John Doe'}
               />
               {err.full_name && <span style={errStyle}>{err.full_name}</span>}
@@ -378,7 +389,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 onChange={(e) => setBaseResort(e.target.value)}
                 onInput={(e) => setBaseResort((e.target as HTMLInputElement).value)}
                 onBlur={() => setTouched((t) => ({ ...t, base_resort: true }))}
-                style={{ ...inputBase, ...(err.base_resort ? { borderColor: '#dc2626' } : {}) }}
+                style={{ ...inputBase, ...(err.base_resort ? { borderColor: 'rgba(239, 68, 68, 0.6)' } : {}) }}
                 placeholder={ui_language === 'it' ? "Cortina d'Ampezzo" : 'Cortina'}
               />
               {err.base_resort && <span style={errStyle}>{err.base_resort}</span>}
@@ -390,7 +401,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 value={working_language}
                 onChange={(e) => setWorkingLanguage(e.target.value as 'en' | 'it' | 'fr' | 'de')}
                 onBlur={() => setTouched((t) => ({ ...t, working_language: true }))}
-                style={{ ...inputBase, ...(err.working_language ? { borderColor: '#dc2626' } : {}) }}
+                style={{ ...inputBase, ...(err.working_language ? { borderColor: 'rgba(239, 68, 68, 0.6)' } : {}) }}
               >
                 {LANGUAGE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -398,18 +409,14 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
               </select>
               {err.working_language && <span style={errStyle}>{err.working_language}</span>}
             </div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
-              step1Valid={String(step1Valid)} savingStep={String(savingStep)} canGoStep2={String(canGoStep2)}
-              {' | '}full_name=&quot;{full_name}&quot; base_resort=&quot;{base_resort}&quot; working_language=&quot;{working_language}&quot;
-            </div>
-            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(148, 163, 184, 0.25)' }}>
               <button
                 type="button"
                 onClick={() => handleStep1Next()}
                 disabled={!canGoStep2}
                 style={canGoStep2 ? primaryBtn : primaryBtnDisabled}
               >
-                {savingStep ? (ui_language === 'it' ? 'Salvataggio…' : 'Saving…') : copy.next}
+                {savingStep ? (ui_language === 'it' ? 'Saving…' : 'Saving…') : copy.next}
               </button>
             </div>
           </section>
@@ -426,10 +433,20 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 value={whatsapp_phone}
                 onChange={(e) => setWhatsappPhone(e.target.value)}
                 onBlur={() => setTouched((t) => ({ ...t, whatsapp_phone: true }))}
-                style={{ ...inputBase, ...(err.whatsapp_phone ? { borderColor: '#dc2626' } : {}) }}
+                style={{ ...inputBase, ...(err.whatsapp_phone ? { borderColor: 'rgba(239, 68, 68, 0.6)' } : {}) }}
                 placeholder="+39 333 1234567"
               />
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>{copy.whatsappHint}</p>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{copy.whatsappHint}</p>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8, marginBottom: 0 }}>
+                {copy.whatsappLinkShort}{' '}
+                <button
+                  type="button"
+                  style={{ background: 'none', border: 'none', color: '#e5e7eb', cursor: 'pointer', fontSize: 12, textDecoration: 'underline', padding: 0 }}
+                  title={copy.whatsappLinkFull}
+                >
+                  {ui_language === 'it' ? 'Maggiori informazioni' : 'More info'}
+                </button>
+              </p>
               {err.whatsapp_phone && <span style={errStyle}>{err.whatsapp_phone}</span>}
             </div>
             <div style={{ marginBottom: '1rem' }}>
@@ -466,7 +483,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 style={{ ...inputBase, resize: 'vertical' }}
               />
             </div>
-            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.75rem' }}>
+            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(148, 163, 184, 0.25)', display: 'flex', gap: '0.75rem' }}>
               <button type="button" onClick={() => setStep(1)} style={secondaryBtn} disabled={savingStep}>
                 {copy.back}
               </button>
@@ -476,7 +493,7 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                 disabled={!canGoStep3}
                 style={canGoStep3 ? primaryBtn : primaryBtnDisabled}
               >
-                {savingStep ? (ui_language === 'it' ? 'Salvataggio…' : 'Saving…') : copy.next}
+                {savingStep ? (ui_language === 'it' ? 'Saving…' : 'Saving…') : copy.next}
               </button>
             </div>
           </section>
@@ -498,15 +515,22 @@ export default function InstructorOnboardingForm({ userEmail, initialDraft }: In
                     display: 'flex',
                     gap: '0.75rem',
                     padding: '0.5rem 0',
-                    borderBottom: '1px solid #f1f5f9',
+                    borderBottom: '1px solid rgba(148, 163, 184, 0.25)',
                   }}
                 >
-                  <dt style={{ color: '#64748b', minWidth: '160px', fontWeight: 500 }}>{label}</dt>
-                  <dd style={{ margin: 0, color: '#0f172a', fontWeight: 500 }}>{value || '–'}</dd>
+                  <dt style={{ color: '#94a3b8', minWidth: '160px', fontWeight: 500 }}>{label}</dt>
+                  <dd style={{ margin: 0, color: '#e5e7eb', fontWeight: 500 }}>{value || '–'}</dd>
                 </div>
               ))}
             </dl>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: '1rem' }}>
+              {copy.privacyConsent}
+              <Link href="/instructor/privacy" style={{ color: '#e5e7eb', textDecoration: 'underline' }}>
+                {copy.privacyPolicy}
+              </Link>
+              .
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(148, 163, 184, 0.25)' }}>
               <button type="button" onClick={() => setStep(2)} style={secondaryBtn}>
                 {copy.back}
               </button>

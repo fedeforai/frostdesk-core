@@ -5,6 +5,7 @@ import { ERROR_CODES } from '../errors/error_codes.js';
 import {
   resolveConversationByChannel,
   persistInboundMessageWithInboxBridge,
+  persistOutboundMessageFromEcho,
   orchestrateInboundDraft,
   insertAuditEvent,
   upsertCustomer,
@@ -31,14 +32,19 @@ import {
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
   fastify.post('/webhook/whatsapp', async (request, reply) => {
     try {
-      // Parse WhatsApp payload structure
+      // Parse WhatsApp payload structure (inbound + message echo when business replies from phone)
       const body = request.body as {
         entry?: Array<{
           changes?: Array<{
             value?: {
+              metadata?: {
+                display_phone_number?: string;
+                phone_number_id?: string;
+              };
               messages?: Array<{
                 id?: string;
                 from?: string;
+                to?: string;
                 timestamp?: string;
                 type?: string;
                 text?: {
@@ -128,7 +134,70 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Support only text messages
+      const value = change.value;
+
+      // Message echo: business replied from WhatsApp app (from = business number). Sync to inbox.
+      const businessPhone = value.metadata?.display_phone_number;
+      const fromNormalized = normalizePhoneE164(message.from) ?? message.from;
+      const businessNormalized = businessPhone ? (normalizePhoneE164(businessPhone) ?? businessPhone) : '';
+      const isEcho = Boolean(
+        businessNormalized &&
+        fromNormalized &&
+        businessNormalized === fromNormalized
+      );
+
+      if (isEcho) {
+        if (!message.to || !message.text?.body) {
+          request.log.warn(
+            { messageId: message.id, hasTo: !!message.to, hasText: !!message.text?.body },
+            'WhatsApp echo missing to or text.body, skipping sync'
+          );
+          return reply.status(200).send({ ok: true });
+        }
+        const customerIdentifier = normalizePhoneE164(message.to) ?? message.to;
+        const instructorIdForConversation = 1;
+        const conversation = await resolveConversationByChannel(
+          'whatsapp',
+          customerIdentifier,
+          instructorIdForConversation
+        );
+        const conversationId = conversation?.id;
+        if (
+          typeof conversationId !== 'string' ||
+          !conversationId.match(/^[0-9a-fA-F-]{36}$/)
+        ) {
+          request.log.warn(
+            { customerIdentifier, conversationId },
+            'WhatsApp echo: no conversation found for recipient, skipping sync'
+          );
+          return reply.status(200).send({ ok: true });
+        }
+        await persistOutboundMessageFromEcho({
+          conversationId,
+          channel: 'whatsapp',
+          externalMessageId: message.id,
+          messageText: message.text.body,
+          receivedAt: new Date(Number(message.timestamp) * 1000),
+          rawPayload: { ...message, channel: 'whatsapp', echo: true },
+        });
+        try {
+          await insertAuditEvent({
+            actor_type: 'system',
+            actor_id: null,
+            action: 'outbound_message_echo_received',
+            entity_type: 'conversation',
+            entity_id: conversationId,
+            severity: 'info',
+            request_id: request.id ?? null,
+            payload: { channel: 'whatsapp', message_id: message.id },
+          });
+        } catch {
+          /* audit fail-open */
+        }
+        return reply.status(200).send({ ok: true });
+      }
+
+      // Support only text messages (inbound path)
       if (message.type !== 'text') {
         const normalized = normalizeError({ code: ERROR_CODES.INVALID_PAYLOAD });
         const httpStatus = mapErrorToHttp(normalized.error);
@@ -165,12 +234,9 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       };
 
       // Resolve conversation by channel and customer identifier.
-      // Use DEFAULT_INSTRUCTOR_ID (UUID) from env so the right instructor sees messages in Inbox; else fallback to 1.
-      const defaultInstructorId = process.env.DEFAULT_INSTRUCTOR_ID?.trim();
-      const instructorIdForConversation =
-        defaultInstructorId && /^[0-9a-fA-F-]{36}$/.test(defaultInstructorId)
-          ? defaultInstructorId
-          : 1;
+      // NOTE: resolveConversationByChannel expects instructorId as number (legacy schema).
+      // DEFAULT_INSTRUCTOR_ID (UUID) support deferred until column type is migrated.
+      const instructorIdForConversation = 1;
 
       const conversation = await resolveConversationByChannel(
         'whatsapp',

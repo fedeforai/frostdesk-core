@@ -22,7 +22,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 4px;
+  padding-right: 14px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -38,7 +38,7 @@
 .footer {
   margin-top: auto;
   padding-top: 16px;
-  border-top: 1px solid #e6ebf2;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .nav {
@@ -56,8 +56,8 @@
 }
 
 .navItem:hover {
-  background: #f2f6ff;
-  border-color: #e3ebff;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .active {
@@ -114,13 +114,31 @@
 }
 
 .sidebar .navItem {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   background: rgba(15, 23, 42, 0.55);
   border-radius: 12px;
   padding: 10px 10px;
   text-decoration: none;
   color: rgba(226, 232, 240, 0.92);
+}
+
+.sidebar .navIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: inherit;
+}
+
+.sidebar .navText {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .sidebar .navItem:hover {
@@ -170,3 +188,73 @@
   padding: 12px 10px 10px 10px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
 }
+
+/* ── Icon rail (menu ritratto) ───────────────────────────────────────────── */
+
+.rail {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  z-index: 30;
+  background: #0f172a;
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.railMenuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 8px 8px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.railMenuBtn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.railNav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.railItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: rgba(226, 232, 240, 0.85);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.railItem:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.railItemActive {
+  background: rgba(30, 58, 138, 0.25);
+  color: #3b82f6;
+}
+

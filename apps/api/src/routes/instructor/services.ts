@@ -1,16 +1,45 @@
 import type { FastifyInstance } from 'fastify';
-import { getInstructorProfileByUserId, getInstructorServices, createInstructorService, updateInstructorService } from '@frostdesk/db';
+import { getInstructorProfileByUserId, getInstructorServices, createInstructorService, updateInstructorService, type LessonType } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 
+const LESSON_TYPES = ['private', 'semi_private', 'group'] as const;
+const LESSON_TYPES_STR = LESSON_TYPES.join(', ');
+
+/** Missing = null/undefined/empty → default. Provided and valid → value. Provided and invalid → 400 (caller must return). */
+function parseLessonTypeForCreate(s: string | null | undefined): { ok: true; value: LessonType } | { ok: false } {
+  if (s === undefined || s === null || s.trim() === '') return { ok: true, value: 'private' };
+  const found = LESSON_TYPES.find((x) => x === s);
+  if (found) return { ok: true, value: found };
+  return { ok: false };
+}
+
+/** Optional field: missing → keep existing; null/empty → null; valid string → value; invalid string → null. */
+function parseLessonTypeForPatch(
+  s: string | null | undefined,
+  existing: LessonType | null
+): LessonType | null {
+  if (s === undefined) return existing ?? 'private';
+  if (s === null || s.trim() === '') return null;
+  const found = LESSON_TYPES.find((x) => x === s);
+  return found ?? null;
+}
+
 type CreateServiceBody = {
+  name?: string | null;
   discipline: string;
+  lesson_type?: string | null;
   duration_minutes: number;
+  min_participants?: number;
+  max_participants?: number;
   price_amount: number;
   currency?: string;
-  notes?: string;
+  short_description?: string | null;
+  location?: string | null;
+  notes?: string | null;
+  sort_order?: number;
 };
 
 function isValidCreateServiceBody(body: unknown): body is CreateServiceBody {
@@ -21,40 +50,68 @@ function isValidCreateServiceBody(body: unknown): body is CreateServiceBody {
     typeof b.duration_minutes === 'number' &&
     typeof b.price_amount === 'number' &&
     (b.currency === undefined || typeof b.currency === 'string') &&
-    (b.notes === undefined || typeof b.notes === 'string')
+    (b.notes === undefined || b.notes === null || typeof b.notes === 'string') &&
+    (b.name === undefined || b.name === null || typeof b.name === 'string') &&
+    (b.lesson_type === undefined || b.lesson_type === null || typeof b.lesson_type === 'string') &&
+    (b.min_participants === undefined || typeof b.min_participants === 'number') &&
+    (b.max_participants === undefined || typeof b.max_participants === 'number') &&
+    (b.short_description === undefined || b.short_description === null || typeof b.short_description === 'string') &&
+    (b.location === undefined || b.location === null || typeof b.location === 'string') &&
+    (b.sort_order === undefined || typeof b.sort_order === 'number')
   );
 }
 
 type PatchServiceBody = {
+  name?: string | null;
   discipline?: string;
+  lesson_type?: string | null;
   duration_minutes?: number;
+  min_participants?: number;
+  max_participants?: number;
   price_amount?: number;
   currency?: string;
+  short_description?: string | null;
+  location?: string | null;
   notes?: string | null;
   is_active?: boolean;
+  sort_order?: number;
 };
 
 function getPatchServiceBody(body: unknown): PatchServiceBody | null {
   if (!body || typeof body !== 'object') return null;
   const b = body as Record<string, unknown>;
   const out: PatchServiceBody = {};
+  if (b.name === undefined || b.name === null || typeof b.name === 'string') out.name = b.name as string | null;
   if (typeof b.discipline === 'string') out.discipline = b.discipline;
+  if (b.lesson_type === undefined || b.lesson_type === null || typeof b.lesson_type === 'string') out.lesson_type = b.lesson_type as string | null;
   if (typeof b.duration_minutes === 'number') out.duration_minutes = b.duration_minutes;
+  if (typeof b.min_participants === 'number') out.min_participants = b.min_participants;
+  if (typeof b.max_participants === 'number') out.max_participants = b.max_participants;
   if (typeof b.price_amount === 'number') out.price_amount = b.price_amount;
   if (typeof b.currency === 'string') out.currency = b.currency;
+  if (b.short_description === undefined || b.short_description === null || typeof b.short_description === 'string') out.short_description = b.short_description as string | null;
+  if (b.location === undefined || b.location === null || typeof b.location === 'string') out.location = b.location as string | null;
   if (b.notes === undefined || b.notes === null || typeof b.notes === 'string') out.notes = b.notes as string | null;
   if (typeof b.is_active === 'boolean') out.is_active = b.is_active;
+  if (typeof b.sort_order === 'number') out.sort_order = b.sort_order;
   return out;
 }
 
 function hasAtLeastOnePatchField(patch: PatchServiceBody): boolean {
   return (
+    patch.name !== undefined ||
     patch.discipline !== undefined ||
+    patch.lesson_type !== undefined ||
     patch.duration_minutes !== undefined ||
+    patch.min_participants !== undefined ||
+    patch.max_participants !== undefined ||
     patch.price_amount !== undefined ||
     patch.currency !== undefined ||
+    patch.short_description !== undefined ||
+    patch.location !== undefined ||
     patch.notes !== undefined ||
-    patch.is_active !== undefined
+    patch.is_active !== undefined ||
+    patch.sort_order !== undefined
   );
 }
 
@@ -133,13 +190,29 @@ export async function instructorServicesRoutes(app: FastifyInstance): Promise<vo
         });
       }
 
+      const parsed = parseLessonTypeForCreate(body.lesson_type);
+      if (!parsed.ok) {
+        return reply.status(400).send({
+          ok: false,
+          error: { code: ERROR_CODES.INVALID_PAYLOAD },
+          message: `lesson_type must be one of: ${LESSON_TYPES_STR}`,
+        });
+      }
+
       const service = await createInstructorService({
         instructorId: profile.id,
+        name: body.name,
         discipline: body.discipline,
+        lesson_type: parsed.value,
         duration_minutes: body.duration_minutes,
+        min_participants: body.min_participants ?? 1,
+        max_participants: body.max_participants ?? 1,
         price_amount: body.price_amount,
         currency: body.currency ?? 'EUR',
+        short_description: body.short_description ?? null,
+        location: body.location ?? null,
         notes: body.notes ?? null,
+        sort_order: body.sort_order ?? 0,
       });
 
       return reply.status(201).send({
@@ -192,7 +265,7 @@ export async function instructorServicesRoutes(app: FastifyInstance): Promise<vo
         return reply.status(400).send({
           ok: false,
           error: { code: ERROR_CODES.INVALID_PAYLOAD },
-          message: 'Invalid body: at least one of discipline, duration_minutes, price_amount, currency, notes, is_active required',
+          message: 'Invalid body: at least one of name, discipline, lesson_type, duration_minutes, min_participants, max_participants, price_amount, currency, short_description, location, notes, is_active, sort_order required',
         });
       }
 
@@ -206,15 +279,23 @@ export async function instructorServicesRoutes(app: FastifyInstance): Promise<vo
         });
       }
 
+      const lesson_type = parseLessonTypeForPatch(patch.lesson_type, existing.lesson_type);
       const service = await updateInstructorService({
         serviceId: id,
         instructorId: profile.id,
+        name: patch.name !== undefined ? patch.name : (existing.name ?? existing.discipline),
         discipline: patch.discipline ?? existing.discipline,
+        lesson_type,
         duration_minutes: patch.duration_minutes ?? existing.duration_minutes,
+        min_participants: patch.min_participants ?? existing.min_participants ?? 1,
+        max_participants: patch.max_participants ?? existing.max_participants ?? 1,
         price_amount: patch.price_amount ?? existing.price_amount,
         currency: patch.currency ?? existing.currency,
-        notes: patch.notes !== undefined ? patch.notes : existing.notes,
+        short_description: patch.short_description !== undefined ? patch.short_description : (existing.short_description ?? null),
+        location: patch.location !== undefined ? patch.location : (existing.location ?? null),
+        notes: patch.notes !== undefined ? patch.notes : (existing.notes ?? null),
         is_active: patch.is_active ?? existing.is_active,
+        sort_order: patch.sort_order ?? existing.sort_order ?? 0,
       });
 
       return reply.send({

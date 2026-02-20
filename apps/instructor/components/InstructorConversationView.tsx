@@ -190,17 +190,17 @@ export default function InstructorConversationView({
       >
         ← Back to Inbox
       </Link>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: '#111827' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: 'rgba(226, 232, 240, 0.95)' }}>
         Conversation
       </h1>
-      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+      <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '1.5rem' }}>
         Reply to the latest message. Status is local (simulated).
       </p>
 
       <div
         style={{
           fontSize: '0.75rem',
-          color: '#6b7280',
+          color: 'rgba(148, 163, 184, 0.9)',
           marginBottom: '0.75rem',
           padding: '0.5rem 0',
         }}
@@ -209,7 +209,7 @@ export default function InstructorConversationView({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: '1rem' }}>
-        <span style={{ fontSize: 12, color: '#6b7280' }}>
+        <span style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.9)' }}>
           {aiState === 'ai_paused_by_human' ? 'AI paused' : aiState === 'ai_on' ? 'AI on' : 'AI: —'}
         </span>
         <button
@@ -217,9 +217,9 @@ export default function InstructorConversationView({
           style={{
             padding: '4px 10px',
             fontSize: 12,
-            border: '1px solid #d1d5db',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 4,
-            background: '#fff',
+            background: 'rgba(15, 23, 42, 0.6)',
             cursor: aiStateLoading ? 'not-allowed' : 'pointer',
           }}
           disabled={aiStateLoading}
@@ -232,9 +232,9 @@ export default function InstructorConversationView({
           style={{
             padding: '4px 10px',
             fontSize: 12,
-            border: '1px solid #d1d5db',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 4,
-            background: '#fff',
+            background: 'rgba(15, 23, 42, 0.6)',
             cursor: aiStateLoading ? 'not-allowed' : 'pointer',
           }}
           disabled={aiStateLoading}
@@ -249,10 +249,10 @@ export default function InstructorConversationView({
 
       <div
         style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.5rem',
           padding: '1rem',
-          backgroundColor: '#fafafa',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           marginBottom: '1rem',
         }}
       >
@@ -263,10 +263,10 @@ export default function InstructorConversationView({
               textAlign: 'center',
             }}
           >
-            <p style={{ fontSize: '0.875rem', color: '#111827', fontWeight: 500, margin: '0 0 0.5rem 0' }}>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)', fontWeight: 500, margin: '0 0 0.5rem 0' }}>
               This conversation hasn't started yet.
             </p>
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', margin: 0 }}>
               You'll be able to reply
               <br />
               as soon as the guest sends a message.
@@ -294,10 +294,10 @@ export default function InstructorConversationView({
           style={{
             marginBottom: '1rem',
             padding: '0.75rem 1rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
             borderRadius: '0.375rem',
-            color: '#991b1b',
+            color: 'rgba(252, 165, 165, 0.95)',
             fontSize: '0.875rem',
           }}
         >
@@ -311,7 +311,7 @@ export default function InstructorConversationView({
       />
 
       {bookingStatus != null && (
-        <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+        <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', lineHeight: 1.4 }}>
           <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Payment & confirmation</div>
           <div>
             You confirm the lesson; payment is handled separately and finalizes the booking. You can share the payment link when you're ready.

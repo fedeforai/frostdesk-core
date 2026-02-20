@@ -18,13 +18,13 @@ export default async function ApprovalPendingPage() {
         style={{
           marginBottom: '1rem',
           padding: '1rem',
-          backgroundColor: '#fef3c7',
+          backgroundColor: 'rgba(251, 191, 36, 0.1)',
           border: '1px solid #f59e0b',
           borderRadius: '0.375rem',
           fontSize: '0.875rem',
         }}
       >
-        Il tuo profilo è in attesa di approvazione. Potrai completare l&apos;onboarding quando un amministratore avrà approvato il tuo account.
+        Your profile is pending approval. You will be able to complete onboarding when an administrator has approved your account.
       </div>
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <Link
@@ -33,8 +33,8 @@ export default async function ApprovalPendingPage() {
             padding: '0.5rem 1rem',
             borderRadius: '0.375rem',
             border: '1px solid #3b82f6',
-            background: '#eff6ff',
-            color: '#1d4ed8',
+            background: 'rgba(59, 130, 246, 0.08)',
+            color: 'rgba(129, 140, 248, 0.95)',
             fontSize: '0.875rem',
             fontWeight: 600,
             textDecoration: 'none',

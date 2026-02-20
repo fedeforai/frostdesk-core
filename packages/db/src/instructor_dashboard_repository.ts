@@ -91,7 +91,7 @@ export async function getInstructorDashboardData(
   `;
   const instructor = instructorResult.length > 0 ? instructorResult[0] : null;
 
-  // 2. Get services
+  // 2. Get services (capped for fast response)
   const services = await sql<DashboardService[]>`
     SELECT 
       id,
@@ -103,9 +103,10 @@ export async function getInstructorDashboardData(
     FROM instructor_services
     WHERE instructor_id = ${instructorId}
     ORDER BY created_at DESC
+    LIMIT 50
   `;
 
-  // 3. Get meeting points
+  // 3. Get meeting points (capped)
   const meetingPoints = await sql<DashboardMeetingPoint[]>`
     SELECT 
       id,
@@ -117,9 +118,10 @@ export async function getInstructorDashboardData(
     FROM instructor_meeting_points
     WHERE instructor_id = ${instructorId}
     ORDER BY created_at DESC
+    LIMIT 50
   `;
 
-  // 4. Get policies (mapping instructor_policies to instructor_rules structure)
+  // 4. Get policies (capped)
   const policies = await sql<DashboardPolicy[]>`
     SELECT 
       id,
@@ -131,9 +133,10 @@ export async function getInstructorDashboardData(
     FROM instructor_policies
     WHERE instructor_id = ${instructorId}
     ORDER BY policy_type, version DESC
+    LIMIT 50
   `;
 
-  // 5. Get availability
+  // 5. Get availability (capped)
   const availability = await sql<DashboardAvailability[]>`
     SELECT 
       id,
@@ -144,6 +147,7 @@ export async function getInstructorDashboardData(
     FROM instructor_availability
     WHERE instructor_id = ${instructorId}
     ORDER BY day_of_week, start_time
+    LIMIT 100
   `;
 
   // 6. Get calendar status

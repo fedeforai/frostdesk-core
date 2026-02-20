@@ -84,14 +84,14 @@ export default function CalendarConnectionPanel({
 
   return (
     <div style={{
-      border: '1px solid #e5e7eb',
-      borderRadius: '0.5rem',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '20px',
       padding: '1.5rem',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       marginBottom: '1.5rem',
     }}>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
         Calendar Connection
       </h2>
 
@@ -99,10 +99,10 @@ export default function CalendarConnectionPanel({
         <div style={{
           padding: '0.75rem',
           marginBottom: '1rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
           borderRadius: '0.375rem',
-          color: '#991b1b',
+          color: 'rgba(252, 165, 165, 0.95)',
           fontSize: '0.875rem',
         }}>
           {error}
@@ -113,20 +113,20 @@ export default function CalendarConnectionPanel({
         <div>
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ marginBottom: '0.5rem' }}>
-              <strong style={{ color: '#374151' }}>Provider:</strong>{' '}
-              <span style={{ color: '#6b7280' }}>
+              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Provider:</strong>{' '}
+              <span style={{ color: 'rgba(148, 163, 184, 0.9)' }}>
                 {connection.provider || 'google'}
               </span>
             </div>
             {connection.calendar_id && (
               <div style={{ marginBottom: '0.5rem' }}>
-                <strong style={{ color: '#374151' }}>Calendar ID:</strong>{' '}
-                <span style={{ color: '#6b7280' }}>{connection.calendar_id}</span>
+                <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Calendar ID:</strong>{' '}
+                <span style={{ color: 'rgba(148, 163, 184, 0.9)' }}>{connection.calendar_id}</span>
               </div>
             )}
             <div>
-              <strong style={{ color: '#374151' }}>Status:</strong>{' '}
-              <span style={{ color: '#059669', fontWeight: '500' }}>Connected</span>
+              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
+              <span style={{ color: 'rgba(74, 222, 128, 0.95)', fontWeight: '500' }}>Connected</span>
             </div>
           </div>
 
@@ -137,9 +137,9 @@ export default function CalendarConnectionPanel({
               disabled={loading}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                color: 'rgba(165, 180, 252, 1)',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
                 borderRadius: '0.375rem',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '0.875rem',
@@ -167,9 +167,9 @@ export default function CalendarConnectionPanel({
               disabled={loading}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                border: 'none',
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                color: 'rgba(248, 113, 113, 0.95)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
                 borderRadius: '0.375rem',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '0.875rem',
@@ -195,8 +195,8 @@ export default function CalendarConnectionPanel({
       ) : (
         <div>
           <div style={{ marginBottom: '1rem' }}>
-            <strong style={{ color: '#374151' }}>Status:</strong>{' '}
-            <span style={{ color: '#dc2626', fontWeight: '500' }}>Not connected</span>
+            <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
+            <span style={{ color: 'rgba(248, 113, 113, 0.95)', fontWeight: '500' }}>Not connected</span>
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
@@ -207,7 +207,7 @@ export default function CalendarConnectionPanel({
                 marginBottom: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: '500',
-                color: '#374151',
+                color: 'rgba(226, 232, 240, 0.95)',
               }}
             >
               OAuth Authorization Code
@@ -222,9 +222,11 @@ export default function CalendarConnectionPanel({
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                border: '1px solid #d1d5db',
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
+                color: 'rgba(226, 232, 240, 0.95)',
                 outline: 'none',
                 opacity: loading ? 0.6 : 1,
               }}
@@ -233,7 +235,7 @@ export default function CalendarConnectionPanel({
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -247,7 +249,7 @@ export default function CalendarConnectionPanel({
                 marginBottom: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: '500',
-                color: '#374151',
+                color: 'rgba(226, 232, 240, 0.95)',
               }}
             >
               Calendar ID
@@ -262,9 +264,11 @@ export default function CalendarConnectionPanel({
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                border: '1px solid #d1d5db',
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
+                color: 'rgba(226, 232, 240, 0.95)',
                 outline: 'none',
                 opacity: loading ? 0.6 : 1,
               }}
@@ -273,7 +277,7 @@ export default function CalendarConnectionPanel({
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -285,9 +289,9 @@ export default function CalendarConnectionPanel({
             disabled={loading || !authCode.trim() || !calendarId.trim()}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
+              backgroundColor: 'rgba(99, 102, 241, 0.2)',
+              color: 'rgba(165, 180, 252, 1)',
+              border: '1px solid rgba(99, 102, 241, 0.4)',
               borderRadius: '0.375rem',
               cursor: loading || !authCode.trim() || !calendarId.trim() ? 'not-allowed' : 'pointer',
               fontSize: '0.875rem',

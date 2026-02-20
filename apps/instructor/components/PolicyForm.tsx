@@ -167,10 +167,10 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           style={{
             marginBottom: '1rem',
             padding: '0.75rem',
-            backgroundColor: '#fee2e2',
-            color: '#991b1b',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            color: 'rgba(252, 165, 165, 0.95)',
             borderRadius: '0.375rem',
-            border: '1px solid #fca5a5',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
           }}
         >
           {error}
@@ -185,7 +185,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Policy Type *
@@ -217,11 +217,11 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           style={{
             width: '100%',
             padding: '0.5rem',
-            border: '1px solid #d1d5db',
+border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.375rem',
             fontSize: '1rem',
             outline: 'none',
-            backgroundColor: 'white',
+backgroundColor: 'rgba(15, 23, 42, 0.6)',
           }}
           onFocus={(e) => {
             e.currentTarget.style.outline = '2px solid #3b82f6';
@@ -248,7 +248,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Title *
@@ -263,7 +263,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           style={{
             width: '100%',
             padding: '0.5rem',
-            border: '1px solid #d1d5db',
+border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.375rem',
             fontSize: '1rem',
             outline: 'none',
@@ -287,7 +287,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Content * (Markdown allowed)
@@ -302,7 +302,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           style={{
             width: '100%',
             padding: '0.5rem',
-            border: '1px solid #d1d5db',
+border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.375rem',
             fontSize: '1rem',
             outline: 'none',
@@ -329,7 +329,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+  color: 'rgba(226, 232, 240, 0.95)',
             }}
           >
             Version *
@@ -345,7 +345,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
@@ -368,7 +368,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+  color: 'rgba(226, 232, 240, 0.95)',
             }}
           >
             Valid From
@@ -382,7 +382,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
@@ -404,7 +404,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+  color: 'rgba(226, 232, 240, 0.95)',
             }}
           >
             Valid To
@@ -418,7 +418,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
@@ -442,7 +442,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
             gap: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+color: 'rgba(226, 232, 240, 0.95)',
             cursor: 'pointer',
           }}
         >
@@ -468,9 +468,9 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           disabled={loading}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
-            border: '1px solid #d1d5db',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+color: 'rgba(226, 232, 240, 0.95)',
+border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.375rem',
             cursor: loading ? 'not-allowed' : 'pointer',
             fontSize: '1rem',
@@ -494,7 +494,7 @@ export default function PolicyForm({ policy, existingPolicies = [], onCancel, on
           disabled={loading || !title.trim() || !content.trim() || !version.trim()}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: loading ? '#d1d5db' : '#3b82f6',
+            backgroundColor: loading ? 'rgba(148, 163, 184, 0.9)' : '#3b82f6',
             color: 'white',
             border: 'none',
             borderRadius: '0.375rem',

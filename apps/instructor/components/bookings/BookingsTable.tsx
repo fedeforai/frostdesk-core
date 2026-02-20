@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { updateInstructorBookingStatus, deleteInstructorBooking } from '@/lib/instructorApi';
+import styles from './BookingsTable.module.css';
 
 export type Booking = {
   id: string;
@@ -13,6 +14,7 @@ export type Booking = {
   start_time: string;
   end_time: string;
   status: string;
+  payment_status?: string | null;
 };
 
 /** Prefer join-sourced customer info, fallback to legacy customer_name. */
@@ -31,7 +33,27 @@ function formatDateTime(value: string | null | undefined): string {
   return d.toISOString().slice(0, 16).replace('T', ' ');
 }
 
-const STATUS_OPTIONS = ['draft', 'pending', 'confirmed', 'modified', 'cancelled', 'declined'] as const;
+const ALL_STATUSES = ['draft', 'pending', 'confirmed', 'modified', 'cancelled', 'declined'] as const;
+
+/** Valid transitions from each state (mirrors booking_state_machine.ts). */
+const ALLOWED_TRANSITIONS: Record<string, readonly string[]> = {
+  draft: ['pending', 'confirmed', 'cancelled'],
+  pending: ['confirmed', 'declined', 'cancelled'],
+  confirmed: ['modified', 'cancelled'],
+  modified: ['confirmed', 'modified', 'cancelled'],
+  cancelled: ['draft', 'pending'],
+  declined: ['draft', 'pending'],
+};
+
+function statusOptionsFor(current: string): string[] {
+  const allowed = ALLOWED_TRANSITIONS[current] ?? [];
+  return [current, ...allowed.filter((s) => s !== current)];
+}
+
+type SortKey = 'id' | 'customer' | 'start' | 'end' | 'status';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_FILTER_ALL = 'all';
 
 export function BookingsTable({
   items,
@@ -42,6 +64,63 @@ export function BookingsTable({
 }) {
   const [changingId, setChangingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState(STATUS_FILTER_ALL);
+  const [sortKey, setSortKey] = useState<SortKey>('start');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'start' || key === 'end' ? 'desc' : 'asc');
+    }
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = items;
+
+    if (q) {
+      list = list.filter((b) => {
+        const label = bookingCustomerLabel(b).toLowerCase();
+        const id = b.id.toLowerCase();
+        return label.includes(q) || id.includes(q);
+      });
+    }
+
+    if (statusFilter !== STATUS_FILTER_ALL) {
+      list = list.filter((b) => b.status === statusFilter);
+    }
+
+    const dir = sortDir === 'asc' ? 1 : -1;
+    list = [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case 'id':
+          cmp = a.id.localeCompare(b.id);
+          break;
+        case 'customer':
+          cmp = bookingCustomerLabel(a).localeCompare(bookingCustomerLabel(b));
+          break;
+        case 'start':
+          cmp = new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+          break;
+        case 'end':
+          cmp = new Date(a.end_time).getTime() - new Date(b.end_time).getTime();
+          break;
+        case 'status':
+          cmp = a.status.localeCompare(b.status);
+          break;
+        default:
+          break;
+      }
+      return cmp * dir;
+    });
+
+    return list;
+  }, [items, search, statusFilter, sortKey, sortDir]);
 
   async function handleStatusChange(id: string, newStatus: string) {
     setError(null);
@@ -70,96 +149,175 @@ export function BookingsTable({
     }
   }
 
-  const border = '1px solid rgba(148, 163, 184, 0.25)';
-  const thStyle = { padding: '0.5rem 0.75rem', borderBottom: '2px solid rgba(148, 163, 184, 0.3)', color: 'rgba(226, 232, 240, 0.95)', textAlign: 'left' as const };
-  const tdStyle = { padding: '0.5rem 0.75rem', borderBottom: border, color: 'rgba(226, 232, 240, 0.92)' };
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortKey !== column) return <span className={styles.sortIcon}>↕</span>;
+    return (
+      <span className={styles.sortIcon} aria-label={sortDir === 'asc' ? 'Ascending' : 'Descending'}>
+        {sortDir === 'asc' ? '↑' : '↓'}
+      </span>
+    );
+  };
 
   return (
-    <div style={{ border, borderRadius: 10, overflow: 'hidden', background: 'rgba(30, 41, 59, 0.4)' }}>
-      {error && (
-        <p style={{ marginBottom: '0.75rem', color: '#fca5a5', fontSize: '0.875rem' }}>{error}</p>
-      )}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Cliente</th>
-            <th style={thStyle}>Inizio</th>
-            <th style={thStyle}>Fine</th>
-            <th style={thStyle}>Stato</th>
-            <th style={{ ...thStyle, width: '1%' }}>Azioni</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((b) => (
-            <tr
-              key={b.id}
-              style={{
-                borderBottom: border,
-                ...(b.status === 'confirmed' ? { backgroundColor: 'rgba(34, 197, 94, 0.12)' } : {}),
-                ...(b.status === 'cancelled' || b.status === 'declined' ? { opacity: 0.7 } : {}),
-              }}
-            >
-              <td
-                style={{
-                  ...tdStyle,
-                  ...(b.status === 'confirmed' ? { borderLeft: '3px solid rgba(34, 197, 94, 0.7)', paddingLeft: '0.5rem' } : {}),
-                }}
-              >
-                {bookingCustomerLabel(b)}
-              </td>
-              <td style={tdStyle}>{formatDateTime(b.start_time)}</td>
-              <td style={tdStyle}>{formatDateTime(b.end_time)}</td>
-              <td style={tdStyle}>
-                <select
-                  value={b.status}
-                  onChange={(e) => handleStatusChange(b.id, e.target.value)}
-                  disabled={changingId !== null}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(15, 23, 42, 0.6)',
-                    color: 'rgba(226, 232, 240, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.3)',
-                    borderRadius: 6,
-                    ...(b.status === 'confirmed' ? { color: '#86efac', fontWeight: 500 } : {}),
-                  }}
-                  aria-label="Cambia stato"
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </td>
-              <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                <Link
-                  href={`/instructor/bookings/${b.id}`}
-                  style={{ marginRight: '0.5rem', fontSize: '0.875rem', color: '#7dd3fc' }}
-                  aria-label="Visualizza o modifica"
-                >
-                  Modifica
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(b.id)}
-                  disabled={changingId !== null}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.875rem',
-                    color: '#fca5a5',
-                    background: 'transparent',
-                    border: '1px solid rgba(248, 113, 113, 0.5)',
-                    borderRadius: 6,
-                    cursor: changingId !== null ? 'not-allowed' : 'pointer',
-                  }}
-                  aria-label="Elimina prenotazione"
-                >
-                  {changingId === b.id ? '…' : 'Elimina'}
-                </button>
-              </td>
-            </tr>
+    <div className={styles.wrap}>
+      <div className={styles.toolbar}>
+        <input
+          type="search"
+          className={styles.searchInput}
+          placeholder="Search by customer or ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search bookings"
+        />
+        <span className={styles.filterLabel}>Status</span>
+        <select
+          className={styles.filterSelect}
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label="Filter by status"
+        >
+          <option value={STATUS_FILTER_ALL}>All</option>
+          {ALL_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </option>
           ))}
-        </tbody>
-      </table>
+        </select>
+        <span className={styles.resultCount}>
+          {filteredAndSorted.length} {filteredAndSorted.length === 1 ? 'booking' : 'bookings'}
+        </span>
+      </div>
+
+      {error && <p className={styles.errorMsg}>{error}</p>}
+
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th
+                className={`${styles.th} ${styles.thSortable} ${sortKey === 'id' ? styles.thActive : ''}`}
+                onClick={() => handleSort('id')}
+              >
+                Booking ID
+                <SortIcon column="id" />
+              </th>
+              <th
+                className={`${styles.th} ${styles.thSortable} ${sortKey === 'customer' ? styles.thActive : ''}`}
+                onClick={() => handleSort('customer')}
+              >
+                Customer
+                <SortIcon column="customer" />
+              </th>
+              <th
+                className={`${styles.th} ${styles.thSortable} ${sortKey === 'start' ? styles.thActive : ''}`}
+                onClick={() => handleSort('start')}
+              >
+                Inizio
+                <SortIcon column="start" />
+              </th>
+              <th
+                className={`${styles.th} ${styles.thSortable} ${sortKey === 'end' ? styles.thActive : ''}`}
+                onClick={() => handleSort('end')}
+              >
+                Fine
+                <SortIcon column="end" />
+              </th>
+              <th
+                className={`${styles.th} ${styles.thSortable} ${sortKey === 'status' ? styles.thActive : ''}`}
+                onClick={() => handleSort('status')}
+              >
+                Status
+                <SortIcon column="status" />
+              </th>
+              <th className={styles.th}>
+                Pagamento
+              </th>
+              <th className={styles.th} style={{ width: '1%' }}>
+                Azioni
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAndSorted.length === 0 ? (
+              <tr>
+                <td colSpan={7} className={styles.empty}>
+                  {items.length === 0
+                    ? 'No bookings yet.'
+                    : 'No bookings match your search or filters.'}
+                </td>
+              </tr>
+            ) : (
+              filteredAndSorted.map((b) => (
+                <tr
+                  key={b.id}
+                  className={`${styles.tr} ${
+                    b.status === 'confirmed' ? styles.trConfirmed : ''
+                  } ${b.status === 'cancelled' || b.status === 'declined' ? styles.trMuted : ''}`}
+                >
+                  <td className={`${styles.td} ${styles.tdId}`}>
+                    <Link
+                      href={`/instructor/booking-lifecycle?bookingId=${b.id}`}
+                      title={b.id}
+                      className={styles.linkId}
+                    >
+                      {b.id.slice(0, 8)}…
+                    </Link>
+                  </td>
+                  <td className={`${styles.td} ${styles.tdCustomer}`}>
+                    {bookingCustomerLabel(b)}
+                  </td>
+                  <td className={`${styles.td} ${styles.tdDateTime}`}>
+                    {formatDateTime(b.start_time)}
+                  </td>
+                  <td className={`${styles.td} ${styles.tdDateTime}`}>
+                    {formatDateTime(b.end_time)}
+                  </td>
+                  <td className={styles.td}>
+                    <select
+                      value={b.status}
+                      onChange={(e) => handleStatusChange(b.id, e.target.value)}
+                      disabled={changingId !== null}
+                      className={`${styles.statusSelect} ${
+                        b.status === 'confirmed' ? styles.statusConfirmed : ''
+                      }`}
+                      aria-label="Change status"
+                    >
+                      {statusOptionsFor(b.status).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className={styles.td}>
+                    <span className={b.payment_status === 'paid' ? styles.paymentPaid : styles.paymentUnpaid}>
+                      {b.payment_status === 'paid' ? 'Pagato' : b.payment_status === 'pending' ? 'In attesa' : 'Non pagato'}
+                    </span>
+                  </td>
+                  <td className={`${styles.td} ${styles.tdActions}`}>
+                    <Link
+                      href={`/instructor/bookings/${b.id}`}
+                      className={styles.actionEdit}
+                      aria-label="View or edit"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(b.id)}
+                      disabled={changingId !== null}
+                      className={styles.actionDelete}
+                      aria-label="Delete booking"
+                    >
+                      {changingId === b.id ? '…' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

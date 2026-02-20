@@ -10,7 +10,9 @@ export async function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', path);
 
-  const res = NextResponse.next({
+  // ── Supabase client with proper cookie refresh handling ──────────────────
+  // `let` so setAll can recreate the response when tokens are refreshed.
+  let res = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
@@ -23,6 +25,11 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll();
         },
         setAll(cookiesToSet: CookieToSet[]) {
+          // 1. Write to request so subsequent cookie reads see fresh tokens
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          // 2. Recreate the "next" response with updated request headers
+          res = NextResponse.next({ request: { headers: requestHeaders } });
+          // 3. Write to response so the browser receives fresh tokens
           cookiesToSet.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, options as Record<string, unknown>);
           });
@@ -31,9 +38,12 @@ export async function middleware(req: NextRequest) {
     }
   );
 
+  // ── Auth check — getUser() validates server-side & handles refresh ───────
+  // Previously used getSession() which reads the JWT locally and can return
+  // null when the access token expires, causing spurious login redirects.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (AUTH_TRACE) {
     const allCookies = req.cookies.getAll();
@@ -45,12 +55,12 @@ export async function middleware(req: NextRequest) {
       path,
       cookieNames,
       hasSbAuthCookie,
-      hasSession: !!session,
-      sessionUserId: session?.user?.id ?? null,
+      hasUser: !!user,
+      userId: user?.id ?? null,
     }));
   }
 
-  // Public routes: no redirect to login
+  // ── Public routes: no redirect to login ──────────────────────────────────
   const isPublic =
     path === '/instructor/login' ||
     path === '/instructor/signup' ||
@@ -62,17 +72,23 @@ export async function middleware(req: NextRequest) {
     path.startsWith('/_next') ||
     path === '/favicon.ico';
 
-  if (path.startsWith('/instructor') && !isPublic && !session) {
+  if (path.startsWith('/instructor') && !isPublic && !user) {
     const url = req.nextUrl.clone();
     url.pathname = '/instructor/login';
     const fullNext = path + (req.nextUrl.search || '');
     url.searchParams.set('next', fullNext);
-    return NextResponse.redirect(url);
+    const redirectRes = NextResponse.redirect(url);
+    // Preserve any refreshed auth cookies on the redirect response
+    res.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectRes;
   }
 
   return res;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Exclude /api so API routes run without middleware (avoid 404 when middleware throws e.g. missing env on Vercel)
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 };

@@ -7,6 +7,7 @@ import {
   getAdminMessages,
   insertAuditEvent,
   listAuditLog,
+  listAllInstructorProfiles,
   UnauthorizedError,
   isAdmin,
   getUserRole,
@@ -316,6 +317,44 @@ export async function adminRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // GET /admin/instructors — list all instructor profiles with performance metrics
+  fastify.get('/admin/instructors', async (request, reply) => {
+    try {
+      await requireAdminUser(request);
+      const query = request.query as {
+        limit?: string;
+        offset?: string;
+        approval_status?: string;
+      };
+      const limit = query.limit ? Number(query.limit) : 50;
+      const offset = query.offset ? Number(query.offset) : 0;
+      let result;
+      try {
+        result = await listAllInstructorProfiles({
+          limit,
+          offset,
+          approval_status: query.approval_status ?? undefined,
+        });
+      } catch (listError) {
+        const err = listError as Error;
+        request.log.warn(
+          { err: listError, message: err?.message, stack: err?.stack },
+          'listAllInstructorProfiles failed, returning empty list'
+        );
+        return { ok: true, data: { items: [], total: 0 } };
+      }
+      return { ok: true, data: result };
+    } catch (error) {
+      const normalized = normalizeError(error);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
+    }
+  });
+
   // Register feature flags routes
   await adminFeatureFlagsRoutes(fastify);
 
@@ -361,6 +400,10 @@ export async function adminRoutes(fastify: FastifyInstance) {
   const { adminDashboardRoutes } = await import('./admin/dashboard.js');
   await adminDashboardRoutes(fastify);
 
+  // Register comprehensive dashboard route
+  const { adminDashboardComprehensiveRoutes } = await import('./admin/dashboard_comprehensive.js');
+  await adminDashboardComprehensiveRoutes(fastify);
+
   // Register KPI routes
   const { adminKPIRoutes } = await import('./admin/kpi.js');
   await adminKPIRoutes(fastify);
@@ -391,4 +434,19 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // AI cost dashboard (enriched cost tracking)
   const { adminAiCostRoutes } = await import('./admin/ai_cost.js');
   await adminAiCostRoutes(fastify);
+
+  // Admin reports (Excel export)
+  const { adminReportsDailyRoutes } = await import('./admin/reports_daily.js');
+  await adminReportsDailyRoutes(fastify);
+
+  const { adminReportsWeeklyRoutes } = await import('./admin/reports_weekly.js');
+  await adminReportsWeeklyRoutes(fastify);
+
+  // Investor report (PDF)
+  const { adminReportsInvestorRoutes } = await import('./admin/reports_investor.js');
+  await adminReportsInvestorRoutes(fastify);
+
+  // Report archive (list stored reports from Supabase Storage)
+  const { adminReportsArchiveRoutes } = await import('./admin/reports_archive.js');
+  await adminReportsArchiveRoutes(fastify);
 }

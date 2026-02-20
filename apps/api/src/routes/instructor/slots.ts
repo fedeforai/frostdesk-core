@@ -83,11 +83,12 @@ export async function instructorSlotsRoutes(app: FastifyInstance): Promise<void>
           from_utc: fromVal,
           to_utc: toVal,
           timezone,
-          availability_windows: recurring.map((r: { day_of_week: number; start_time: string; end_time: string; is_active: boolean }) => ({
+          availability_windows: recurring.map((r: { day_of_week: number; start_time: string; end_time: string; is_active: boolean; meeting_point_id?: string | null }) => ({
             day_of_week: r.day_of_week,
             start_time: r.start_time,
             end_time: r.end_time,
             is_active: r.is_active,
+            meeting_point_id: r.meeting_point_id ?? null,
           })),
           overrides: overrides.map((o: { start_utc: string; end_utc: string; is_available: boolean }) => ({ start_utc: o.start_utc, end_utc: o.end_utc, is_available: o.is_available })),
           bookings: bookings.map((b: { start_time: string; end_time: string }) => ({ start_time: b.start_time, end_time: b.end_time })),
@@ -96,7 +97,11 @@ export async function instructorSlotsRoutes(app: FastifyInstance): Promise<void>
         const result = computeSellableSlotsFromInput(input, { includeExclusionReasons: true });
         return reply.send({
           ok: true,
-          slots: result.slots.map((s) => ({ start_utc: s.start_utc, end_utc: s.end_utc })),
+          slots: result.slots.map((s) => ({
+            start_utc: s.start_utc,
+            end_utc: s.end_utc,
+            ...(s.meeting_point_id != null ? { meeting_point_id: s.meeting_point_id } : {}),
+          })),
           excluded_ranges: result.excluded_ranges ?? undefined,
           _meta: { participants: participants ?? null, serviceId: serviceId ?? null },
         });
@@ -111,7 +116,11 @@ export async function instructorSlotsRoutes(app: FastifyInstance): Promise<void>
 
       return reply.send({
         ok: true,
-        slots: slots.map((s) => ({ start_utc: s.start_utc, end_utc: s.end_utc })),
+        slots: slots.map((s) => ({
+          start_utc: s.start_utc,
+          end_utc: s.end_utc,
+          ...(s.meeting_point_id != null ? { meeting_point_id: s.meeting_point_id } : {}),
+        })),
         _meta: { participants: participants ?? null, serviceId: serviceId ?? null },
       });
     } catch (err) {

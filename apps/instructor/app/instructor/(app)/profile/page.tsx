@@ -37,30 +37,43 @@ export default function ProfilePage() {
   if (loading && !profile && !errorStatus) {
     return (
       <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-        <p style={{ color: '#6b7280' }}>Loading profile…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.9)' }}>Loading profile…</p>
       </div>
     );
   }
 
+  const isEmptyProfile =
+    profile &&
+    !profile.full_name &&
+    !profile.base_resort &&
+    !profile.working_language &&
+    !profile.contact_email;
+
   return (
     <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
-        Profilo
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
+        Profile
       </h1>
+
+      {isEmptyProfile && (
+        <p style={{ color: 'rgba(148, 163, 184, 0.9)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
+          Configure your profile by filling in the fields below.
+        </p>
+      )}
 
       {(errorStatus === 403 || (errorStatus && errorStatus !== 401)) && (
         <div style={{
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
           borderRadius: '0.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '0.75rem',
           fontSize: '0.875rem',
-          color: '#991b1b',
+          color: 'rgba(252, 165, 165, 0.95)',
         }}>
           <span>
             {errorStatus === 403
@@ -75,8 +88,8 @@ export default function ProfilePage() {
                 padding: '0.375rem 0.75rem',
                 borderRadius: '0.375rem',
                 border: '1px solid #f87171',
-                background: '#fff',
-                color: '#991b1b',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'rgba(252, 165, 165, 0.95)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: '0.8125rem',
@@ -89,13 +102,13 @@ export default function ProfilePage() {
       )}
 
       <div style={{
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.5rem',
         padding: '1.5rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       }}>
-        <ProfileForm profile={profile} />
+        <ProfileForm profile={profile} onSaved={setProfile} />
       </div>
     </div>
   );

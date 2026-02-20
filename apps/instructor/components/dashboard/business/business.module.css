@@ -1,0 +1,226 @@
+/* ── Window Selector ──────────────────────────────────────────────────────── */
+
+.windowSelector {
+  display: flex;
+  gap: 6px;
+}
+
+.windowBtn {
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.windowBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.windowBtnActive {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: rgba(165, 180, 252, 1);
+}
+
+/* ── Business Section ────────────────────────────────────────────────────── */
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: rgba(226, 232, 240, 0.95);
+  margin: 0;
+}
+
+/* ── KPI Grid ────────────────────────────────────────────────────────────── */
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── KPI Card ────────────────────────────────────────────────────────────── */
+
+.kpiCard {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.kpiValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: rgba(226, 232, 240, 0.95);
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.kpiLabel {
+  font-size: 0.8125rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin: 0;
+  font-weight: 500;
+}
+
+.kpiSkeleton {
+  height: 1.75rem;
+  width: 60%;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  animation: pulse 1.5s ease-in-out infinite;
+  margin-bottom: 4px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Trend Section ───────────────────────────────────────────────────────── */
+
+.trendGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .trendGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trendCard {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.trendTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.95);
+  margin: 0 0 16px;
+}
+
+/* ── Sparkline ───────────────────────────────────────────────────────────── */
+
+.sparklineWrap {
+  height: 48px;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ── Funnel Bars ─────────────────────────────────────────────────────────── */
+
+.funnelBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 80px;
+}
+
+.funnelBarCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.funnelBar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.3s ease;
+  min-height: 4px;
+}
+
+.funnelBarLabel {
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.8);
+  margin-top: 6px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ── Status Badges ───────────────────────────────────────────────────────── */
+
+.statusBadges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.badgeGreen {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: rgba(74, 222, 128, 0.95);
+}
+
+.badgeGreen .badgeDot {
+  background: rgba(34, 197, 94, 0.9);
+}
+
+.badgeGray {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.badgeGray .badgeDot {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.badgeOrange {
+  background: rgba(251, 146, 60, 0.12);
+  border-color: rgba(251, 146, 60, 0.3);
+  color: rgba(251, 146, 60, 0.95);
+}
+
+.badgeOrange .badgeDot {
+  background: rgba(251, 146, 60, 0.9);
+}

@@ -18,10 +18,13 @@ function isPageVisible(): boolean {
  * - Runs only when enabled
  * - Pauses when tab is hidden
  * - Avoids overlapping ticks
+ * - Uses a ref for onTick to avoid re-scheduling on every render
  */
 export function useLivePolling({ enabled, intervalMs, onTick }: PollOpts) {
   const runningRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onTickRef = useRef(onTick);
+  onTickRef.current = onTick;
 
   useEffect(() => {
     if (!enabled) return;
@@ -33,7 +36,7 @@ export function useLivePolling({ enabled, intervalMs, onTick }: PollOpts) {
 
       runningRef.current = true;
       try {
-        await onTick();
+        await onTickRef.current();
       } finally {
         runningRef.current = false;
       }
@@ -63,5 +66,5 @@ export function useLivePolling({ enabled, intervalMs, onTick }: PollOpts) {
       document.removeEventListener('visibilitychange', onVisibility);
       timerRef.current = null;
     };
-  }, [enabled, intervalMs, onTick]);
+  }, [enabled, intervalMs]);
 }

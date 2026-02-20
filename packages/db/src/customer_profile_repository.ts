@@ -1,4 +1,5 @@
 import { sql } from './client.js';
+import { normalizePhoneE164 } from './phone_normalize.js';
 
 export type CustomerProfileRow = {
   id: string;
@@ -56,10 +57,11 @@ export async function listInstructorCustomers(params: {
       GROUP BY customer_id
     ) n ON n.customer_id = cp.id
     LEFT JOIN (
-      SELECT instructor_id, customer_name, COUNT(*)::int AS bookings_count
+      SELECT customer_id, COUNT(*)::int AS bookings_count
       FROM bookings
-      GROUP BY instructor_id, customer_name
-    ) b ON b.instructor_id = cp.instructor_id AND b.customer_name = cp.display_name
+      WHERE customer_id IS NOT NULL
+      GROUP BY customer_id
+    ) b ON b.customer_id = cp.id
     WHERE cp.instructor_id = ${instructorId}
     ${searchCond}
     ORDER BY cp.last_seen_at DESC NULLS LAST
@@ -98,9 +100,13 @@ export async function upsertCustomer(params: {
 }): Promise<CustomerProfileRow> {
   const source = params.source ?? 'whatsapp';
   const displayName = params.displayName?.trim() || null;
+
+  // CM-1: Normalize phone to E.164 to prevent silent duplicates.
+  // "447712345021" and "+447712345021" must resolve to the same customer.
+  const normalized = normalizePhoneE164(params.phoneNumber);
   const phoneNumber =
-    params.phoneNumber != null && params.phoneNumber !== ''
-      ? params.phoneNumber
+    normalized != null
+      ? normalized
       : (displayName ? slugDisplayName(displayName) : 'anon');
   const result = await sql<CustomerProfileRow[]>`
     INSERT INTO customer_profiles (instructor_id, phone_number, display_name, source, first_seen_at, last_seen_at, updated_at)
@@ -114,6 +120,28 @@ export async function upsertCustomer(params: {
   `;
   if (result.length === 0) throw new Error('Upsert customer failed');
   return result[0];
+}
+
+/**
+ * Find a customer by phone number for a given instructor.
+ * Normalizes the phone to E.164 before lookup to ensure consistent matching.
+ * Returns null if not found.
+ */
+export async function findCustomerByPhone(
+  instructorId: string,
+  phoneNumber: string,
+): Promise<CustomerProfileRow | null> {
+  const normalized = normalizePhoneE164(phoneNumber);
+  if (!normalized) return null;
+  const result = await sql<CustomerProfileRow[]>`
+    SELECT id, instructor_id, phone_number, display_name,
+           first_seen_at, last_seen_at, source, created_at, updated_at
+    FROM customer_profiles
+    WHERE instructor_id = ${instructorId}
+      AND phone_number = ${normalized}
+    LIMIT 1
+  `;
+  return result.length > 0 ? result[0] : null;
 }
 
 /**

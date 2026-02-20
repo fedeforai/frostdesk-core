@@ -40,10 +40,10 @@ export async function listAllMessages(
     SELECT 
       m.id,
       m.conversation_id,
-      COALESCE(m.instructor_id, c.instructor_id) as instructor_id,
+      c.instructor_id as instructor_id,
       m.direction,
-      m.role,
-      m.content,
+      NULL::text as role,
+      m.message_text AS content,
       m.created_at
     FROM messages m
     LEFT JOIN conversations c ON m.conversation_id = c.id

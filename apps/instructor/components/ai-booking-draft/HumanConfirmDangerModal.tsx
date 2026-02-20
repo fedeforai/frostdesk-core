@@ -34,7 +34,7 @@ export function HumanConfirmDangerModal({
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
       }}>
         <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
-          Stai per creare una prenotazione reale
+          You are about to create a real booking
         </h3>
 
         <ul style={{
@@ -45,7 +45,7 @@ export function HumanConfirmDangerModal({
           lineHeight: 1.6,
         }}>
           <li>L&apos;azione è irreversibile</li>
-          <li>La disponibilità non verrà ricontrollata</li>
+          <li>Availability will not be rechecked</li>
           <li>Eventuali conflitti in calendario non verranno risolti</li>
           <li>L&apos;AI non interverrà</li>
           <li>Stai agendo come operatore umano</li>
@@ -66,7 +66,7 @@ export function HumanConfirmDangerModal({
               cursor: 'pointer',
             }}
           >
-            Annulla
+            Cancel
           </button>
           <button
             type="button"

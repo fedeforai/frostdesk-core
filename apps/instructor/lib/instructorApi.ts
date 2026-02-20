@@ -21,7 +21,7 @@ export interface MarketingFields {
   teaching_philosophy?: string | null;
   target_audience?: TargetAudience[] | null;
   usp_tags?: string[] | null;
-  /** Base resort + altre località dove il maestro può fare lezioni */
+  /** Base resort + other locations where the instructor can give lessons */
   resorts?: { base?: string; operating?: string[] } | null;
 }
 
@@ -111,6 +111,68 @@ export async function updateInstructorProfile(
   return data.profile;
 }
 
+/** Saves onboarding draft. POST /instructor/onboarding/draft. */
+export async function saveOnboardingDraft(body: {
+  full_name?: string | null;
+  base_resort?: string | null;
+  working_language?: string | null;
+  whatsapp_phone?: string | null;
+  onboarding_payload?: Record<string, unknown> | null;
+  ui_language?: string | null;
+}): Promise<{ ok: boolean }> {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/onboarding/draft`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await getAuthHeadersForApi()) ?? {} },
+    body: JSON.stringify({
+      full_name: body.full_name ?? undefined,
+      base_resort: body.base_resort ?? undefined,
+      working_language: body.working_language ?? undefined,
+      whatsapp_phone: body.whatsapp_phone ?? undefined,
+      onboarding_payload: body.onboarding_payload ?? undefined,
+      ui_language: body.ui_language ?? undefined,
+    }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const err = new Error(errorData?.message || 'Failed to save draft');
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
+/** Submits onboarding complete. POST /instructor/onboarding/complete. */
+export async function submitOnboardingComplete(body: {
+  full_name: string;
+  base_resort: string;
+  working_language: string;
+  whatsapp_phone: string;
+  onboarding_payload?: Record<string, unknown> | null;
+}): Promise<{ ok: boolean }> {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/onboarding/complete`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await getAuthHeadersForApi()) ?? {} },
+    body: JSON.stringify({
+      full_name: body.full_name,
+      base_resort: body.base_resort,
+      working_language: body.working_language,
+      whatsapp_phone: body.whatsapp_phone,
+      onboarding_payload: body.onboarding_payload ?? undefined,
+    }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const err = new Error(errorData?.message || 'Failed to complete onboarding');
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
 export interface DashboardBooking {
   id: string;
   conversation_id: string;
@@ -198,32 +260,55 @@ export async function fetchInstructorDashboardViaApi(): Promise<InstructorDashbo
   return response.json();
 }
 
+export type LessonType = 'private' | 'semi_private' | 'group';
+
 export interface InstructorService {
   id: string;
   instructor_id: string;
+  name: string | null;
   discipline: string;
+  lesson_type: LessonType | null;
   duration_minutes: number;
+  min_participants: number;
+  max_participants: number;
   price_amount: number;
   currency: string;
+  short_description: string | null;
+  location: string | null;
   is_active: boolean;
   notes: string | null;
+  sort_order: number;
 }
 
 export interface CreateInstructorServiceParams {
+  name?: string | null;
   discipline: string;
+  lesson_type?: LessonType | null;
   duration_minutes: number;
+  min_participants?: number;
+  max_participants?: number;
   price_amount: number;
   currency: string;
+  short_description?: string | null;
+  location?: string | null;
   notes?: string | null;
+  sort_order?: number;
 }
 
 export interface UpdateInstructorServiceParams {
+  name: string | null;
   discipline: string;
+  lesson_type: LessonType | null;
   duration_minutes: number;
+  min_participants: number;
+  max_participants: number;
   price_amount: number;
   currency: string;
-  notes?: string | null;
+  short_description: string | null;
+  location: string | null;
+  notes: string | null;
   is_active: boolean;
+  sort_order: number;
 }
 
 /**
@@ -241,7 +326,8 @@ export async function fetchInstructorServices(): Promise<InstructorService[]> {
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/services`;
   const response = await fetch(url, {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    credentials: 'include',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
   });
   if (response.status === 401) {
     const err = new Error('UNAUTHENTICATED');
@@ -286,6 +372,7 @@ export async function createInstructorService(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/services`;
   const response = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(params),
   });
@@ -332,6 +419,7 @@ export async function updateInstructorService(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/services/${encodeURIComponent(serviceId)}`;
   const response = await fetch(url, {
     method: 'PATCH',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(params),
   });
@@ -394,8 +482,8 @@ export async function fetchAvailabilityConflicts(): Promise<AvailabilityCalendar
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/availability/conflicts`;
   const response = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
-    credentials: 'same-origin',
   });
   if (response.status === 401) {
     const err = new Error('UNAUTHENTICATED');
@@ -430,11 +518,20 @@ export interface FetchInstructorBookingsResponse {
   items: any[];
 }
 
+export interface FetchInstructorBookingsFilters {
+  date_from?: string;
+  date_to?: string;
+  payment_status?: string;
+}
+
 /**
  * Fetches all bookings for the instructor via same-origin proxy (GET /api/instructor/bookings).
+ * Optional filters: date_from, date_to (YYYY-MM-DD), payment_status ('unpaid').
  * @returns Bookings list
  */
-export async function fetchInstructorBookings(): Promise<FetchInstructorBookingsResponse> {
+export async function fetchInstructorBookings(
+  filters?: FetchInstructorBookingsFilters | null
+): Promise<FetchInstructorBookingsResponse> {
   const authHeaders = await getAuthHeadersForApi();
   if (authHeaders === null) {
     const err = new Error('UNAUTHORIZED');
@@ -442,7 +539,12 @@ export async function fetchInstructorBookings(): Promise<FetchInstructorBookings
     throw err;
   }
   const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl.replace(/\/$/, '')}/instructor/bookings`;
+  const params = new URLSearchParams();
+  if (filters?.date_from) params.set('date_from', filters.date_from);
+  if (filters?.date_to) params.set('date_to', filters.date_to);
+  if (filters?.payment_status) params.set('payment_status', filters.payment_status);
+  const qs = params.toString();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/bookings${qs ? `?${qs}` : ''}`;
   const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',
@@ -469,12 +571,12 @@ export async function fetchInstructorBookings(): Promise<FetchInstructorBookings
       errorData?.message ??
       (typeof errorData?.error === 'string' ? errorData.error : null) ??
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare le prenotazioni. Riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load bookings. Please retry.');
     const err = new Error(msg);
     (err as any).status = response.status;
     throw err;
@@ -538,6 +640,11 @@ export async function createInstructorBooking(payload: {
   serviceId?: string | null;
   meetingPointId?: string | null;
   notes?: string | null;
+  durationMinutes?: number | null;
+  partySize?: number | null;
+  skillLevel?: string | null;
+  amountCents?: number | null;
+  currency?: 'eur' | 'gbp' | 'chf' | null;
 }): Promise<{ id: string }> {
   const authHeaders = await getAuthHeadersForApi();
   if (authHeaders === null) {
@@ -554,6 +661,11 @@ export async function createInstructorBooking(payload: {
     notes: payload.notes ?? undefined,
     service_id: payload.serviceId ?? undefined,
     meeting_point_id: payload.meetingPointId ?? undefined,
+    duration_minutes: payload.durationMinutes ?? undefined,
+    party_size: payload.partySize ?? undefined,
+    skill_level: payload.skillLevel ?? undefined,
+    amount_cents: payload.amountCents ?? undefined,
+    currency: payload.currency ?? undefined,
   };
   const response = await fetch(url, {
     method: 'POST',
@@ -581,6 +693,7 @@ export async function createInstructorBooking(payload: {
     const msg = errorData?.message || (typeof errorData?.error === 'string' ? errorData.error : null) || 'Failed to create booking';
     const err = new Error(msg);
     (err as any).status = response.status;
+    (err as any).code = errorData?.error;
     throw err;
   }
   return response.json();
@@ -624,9 +737,10 @@ export async function updateInstructorBooking(
     throw err;
   }
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
     const err = new Error(errorData?.message || 'Failed to update booking');
     (err as any).status = response.status;
+    (err as any).code = errorData?.error;
     throw err;
   }
   return response.json();
@@ -741,11 +855,13 @@ export async function cancelInstructorBooking(id: string): Promise<{ ok?: boolea
   if (!response.ok) {
     const err = new Error((data as any)?.message || data?.message || 'Failed to cancel booking');
     (err as any).status = response.status;
+    (err as any).code = (data as any)?.error;
     throw err;
   }
   if (data && data.ok === false) {
     const err = new Error((data as any)?.message || data?.message || 'Cancel failed');
     (err as any).status = response.status;
+    (err as any).code = (data as any)?.error;
     throw err;
   }
   return data;
@@ -839,6 +955,59 @@ export async function fetchBookingTimeline(bookingId: string): Promise<BookingTi
   };
 }
 
+/** Event shape from GET /instructor/conversations/:id/timeline (decision timeline). */
+export interface ConversationTimelineEvent {
+  timestamp: string;
+  type: string;
+  actor_type: string;
+  actor_id: string | null;
+  summary: string;
+  payload: Record<string, unknown>;
+}
+
+export interface ConversationTimelineResponse {
+  conversation_id: string;
+  timeline: ConversationTimelineEvent[];
+}
+
+/** Fetches conversation decision timeline. GET /instructor/conversations/:id/timeline. */
+export async function fetchConversationTimeline(conversationId: string): Promise<ConversationTimelineResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err = new Error('UNAUTHORIZED');
+    (err as any).status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/timeline`;
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (response.status === 401) {
+    const err = new Error('UNAUTHORIZED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (response.status === 403 || response.status === 404) {
+    const err = new Error(response.status === 404 ? 'NOT_FOUND' : 'NOT_AUTHORIZED');
+    (err as any).status = response.status;
+    throw err;
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const err = new Error(errorData?.message || 'Failed to load timeline');
+    (err as any).status = response.status;
+    throw err;
+  }
+  const data = await response.json().catch(() => ({})) as any;
+  return {
+    conversation_id: data?.conversation_id ?? conversationId,
+    timeline: Array.isArray(data?.timeline) ? data.timeline : [],
+  };
+}
+
 // ========== Customers ==========
 
 /** Customer list item; keys match backend snake_case. */
@@ -919,12 +1088,12 @@ export async function fetchInstructorCustomers(params?: {
       errorData?.message ||
       (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare i clienti. Verifica che l\'API sia avviata e riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load customers. Verify that the API is running and retry.');
     const err = new Error(msg);
     (err as any).status = response.status;
     throw err;
@@ -936,7 +1105,13 @@ export async function fetchInstructorCustomers(params?: {
 export interface InstructorCustomerDetailResponse {
   customer: InstructorCustomerItem & { updated_at: string };
   notes: Array<{ id: string; customer_id: string; instructor_id: string; content: string; created_at: string }>;
-  stats: { notes_count: number; bookings_count: number; value_score: number };
+  stats: {
+    notes_count: number;
+    bookings_count: number;
+    value_score: number;
+    total_amount_cents?: number;
+    currency?: string | null;
+  };
 }
 
 export async function fetchInstructorCustomer(id: string): Promise<InstructorCustomerDetailResponse> {
@@ -1004,9 +1179,10 @@ export async function createInstructorCustomerNote(
     throw err;
   }
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
     const err = new Error(errorData?.message || 'Failed to add note');
     (err as any).status = response.status;
+    (err as any).code = errorData?.error;
     throw err;
   }
   return response.json();
@@ -1059,6 +1235,7 @@ export async function createInstructorCustomer(payload: {
     const msg = errorData?.message || (typeof errorData?.error === 'string' ? errorData.error : null) || 'Failed to create customer';
     const err = new Error(msg);
     (err as any).status = response.status;
+    (err as any).code = errorData?.error;
     throw err;
   }
   const data = await response.json();
@@ -1081,6 +1258,7 @@ export async function createInstructorMeetingPoint(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/meeting-points`;
   const response = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(params),
   });
@@ -1110,6 +1288,8 @@ export interface InstructorAvailability {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  /** Optional: when set, this window is only for that meeting point. */
+  meeting_point_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1119,6 +1299,7 @@ export interface CreateAvailabilityParams {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  meetingPointId?: string | null;
 }
 
 export interface UpdateAvailabilityParams {
@@ -1127,6 +1308,7 @@ export interface UpdateAvailabilityParams {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  meetingPointId?: string | null;
 }
 
 export interface FetchAvailabilityResponse {
@@ -1172,12 +1354,12 @@ export async function fetchAvailability(): Promise<InstructorAvailability[]> {
       errorData?.message ||
       (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare la disponibilità. Verifica che l\'API sia avviata e riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load availability. Verify that the API is running and retry.');
     const errorObj = new Error(msg);
     (errorObj as any).status = response.status;
     throw errorObj;
@@ -1185,6 +1367,134 @@ export async function fetchAvailability(): Promise<InstructorAvailability[]> {
   const data = (await response.json()) as { ok?: boolean; availability?: InstructorAvailability[] };
   return data?.ok && Array.isArray(data.availability) ? data.availability : [];
 }
+
+// ── Availability overrides (date-specific block or add) ─────────────────────
+
+export interface AvailabilityOverrideItem {
+  id: string;
+  instructor_id: string;
+  start_utc: string;
+  end_utc: string;
+  is_available: boolean;
+  created_at: string;
+}
+
+export async function fetchAvailabilityOverrides(params?: {
+  from?: string;
+  to?: string;
+}): Promise<AvailabilityOverrideItem[]> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const error = new Error('No session found');
+    (error as any).status = 401;
+    throw error;
+  }
+  const baseUrl = getApiBaseUrl();
+  const q = new URLSearchParams();
+  if (params?.from) q.set('from', params.from);
+  if (params?.to) q.set('to', params.to);
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/availability/overrides${q.toString() ? `?${q.toString()}` : ''}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (response.status === 401) {
+    const err = new Error('UNAUTHORIZED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (response.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const errorObj = new Error(errorData?.message ?? 'Unable to load overrides');
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+  const data = (await response.json()) as { ok?: boolean; items?: AvailabilityOverrideItem[] };
+  return data?.ok && Array.isArray(data.items) ? data.items : [];
+}
+
+export async function createAvailabilityOverride(params: {
+  start_utc: string;
+  end_utc: string;
+  is_available: boolean;
+}): Promise<AvailabilityOverrideItem> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const error = new Error('No session found');
+    (error as any).status = 401;
+    throw error;
+  }
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/availability/overrides`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: JSON.stringify(params),
+  });
+  if (response.status === 401) {
+    const err = new Error('UNAUTHORIZED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (response.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const errorObj = new Error(errorData?.message ?? 'Failed to create override');
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+  const data = (await response.json()) as { ok?: boolean; item?: AvailabilityOverrideItem };
+  if (!data?.ok || !data.item) throw new Error('Invalid response');
+  return data.item;
+}
+
+export async function deleteAvailabilityOverride(id: string): Promise<void> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const error = new Error('No session found');
+    (error as any).status = 401;
+    throw error;
+  }
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/availability/overrides/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: authHeaders,
+  });
+  if (response.status === 401) {
+    const err = new Error('UNAUTHORIZED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (response.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (response.status === 404) {
+    const err = new Error('Override not found');
+    (err as any).status = 404;
+    throw err;
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string };
+    const errorObj = new Error(errorData?.message ?? 'Failed to delete override');
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+}
+
+// ── Recurring availability (create/update) ─────────────────────────────────
 
 /**
  * Creates a new instructor availability window via API proxy.
@@ -1209,6 +1519,7 @@ export async function createAvailability(
   };
   const response = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(body),
   });
@@ -1250,9 +1561,11 @@ export async function updateAvailability(
     start_time: payload.startTime,
     end_time: payload.endTime,
     is_active: payload.isActive,
+    ...(payload.meetingPointId !== undefined ? { meeting_point_id: payload.meetingPointId } : {}),
   };
   const response = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(body),
   });
@@ -1330,6 +1643,7 @@ export async function updateInstructorMeetingPoint(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/meeting-points/${encodeURIComponent(meetingPointId)}`;
   const response = await fetch(url, {
     method: 'PATCH',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(params),
   });
@@ -1386,12 +1700,12 @@ export async function fetchInstructorMeetingPoints(): Promise<InstructorMeetingP
       errorData?.message ||
       (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare i luoghi di ritrovo. Verifica che l\'API sia avviata e riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load meeting points. Verify that the API is running and retry.');
     const errorObj = new Error(msg);
     (errorObj as any).status = response.status;
     throw errorObj;
@@ -1526,12 +1840,19 @@ export interface CreateInstructorPolicyParams {
   policy_type: PolicyType;
   title: string;
   content: string;
+  version?: number;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  is_active?: boolean;
 }
 
 export interface UpdateInstructorPolicyParams {
   policy_type?: PolicyType;
   title: string;
   content: string;
+  version?: number;
+  valid_from?: string | null;
+  valid_to?: string | null;
   is_active: boolean;
 }
 
@@ -1606,12 +1927,12 @@ export async function fetchInstructorPolicyDocument(): Promise<InstructorPolicyD
       data?.message ||
       (typeof data?.error === 'string' ? data.error : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare le policy. Verifica che l\'API sia avviata e riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load policies. Verify that the API is running and retry.');
     const err = new Error(msg);
     (err as Error & { status: number }).status = response.status;
     throw err;
@@ -1633,12 +1954,12 @@ export async function patchInstructorPolicyDocumentApi(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/policies`;
   const response = await fetch(url, {
     method: 'PATCH',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'If-Match': String(version),
       ...authHeaders,
     },
-    credentials: 'same-origin',
     body: JSON.stringify(params),
   });
   if (response.status === 401) {
@@ -1850,17 +2171,17 @@ export async function fetchAIBookingSuggestionContext(): Promise<AIBookingSugges
     const msg =
       errorData?.message ||
       (isUpstreamDown
-        ? 'L\'API non è raggiungibile. Verifica che l\'API sia avviata (es. porta 3001) e riprova.'
+        ? 'The API is not reachable. Verify that the API is running (e.g. port 3001) and retry.'
         : typeof errorData?.error === 'string'
           ? errorData.error
           : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato.'
+          ? 'Endpoint not found.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare il contesto per le prenotazioni. Riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load booking context. Please retry.');
     const error = new Error(msg);
     (error as any).status = response.status;
     throw error;
@@ -1988,6 +2309,7 @@ export async function deactivateAvailability(id: string): Promise<void> {
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/availability/${encodeURIComponent(id)}/toggle`;
   const response = await fetch(url, {
     method: 'PATCH',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
   });
   if (response.status === 401) {
@@ -2220,58 +2542,43 @@ export interface BookingAuditLogRow {
 }
 
 /**
- * Fetches booking audit logs for the instructor.
- * 
+ * Fetches booking audit logs for the instructor via same-origin proxy (GET /api/instructor/booking-audit-logs).
+ * Auth: cookie sent to proxy, API validates JWT. Use in the browser so session is handled by the proxy.
+ *
  * @returns Array of booking audit log rows
  */
 export async function fetchInstructorBookingAuditLogs(): Promise<BookingAuditLogRow[]> {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch('/api/instructor/booking-audit-logs', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
 
-  if (!session) {
+  if (response.status === 401) {
     const error = new Error('UNAUTHORIZED');
     (error as any).status = 401;
     throw error;
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
-  }
-
-  const functionUrl = `${supabaseUrl}/functions/v1/instructor/booking-audit-logs`;
-
-  const response = await fetch(functionUrl, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-  });
-
   if (!response.ok) {
-    if (response.status === 401) {
-      const error = new Error('UNAUTHORIZED');
-      (error as any).status = 401;
-      throw error;
-    }
     const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
     const msg =
       errorData?.message ||
       (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
       (response.status === 502 || response.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : response.status === 404
-          ? 'Endpoint non trovato.'
+          ? 'Endpoint not found.'
           : response.status === 500
-            ? 'Errore del server. Riprova.'
-            : 'Impossibile caricare i log di audit. Riprova.');
+            ? 'Server error. Please retry.'
+            : 'Unable to load audit logs. Please retry.');
     const error = new Error(msg);
     (error as any).status = response.status;
     throw error;
   }
 
-  return response.json();
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
 }
 
 export interface BookingLifecycleReadModel {
@@ -2366,6 +2673,15 @@ export interface InstructorConversation {
   updatedAt: string;
   status: 'hot' | 'waiting' | 'resolved';
   unreadCount: number;
+  // CM-2: customer profile link
+  customerProfileId?: string | null;
+  customerPhone?: string | null;
+  // CM-3: trust signals
+  customerBookingsCount?: number;
+  customerNotesCount?: number;
+  customerFirstSeenAt?: string | null;
+  customerLastSeenAt?: string | null;
+  isKnownCustomer?: boolean;
 }
 
 export interface InstructorMessage {
@@ -2447,9 +2763,9 @@ export async function getConversations(): Promise<InstructorConversation[]> {
       (typeof body?.error === 'object' && body?.error && 'message' in body.error ? body.error.message : null) ??
       (typeof body?.error === 'string' ? body.error : null) ??
       (res.status === 502 || res.status === 503
-        ? 'Servizio non disponibile. Riprova più tardi.'
+        ? 'Service unavailable. Try again later.'
         : res.status === 404
-          ? 'Endpoint non trovato. Verifica che l\'API sia avviata.'
+          ? 'Endpoint not found. Verify that the API is running.'
           : 'Failed to load conversations');
     const err = new Error(msg);
     (err as any).status = res.status;
@@ -2474,6 +2790,7 @@ export async function getMessages(conversationId: string): Promise<InstructorMes
   const url = `${getApiBaseUrl()}/instructor/conversations/${encodeURIComponent(conversationId)}/messages`;
   const res = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
   });
 
@@ -2507,6 +2824,51 @@ export async function getMessages(conversationId: string): Promise<InstructorMes
 export type ConversationAiState = 'ai_on' | 'ai_paused_by_human' | 'ai_suggestion_only';
 
 /**
+ * GET /instructor/conversations/:id/ai-state — Fetch current AI state for a conversation.
+ */
+export async function getConversationAiState(
+  conversationId: string
+): Promise<ConversationAiState | null> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err = new Error('No session found');
+    (err as any).status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/ai-state`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+
+  if (res.status === 401) {
+    const err = new Error('UNAUTHENTICATED');
+    (err as any).status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error('ONBOARDING_REQUIRED');
+    (err as any).status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    const err = new Error('Failed to get AI state');
+    (err as any).status = res.status;
+    throw err;
+  }
+
+  const data = (await res.json()) as { ok: boolean; ai_state?: string };
+  if (!data?.ok || !data.ai_state) return null;
+  const valid: ConversationAiState[] = ['ai_on', 'ai_paused_by_human', 'ai_suggestion_only'];
+  return valid.includes(data.ai_state as ConversationAiState) ? (data.ai_state as ConversationAiState) : null;
+}
+
+/**
  * PATCH /instructor/conversations/:id/ai-state — Take over (pause AI) or Resume AI.
  */
 export async function patchConversationAiState(
@@ -2523,6 +2885,7 @@ export async function patchConversationAiState(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/ai-state`;
   const res = await fetch(url, {
     method: 'PATCH',
+    credentials: 'include',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(body),
   });
@@ -2584,8 +2947,8 @@ export async function fetchInstructorInbox(): Promise<InstructorInboxItem[]> {
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/inbox`;
   const res = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
-    credentials: 'same-origin',
   });
 
   if (res.status === 401) {
@@ -2640,6 +3003,7 @@ export async function sendInstructorReply(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/inbox/${conversationId}/reply`;
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify(body),
   });
@@ -2675,18 +3039,25 @@ export interface ConversationDraft {
   expiresAt: string | null;
 }
 
+export interface SuggestedAction {
+  id: string;
+  label: string;
+  payload?: { bookingDraftId?: string; bookingId?: string };
+}
+
 export interface GetConversationDraftResponse {
   ok: boolean;
   draft: ConversationDraft | null;
+  suggested_actions?: SuggestedAction[];
 }
 
 /**
- * Fetches the active draft for a conversation.
+ * Fetches the active draft and suggested actions for a conversation.
  * GET /instructor/conversations/:id/draft
  */
 export async function getConversationDraft(
   conversationId: string
-): Promise<ConversationDraft | null> {
+): Promise<{ draft: ConversationDraft | null; suggested_actions: SuggestedAction[] }> {
   const authHeaders = await getAuthHeadersForApi();
   if (authHeaders === null) {
     const err: any = new Error('Not authenticated');
@@ -2697,6 +3068,7 @@ export async function getConversationDraft(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/draft`;
   const res = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: { Accept: 'application/json', ...authHeaders },
   });
   if (res.status === 401) {
@@ -2721,6 +3093,132 @@ export async function getConversationDraft(
     throw err;
   }
   const data: GetConversationDraftResponse = await res.json();
+  if (!data.ok) return { draft: null, suggested_actions: [] };
+  return {
+    draft: data.draft ?? null,
+    suggested_actions: data.suggested_actions ?? [],
+  };
+}
+
+/** Upcoming booking summary from GET /instructor/conversations/:id/context */
+export interface ConversationContextUpcomingBooking {
+  id: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  customer_name: string | null;
+  payment_status: string | null;
+}
+
+/** Pending booking draft from context (for confirm-in-thread). */
+export interface ConversationContextPendingDraft {
+  id: string;
+  conversation_id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number | null;
+  party_size: number;
+  customer_name: string | null;
+  customer_phone: string | null;
+  meeting_point_text: string | null;
+  service_id: string | null;
+  meeting_point_id: string | null;
+  skill_level: string | null;
+  lesson_type: string | null;
+  sport: string | null;
+  resort: string | null;
+}
+
+export interface GetConversationContextResponse {
+  ok: boolean;
+  upcoming_bookings: ConversationContextUpcomingBooking[];
+  pending_booking_draft: ConversationContextPendingDraft | null;
+}
+
+/**
+ * Fetches conversation context: upcoming bookings and pending booking draft for in-thread actions.
+ * GET /instructor/conversations/:id/context
+ */
+export async function getConversationContext(
+  conversationId: string
+): Promise<GetConversationContextResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/context`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (res.status === 401) {
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
+    throw err;
+  }
+  if (res.status === 403) {
+    const err: any = new Error('ONBOARDING_REQUIRED');
+    err.status = 403;
+    throw err;
+  }
+  if (res.status === 404) {
+    const err: any = new Error('NOT_FOUND');
+    err.status = 404;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error((body as { message?: string })?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json() as GetConversationContextResponse;
+  return {
+    ok: data.ok ?? true,
+    upcoming_bookings: Array.isArray(data.upcoming_bookings) ? data.upcoming_bookings : [],
+    pending_booking_draft: data.pending_booking_draft ?? null,
+  };
+}
+
+/**
+ * Re-generates the AI draft for a conversation by re-running the classifier
+ * on the last inbound message.
+ * POST /instructor/conversations/:id/draft/regenerate
+ */
+export async function regenerateConversationAiDraft(
+  conversationId: string
+): Promise<ConversationDraft | null> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/conversations/${encodeURIComponent(conversationId)}/draft/regenerate`;
+  const res = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
+    body: '{}',
+  });
+  if (res.status === 401) {
+    const err: any = new Error('UNAUTHENTICATED');
+    err.status = 401;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `Regenerate failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
   return data.ok ? data.draft ?? null : null;
 }
 
@@ -2742,6 +3240,7 @@ export async function useDraft(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/drafts/${encodeURIComponent(draftId)}/use`;
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
     body: JSON.stringify({ edited: params.edited, finalText: params.finalText }),
   });
@@ -2783,6 +3282,7 @@ export async function ignoreDraft(draftId: string): Promise<void> {
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/drafts/${encodeURIComponent(draftId)}/ignore`;
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: { Accept: 'application/json', ...authHeaders },
   });
   if (res.status === 401) {
@@ -2841,6 +3341,7 @@ export async function getKpiSummary(
   const url = `${baseUrl.replace(/\/$/, '')}/instructor/kpis/summary?window=${window}`;
   const res = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: { Accept: 'application/json', ...authHeaders },
   });
   if (res.status === 401) {
@@ -2858,6 +3359,472 @@ export async function getKpiSummary(
     const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
     err.status = res.status;
     throw err;
+  }
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AI Booking Drafts (structured booking proposals from AI)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface BookingDraftItem {
+  id: string;
+  conversationId: string;
+  messageId: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number | null;
+  partySize: number;
+  skillLevel: string | null;
+  lessonType: string | null;
+  sport: string | null;
+  resort: string | null;
+  meetingPointText: string | null;
+  serviceId: string | null;
+  meetingPointId: string | null;
+  extractionConfidence: number;
+  draftReason: string;
+  status: 'pending_review' | 'confirmed' | 'rejected' | 'expired';
+  aiCustomerReply: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  confirmedBookingId: string | null;
+}
+
+/** Response from GET /instructor/availability/check */
+export interface AvailabilityCheckResponse {
+  ok?: boolean;
+  hasConflict: boolean;
+  availabilityUnknown?: boolean;
+  conflicts?: Array<{
+    source: string;
+    start_time: string;
+    end_time: string;
+    duration_minutes: number;
+    title: string | null;
+    provider: string | null;
+  }>;
+}
+
+/**
+ * Check if a time window has availability conflicts (for confirm-draft flow).
+ * GET /instructor/availability/check with start_utc/end_utc or date+start_time+duration_minutes.
+ */
+export async function checkAvailability(params: {
+  start_utc: string;
+  end_utc: string;
+}): Promise<AvailabilityCheckResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const qs = new URLSearchParams({
+    start_utc: params.start_utc,
+    end_utc: params.end_utc,
+  }).toString();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/availability/check?${qs}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (res.status === 401 || res.status === 403) {
+    const err: any = new Error(res.status === 401 ? 'UNAUTHORIZED' : 'ONBOARDING_REQUIRED');
+    err.status = res.status;
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error((body as { message?: string })?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json() as AvailabilityCheckResponse;
+  return {
+    hasConflict: data.hasConflict ?? false,
+    availabilityUnknown: data.availabilityUnknown ?? false,
+    conflicts: data.conflicts ?? [],
+  };
+}
+
+export async function getBookingDrafts(
+  opts?: { status?: string }
+): Promise<BookingDraftItem[]> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const qs = opts?.status ? `?status=${encodeURIComponent(opts.status)}` : '';
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/booking-drafts${qs}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return data.drafts ?? [];
+}
+
+export async function getBookingDraftCount(): Promise<number> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) return 0;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/booking-drafts/count`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) return 0;
+  const data = await res.json();
+  return data.count ?? 0;
+}
+
+export async function confirmBookingDraft(draftId: string): Promise<{ bookingId: string; alreadyConfirmed: boolean }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/booking-drafts/${encodeURIComponent(draftId)}/confirm`;
+  const res = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: '{}',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return { bookingId: data.bookingId, alreadyConfirmed: data.alreadyConfirmed ?? false };
+}
+
+export async function rejectBookingDraftApi(draftId: string): Promise<BookingDraftItem> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) {
+    const err: any = new Error('Not authenticated');
+    err.status = 401;
+    throw err;
+  }
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, '')}/instructor/booking-drafts/${encodeURIComponent(draftId)}/reject`;
+  const res = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: '{}',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err: any = new Error(body?.message ?? `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return data.draft;
+}
+
+// ── Stripe Connect ──────────────────────────────────────────────────────────
+
+export interface StripeConnectStatusResponse {
+  status: 'not_connected' | 'pending' | 'enabled' | 'restricted';
+  chargesEnabled: boolean;
+  detailsSubmitted: boolean;
+}
+
+export async function getStripeConnectStatus(): Promise<StripeConnectStatusResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/stripe/connect/status`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function initiateStripeConnect(): Promise<{ url: string; stripeAccountId: string }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/stripe/connect`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: '{}',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function refreshStripeConnect(): Promise<{ url: string }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/stripe/connect/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: '{}',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── WhatsApp (linked number) ─────────────────────────────────────────────────
+
+export interface WhatsappAccount {
+  phone_number: string;
+  status: string;
+}
+
+export async function getWhatsappAccount(): Promise<WhatsappAccount | null> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/whatsapp`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.ok && data.account ? data.account : null;
+}
+
+export async function connectWhatsapp(phoneNumber: string): Promise<WhatsappAccount> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/whatsapp/connect`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({ phone_number: phoneNumber.trim() }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  if (!data.ok || !data.account) throw new Error('Invalid response');
+  return data.account;
+}
+
+// ── Payment Links ───────────────────────────────────────────────────────────
+
+export interface PaymentLinkResponse {
+  url: string;
+  checkoutSessionId: string;
+}
+
+export interface BookingPaymentInfo {
+  paymentStatus: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded';
+  checkoutSessionId: string | null;
+  paymentUrl: string | null;
+  paidAt: string | null;
+  chargeId: string | null;
+}
+
+export async function generatePaymentLink(
+  bookingId: string,
+  amount: number,
+  currency: string = 'eur',
+  description?: string,
+): Promise<PaymentLinkResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/bookings/${encodeURIComponent(bookingId)}/payment-link`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: JSON.stringify({ amount, currency, description }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getBookingPaymentInfo(bookingId: string): Promise<BookingPaymentInfo> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/bookings/${encodeURIComponent(bookingId)}/payment`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── KPI Endpoints (read-only) ───────────────────────────────────────────────
+
+export type KpiWindow = '7d' | '30d' | '90d';
+
+export interface BusinessKpiResponse {
+  window: KpiWindow;
+  revenue_cents: number;
+  paid_bookings: number;
+  completed_lessons: number;
+  completion_rate: number;
+  avg_booking_value_cents: number;
+  repeat_customer_rate: number;
+}
+
+export interface RevenueKpiResponse {
+  window: KpiWindow;
+  paid_bookings: number;
+  total_revenue_cents: number;
+  avg_booking_value_cents: number;
+  currency: string | null;
+}
+
+export interface FunnelKpiResponse {
+  window: KpiWindow;
+  created: number;
+  confirmed: number;
+  cancelled: number;
+  declined: number;
+  conversion_rate: number;
+  cancellation_rate: number;
+}
+
+async function fetchKpi<T>(path: string, window: KpiWindow): Promise<T> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/kpis/${path}?window=${window}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export function getBusinessKpi(window: KpiWindow): Promise<BusinessKpiResponse> {
+  return fetchKpi<BusinessKpiResponse>('business', window);
+}
+
+export function getRevenueKpi(window: KpiWindow): Promise<RevenueKpiResponse> {
+  return fetchKpi<RevenueKpiResponse>('revenue', window);
+}
+
+export function getFunnelKpi(window: KpiWindow): Promise<FunnelKpiResponse> {
+  return fetchKpi<FunnelKpiResponse>('funnel', window);
+}
+
+// ── AI feature status (global toggle) ─────────────────────────────────────
+
+export interface AIFeatureStatusResponse {
+  ok: boolean;
+  enabled: boolean;
+  canToggle: boolean;
+  ai_whatsapp_enabled?: boolean;
+}
+
+/**
+ * GET /instructor/ai-status — current AI flag and whether user can toggle it.
+ */
+export async function getAIFeatureStatus(): Promise<AIFeatureStatusResponse> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/ai-status`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * PATCH /instructor/ai-status — set AI enabled. Body { enabled: boolean }.
+ * Throws on 403 (cannot toggle) or other errors.
+ */
+export async function setAIFeatureStatus(enabled: boolean): Promise<{ ok: boolean; enabled: boolean }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/ai-status`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * POST /instructor/ai/toggle-whatsapp — set AI WhatsApp enabled. Body { enabled: boolean }.
+ * Returns { enabled: boolean }. Throws on error.
+ */
+export async function setAIWhatsAppEnabled(enabled: boolean): Promise<{ enabled: boolean }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/ai/toggle-whatsapp`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
   }
   return res.json();
 }

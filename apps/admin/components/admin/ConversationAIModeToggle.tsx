@@ -61,13 +61,13 @@ export default function ConversationAIModeToggle({
         alignItems: 'center',
         gap: '0.75rem',
         padding: '0.75rem',
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '6px',
         backgroundColor: '#ffffff',
       }}
     >
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '0.25rem' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
           AI Mode
         </div>
         <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>

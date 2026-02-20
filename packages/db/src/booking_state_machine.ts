@@ -1,6 +1,6 @@
 /**
  * Booking state machine. Aligned with DB CHECK:
- * status IN ('draft', 'pending', 'confirmed', 'cancelled', 'modified', 'declined')
+ * status IN ('draft', 'pending', 'confirmed', 'cancelled', 'modified', 'declined', 'completed')
  */
 
 export type BookingState =
@@ -9,7 +9,8 @@ export type BookingState =
   | 'confirmed'
   | 'cancelled'
   | 'modified'
-  | 'declined';
+  | 'declined'
+  | 'completed';
 
 export class InvalidBookingTransitionError extends Error {
   code = 'INVALID_BOOKING_TRANSITION';
@@ -21,23 +22,25 @@ export class InvalidBookingTransitionError extends Error {
 }
 
 /**
- * Allowed transitions (matches DB and instructor API):
- * - draft → pending
- * - pending → confirmed
- * - pending → declined
- * - confirmed → modified
- * - confirmed → cancelled
- * - modified → modified
- * - modified → cancelled
- * - cancelled, declined: terminal (no outgoing transitions)
+ * Allowed transitions for instructor manual overrides.
+ *
+ * Instructors have full control over their bookings:
+ * - draft → pending, confirmed, cancelled
+ * - pending → confirmed, declined, cancelled
+ * - confirmed → modified, cancelled, completed
+ * - modified → confirmed, modified, cancelled, completed
+ * - cancelled → draft, pending          (reopen)
+ * - declined → draft, pending           (reopen)
+ * - completed → (terminal, no outgoing)
  */
 const ALLOWED_TRANSITIONS: Record<BookingState, readonly BookingState[]> = {
-  draft: ['pending'],
-  pending: ['confirmed', 'declined'],
-  confirmed: ['modified', 'cancelled'],
-  modified: ['modified', 'cancelled'],
-  cancelled: [],
-  declined: [],
+  draft: ['pending', 'confirmed', 'cancelled'],
+  pending: ['confirmed', 'declined', 'cancelled'],
+  confirmed: ['modified', 'cancelled', 'completed'],
+  modified: ['confirmed', 'modified', 'cancelled', 'completed'],
+  cancelled: ['draft', 'pending'],
+  declined: ['draft', 'pending'],
+  completed: [],
 };
 
 /**
@@ -71,7 +74,7 @@ export function canTransition(
 }
 
 /** Terminal states: no outgoing transitions. */
-const TERMINAL_STATES: ReadonlySet<BookingState> = new Set(['cancelled', 'declined']);
+const TERMINAL_STATES: ReadonlySet<BookingState> = new Set(['cancelled', 'declined', 'completed']);
 
 /**
  * Returns true if the state is terminal (cancelled or declined).

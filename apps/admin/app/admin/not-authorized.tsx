@@ -29,7 +29,7 @@ export default function NotAuthorized() {
         <h1 style={{ 
           fontSize: '1.5rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.5rem',
         }}>
           Access Denied

@@ -114,7 +114,8 @@ export async function instructorConversationsHandoffRoutes(
           message: err.message,
         });
       }
-      const normalized = normalizeError(err);
+      const e = err instanceof Error ? err : new Error(String(err));
+      const normalized = normalizeError(e);
       return reply
         .status(mapErrorToHttp(normalized.error))
         .send({ ok: false, error: normalized.error, message: normalized.message });

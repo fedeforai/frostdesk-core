@@ -38,10 +38,10 @@ export default function InstructorAppError({
       >
         <h1 style={{ fontSize: 18, marginBottom: 8 }}>Qualcosa è andato storto</h1>
         <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 16 }}>
-          {error.message || 'Errore di caricamento'}
+          {error.message || 'Loading error'}
         </p>
         <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
-          Se l&apos;API non è avviata, esegui: <code style={{ background: '#1e293b', padding: '2px 6px', borderRadius: 4 }}>pnpm --filter @frostdesk/api dev</code>
+          If the API is not running, execute: <code style={{ background: '#1e293b', padding: '2px 6px', borderRadius: 4 }}>pnpm --filter @frostdesk/api dev</code>
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button
@@ -57,7 +57,7 @@ export default function InstructorAppError({
               cursor: 'pointer',
             }}
           >
-            Riprova
+            Retry
           </button>
           <Link
             href="/instructor/dashboard"

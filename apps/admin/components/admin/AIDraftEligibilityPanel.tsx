@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * AI Draft Eligibility Panel (PILOT-SAFE, READ-ONLY)
+ * AI Draft Eligibility Panel (READ-ONLY)
  * 
  * Displays draft eligibility and escalation status based on AI snapshot.
  * 
@@ -163,7 +163,7 @@ export default function AIDraftEligibilityPanel({
           <h2 style={{
             fontSize: '1.25rem',
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
             margin: '0 0 1rem 0',
           }}>
             AI Draft

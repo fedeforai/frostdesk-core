@@ -7,7 +7,9 @@ import {
   getHotLeads,
   getLatestConversation,
   getKpiSummary,
+  getFunnelKpi,
   type InstructorConversation,
+  type FunnelKpiResponse,
 } from '@/lib/instructorApi';
 import { usePolling } from '@/lib/usePolling';
 import HomeDashboard from './HomeDashboard';
@@ -36,6 +38,7 @@ export default function InstructorDashboardClient() {
     { value: '0%', label: 'Draft usage rate' },
   ]);
   const [kpiPollingBlocked, setKpiPollingBlocked] = useState(false);
+  const [funnel, setFunnel] = useState<FunnelKpiResponse | null>(null);
 
   const loadKpiSummary = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true;
@@ -70,6 +73,21 @@ export default function InstructorDashboardClient() {
     !kpiPollingBlocked
   );
 
+  const loadFunnel = useCallback(async () => {
+    try {
+      const data = await getFunnelKpi('7d');
+      setFunnel(data);
+    } catch {
+      setFunnel(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadFunnel();
+  }, [loadFunnel]);
+
+  const CONVERSATIONS_TIMEOUT_MS = 15_000;
+
   const loadConversations = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true;
     if (!silent) {
@@ -77,7 +95,12 @@ export default function InstructorDashboardClient() {
       setLoading(true);
     }
     try {
-      const list = await getConversations();
+      const list = await Promise.race([
+        getConversations(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timed out')), CONVERSATIONS_TIMEOUT_MS)
+        ),
+      ]);
       setConversations(list);
     } catch (e: unknown) {
       const err = e as { status?: number; message?: string };
@@ -150,6 +173,8 @@ export default function InstructorDashboardClient() {
       empty={empty}
       onRetry={() => void loadConversations()}
       kpiTiles={kpiTiles}
+      funnel={funnel}
+      funnelPrimaryHref="/instructor/bookings/new"
     />
   );
 }

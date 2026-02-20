@@ -28,7 +28,7 @@ export function BookingAuditLogsTable({ items }: { items: BookingAuditLogRow[] }
         <tr>
           <th style={thStyle}>Data</th>
           <th style={thStyle}>Azione</th>
-          <th style={thStyle}>ID prenotazione</th>
+          <th style={thStyle}>Booking ID</th>
           <th style={thStyle}>ID richiesta</th>
         </tr>
       </thead>
@@ -36,7 +36,7 @@ export function BookingAuditLogsTable({ items }: { items: BookingAuditLogRow[] }
         {items.length === 0 ? (
           <tr>
             <td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'rgba(148, 163, 184, 0.92)', padding: '2rem' }}>
-              Nessun log di audit.
+              No audit logs.
             </td>
           </tr>
         ) : (
@@ -58,7 +58,7 @@ function formatDate(iso: string): string {
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleString('it-IT', {
+    return d.toLocaleString('en-GB', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

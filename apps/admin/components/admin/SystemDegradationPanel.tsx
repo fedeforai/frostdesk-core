@@ -9,7 +9,7 @@ interface SystemDegradationPanelProps {
 export default function SystemDegradationPanel({ snapshot }: SystemDegradationPanelProps) {
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -20,13 +20,13 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1.5rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         <h2 style={{ 
           fontSize: '1.5rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           System Degradation Signals
         </h2>
@@ -37,7 +37,7 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           Webhook Stability (last 24h)
@@ -48,14 +48,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               Inbound Messages
             </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
               {snapshot.webhook.inbound_received_24h}
             </span>
           </div>
@@ -65,14 +65,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               Webhook Errors
             </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
               {snapshot.webhook.inbound_errors_24h}
             </span>
           </div>
@@ -84,7 +84,7 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           AI Draft Stability
@@ -95,14 +95,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               Drafts Generated
             </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
               {snapshot.ai_drafts.drafts_generated_24h}
             </span>
           </div>
@@ -112,14 +112,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.75rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           }}>
-            <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
               Draft Errors
             </span>
-            <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+            <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
               {snapshot.ai_drafts.draft_errors_24h}
             </span>
           </div>
@@ -131,7 +131,7 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           Escalation Pressure
@@ -141,14 +141,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Escalations Triggered
           </span>
-          <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
             {snapshot.escalation.escalations_24h}
           </span>
         </div>
@@ -159,7 +159,7 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
         <h3 style={{ 
           fontSize: '1rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.75rem',
         }}>
           Quota Stress
@@ -169,14 +169,14 @@ export default function SystemDegradationPanel({ snapshot }: SystemDegradationPa
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Quota Exceeded Events
           </span>
-          <span style={{ color: '#111827', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '1rem', fontFamily: 'monospace', fontWeight: '600' }}>
             {snapshot.quota.quota_exceeded_24h}
           </span>
         </div>

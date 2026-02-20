@@ -21,9 +21,9 @@ const pageStyles = {
 export default function InstructorBookingsPage() {
   return (
     <div style={pageStyles.wrap}>
-      <h1 style={pageStyles.title}>Prenotazioni</h1>
+      <h1 style={pageStyles.title}>Bookings</h1>
       <p style={pageStyles.subtitle}>
-        Crea, modifica e gestisci le lezioni. Cambia stato o annulla dalla tabella.
+        Create, edit and manage lessons. Change status or cancel from the table.
       </p>
       <BookingsSection />
     </div>

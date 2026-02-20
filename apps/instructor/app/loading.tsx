@@ -10,7 +10,7 @@ export default function RootLoading() {
         fontSize: 14,
       }}
     >
-      Caricamento…
+      Loading…
     </div>
   );
 }

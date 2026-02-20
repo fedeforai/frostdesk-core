@@ -60,10 +60,10 @@ export default function ReplyInput({
   return (
     <div
       style={{
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: '0.5rem',
         padding: '1rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
         marginTop: '1rem',
       }}
     >
@@ -79,7 +79,7 @@ export default function ReplyInput({
           style={{
             width: '100%',
             padding: '0.75rem',
-            border: '1px solid #d1d5db',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '0.375rem',
             fontSize: '0.875rem',
             fontFamily: 'inherit',

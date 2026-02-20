@@ -24,17 +24,23 @@ export async function requireAdmin(): Promise<void> {
     throw { code: 'UNAUTHENTICATED' as const };
   }
 
+  const ADMIN_CHECK_TIMEOUT_MS = 8_000;
+
   let response: Response;
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ADMIN_CHECK_TIMEOUT_MS);
     response = await fetch(`${API_BASE_URL}/admin/check`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
   } catch {
-    // API non raggiungibile: tratta come non autenticato così l'utente può riprovare dal login
+    // Timeout o API non raggiungibile: redirect a login così l'utente può riprovare (evita 504 da Vercel)
     throw { code: 'UNAUTHENTICATED' as const };
   }
 

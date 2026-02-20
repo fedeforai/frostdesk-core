@@ -88,7 +88,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
   };
 
   return (
-    <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', marginTop: '2rem' }}>
+    <div style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.25rem', padding: '1.5rem', marginTop: '2rem' }}>
       <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '600' }}>Override Booking Status</h2>
       
       <form onSubmit={(e) => e.preventDefault()}>
@@ -113,7 +113,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '0.25rem',
               fontSize: '1rem',
               outline: 'none',
@@ -123,7 +123,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
               e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
               e.currentTarget.style.boxShadow = 'none';
             }}
           >
@@ -150,7 +150,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '0.25rem',
               fontSize: '1rem',
               fontFamily: 'inherit',
@@ -161,7 +161,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
               e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
               e.currentTarget.style.boxShadow = 'none';
             }}
           />
@@ -205,7 +205,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
           aria-label="Override booking status"
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: loading || !newStatus ? '#d1d5db' : '#dc2626',
+            backgroundColor: loading || !newStatus ? 'rgba(255, 255, 255, 0.12)' : '#dc2626',
             color: 'white',
             border: 'none',
             borderRadius: '0.25rem',
@@ -250,7 +250,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
         >
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
               padding: '2rem',
               borderRadius: '0.5rem',
               maxWidth: '500px',
@@ -272,9 +272,9 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
                 aria-label="Cancel status override"
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: '#f3f4f6',
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
                   color: '#374151',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   borderRadius: '0.25rem',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
@@ -299,7 +299,7 @@ export default function BookingStatusOverride({ bookingId, currentStatus, userRo
                 aria-label="Confirm status override"
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: loading ? '#d1d5db' : '#dc2626',
+                  backgroundColor: loading ? 'rgba(255, 255, 255, 0.12)' : '#dc2626',
                   color: 'white',
                   border: 'none',
                   borderRadius: '0.25rem',

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  fetchCalendarConnection,
   fetchCalendarEvents,
   type CalendarEvent,
   type InstructorCalendarConnection,
@@ -26,31 +25,55 @@ export default function CalendarPage() {
     try {
       setLoading(true);
       setError(null);
-
-      const conn = await fetchCalendarConnection();
-      setConnection(conn?.id ? conn : null);
-
-      if (conn?.id) {
-        try {
-          const eventsData = await fetchCalendarEvents();
-          setEvents(eventsData);
-        } catch (fetchErr: any) {
-          if (fetchErr?.status === 400) setEvents([]);
-          else setEvents([]);
+      
+      // Try to fetch events - if successful, we have a connection
+      // If it fails with specific error, we don't have a connection
+      try {
+        const eventsData = await fetchCalendarEvents();
+        setEvents(eventsData);
+        
+        // If we can fetch events, we have a connection
+        // Note: We don't have connection details (provider/calendar_id) without a GET endpoint
+        // Connection details will be shown after connecting (stored in state)
+        // For now, we'll use a placeholder to indicate connection exists
+        if (!connection) {
+          // Connection exists but we don't have details - will be shown after connect
+          setConnection({
+            id: '',
+            provider: 'google',
+            calendar_id: '',
+            expires_at: null,
+            created_at: '',
+            updated_at: '',
+          });
         }
-      } else {
-        setEvents([]);
+      } catch (fetchErr: any) {
+        const status = fetchErr.status || 500;
+        if (status === 400) {
+          // No connection
+          setConnection(null);
+          setEvents([]);
+        } else {
+          throw fetchErr;
+        }
       }
     } catch (err: any) {
-      if (typeof err?.status === 'number' && err.status === 401) {
-        router.push('/instructor/login');
+      const status = err.status || 500;
+
+      // 401 → redirect to login
+      if (status === 401) {
+        router.push('/login');
         return;
       }
-      if (typeof err?.status === 'number' && err.status === 403) {
+
+      // 403 → static "Not authorized"
+      if (status === 403) {
         setError('Not authorized');
         return;
       }
-      setError(err?.message === 'Failed to fetch' ? 'Cannot reach API. Check connection.' : 'Unable to load calendar data');
+
+      // 500 → static error
+      setError('Unable to load calendar data');
     } finally {
       setLoading(false);
     }

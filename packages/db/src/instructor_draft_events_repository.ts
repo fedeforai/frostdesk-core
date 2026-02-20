@@ -23,7 +23,7 @@ export async function insertInstructorDraftEvent(
   `;
 }
 
-export type KpiWindow = '7d' | '30d';
+export type KpiWindow = '7d' | '30d' | '90d';
 
 export interface InstructorDraftKpiSummary {
   generated: number;

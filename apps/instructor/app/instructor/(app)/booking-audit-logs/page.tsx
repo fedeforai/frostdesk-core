@@ -19,7 +19,7 @@ export default function BookingAuditLogsPage() {
       setItems(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
-      const raw = e?.message ?? 'Impossibile caricare i log di audit';
+      const raw = e?.message ?? 'Unable to load audit logs';
       if (e?.status === 401 || /UNAUTHORIZED|No session/i.test(raw)) {
         setError('UNAUTHORIZED');
         setItems([]);
@@ -34,7 +34,7 @@ export default function BookingAuditLogsPage() {
       const isConnectionError =
         /Failed to fetch|Load failed|NetworkError|audit|could not be loaded/i.test(raw);
       setError(isConnectionError
-        ? 'Connessione non riuscita. Verifica che il servizio sia disponibile e riprova.'
+        ? 'Connection failed. Verify that the service is available and retry.'
         : raw);
     } finally {
       setLoading(false);
@@ -48,7 +48,7 @@ export default function BookingAuditLogsPage() {
   if (loading && items.length === 0 && !error) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Caricamento…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Loading…</p>
       </div>
     );
   }
@@ -56,10 +56,10 @@ export default function BookingAuditLogsPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
-        Log di audit prenotazioni
+        Booking Audit Logs
       </h1>
       <p style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.92)', marginBottom: '1.5rem' }}>
-        Storico delle azioni sulle prenotazioni per tracciabilità.
+        History of actions on bookings for traceability.
       </p>
 
       {error && (
@@ -78,7 +78,7 @@ export default function BookingAuditLogsPage() {
         }}>
           <span>
             {error === 'UNAUTHORIZED' ? (
-              <>Sessione scaduta o non autenticato. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Accedi</Link></>
+              <>Session expired or not authenticated. <Link href="/instructor/login" style={{ color: '#7dd3fc', textDecoration: 'underline' }}>Login</Link></>
             ) : (
               error
             )}
@@ -98,7 +98,7 @@ export default function BookingAuditLogsPage() {
                 fontSize: '0.8125rem',
               }}
             >
-              Riprova
+              Retry
             </button>
           )}
         </div>

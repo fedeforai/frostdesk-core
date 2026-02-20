@@ -41,7 +41,7 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
   if (!quota) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
         backgroundColor: '#ffffff',
@@ -52,22 +52,22 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
           justifyContent: 'space-between', 
           alignItems: 'center',
           marginBottom: '1rem',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
         }}>
           <h2 style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}>
             AI Quota
           </h2>
         </div>
         <div style={{
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           color: '#6b7280',
           fontSize: '0.875rem',
         }}>
@@ -85,7 +85,7 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -96,13 +96,13 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
         }}>
           AI Quota
         </h2>
@@ -126,11 +126,11 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Channel
           </span>
           <span style={{ color: '#6b7280', fontSize: '0.875rem', textTransform: 'capitalize' }}>
@@ -143,11 +143,11 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Used / Max
           </span>
           <span style={{ color: '#6b7280', fontSize: '0.875rem', fontFamily: 'monospace' }}>
@@ -160,11 +160,11 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0.75rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <span style={{ color: '#111827', fontSize: '0.875rem', fontWeight: '500' }}>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.875rem', fontWeight: '500' }}>
             Percentage
           </span>
           <span style={{ color: '#6b7280', fontSize: '0.875rem', fontFamily: 'monospace' }}>

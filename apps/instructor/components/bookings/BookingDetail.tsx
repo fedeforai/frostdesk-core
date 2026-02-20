@@ -8,6 +8,7 @@ import { updateInstructorBooking, cancelInstructorBooking } from '@/lib/instruct
 type BookingDetailProps = {
   booking: {
     id: string;
+    conversation_id?: string | null;
     customer_name: string | null;
     customer_display_name?: string | null;
     customer_phone?: string | null;
@@ -17,9 +18,37 @@ type BookingDetailProps = {
     notes: string | null;
     service_id?: string | null;
     meeting_point_id?: string | null;
+    duration_minutes?: number | null;
+    party_size?: number | null;
+    skill_level?: string | null;
+    amount_cents?: number | null;
+    currency?: string | null;
   };
   onSaved?: () => void;
 };
+
+const cardStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.03)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: 12,
+  padding: '1.25rem 1.5rem',
+  marginBottom: '1.25rem',
+};
+const labelStyle: React.CSSProperties = { fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.25rem' };
+const valueStyle: React.CSSProperties = { fontSize: '0.9375rem', color: 'rgba(226, 232, 240, 0.95)', fontWeight: 500 };
+const rowStyle: React.CSSProperties = { marginBottom: '1rem' };
+
+function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', hour12: false });
+}
+function formatTimeRange(start: string | null | undefined, end: string | null | undefined): string {
+  if (!start || !end) return formatDateTime(start) || formatDateTime(end) || '—';
+  const s = new Date(start);
+  const e = new Date(end);
+  return `${s.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', hour12: false })} – ${e.toLocaleTimeString('en-GB', { timeStyle: 'short', hour12: false })}`;
+}
 
 /** Prefer join-sourced customer info, fallback to legacy customer_name. */
 function bookingCustomerLabel(booking: BookingDetailProps['booking']): string {
@@ -73,7 +102,11 @@ export function BookingDetail({ booking, onSaved }: BookingDetailProps) {
       onSaved?.();
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      if ((e as any)?.code === 'BILLING_BLOCKED') {
+        setError('Subscription required. Contact support to activate billing.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to save');
+      }
     } finally {
       setSaving(false);
     }
@@ -105,163 +138,203 @@ export function BookingDetail({ booking, onSaved }: BookingDetailProps) {
       onSaved?.();
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to cancel booking');
+      if ((e as any)?.code === 'BILLING_BLOCKED') {
+        setError('Subscription required. Contact support to activate billing.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to cancel booking');
+      }
     } finally {
       setCancelling(false);
     }
   }
 
+  const hasConversation = Boolean(booking.conversation_id?.trim());
+
   return (
     <section>
-      <h2>Booking details</h2>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
+        Booking details
+      </h2>
+
       {successMessage && (
-        <p style={{ marginBottom: '0.5rem', padding: '0.5rem 0.75rem', background: '#d1fae5', color: '#065f46', borderRadius: '0.375rem', fontSize: '0.875rem' }}>
+        <p style={{ marginBottom: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(34, 197, 94, 0.15)', color: 'rgba(74, 222, 128, 0.95)', borderRadius: 8, fontSize: '0.875rem' }}>
           {successMessage}
         </p>
       )}
-      {error && <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{error}</p>}
+      {error && <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginBottom: '0.75rem' }}>{error}</p>}
 
-      {editing ? (
-        <div style={{ maxWidth: '28rem' }}>
-          <p style={{ marginBottom: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>
-            <strong>Customer:</strong> {bookingCustomerLabel(booking)} (read-only)
-          </p>
-          <div style={{ marginBottom: '0.75rem' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Start</label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
-            />
-          </div>
-          <div style={{ marginBottom: '0.75rem' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>End</label>
-            <input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
-            />
-          </div>
-          <div style={{ marginBottom: '0.75rem' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Notes</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
-            />
-          </div>
-          {isDirty && (
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>Unsaved changes</p>
-          )}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || !isDirty}
-              style={{
-                padding: '0.5rem 0.75rem',
-                background: isDirty && !saving ? '#111827' : '#9ca3af',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: saving || !isDirty ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-              }}
-            >
-              {saving ? 'Saving…' : (booking.status === 'confirmed' || booking.status === 'modified' ? 'Save changes' : 'Save')}
-            </button>
-            <button
-              type="button"
-              onClick={handleDiscardEdit}
-              disabled={saving}
-              style={{
-                padding: '0.5rem 0.75rem',
-                background: '#f3f4f6',
-                color: '#374151',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-              }}
-            >
-              Discard
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <p><strong>Customer:</strong> {bookingCustomerLabel(booking)}</p>
-          <p><strong>Start:</strong> {booking.start_time}</p>
-          <p><strong>End:</strong> {booking.end_time}</p>
-          <p>
-            <strong>Status:</strong>{' '}
-            <span
-              style={{
-                display: 'inline-block',
-                padding: '0.2rem 0.5rem',
-                borderRadius: '0.25rem',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                ...(isCancelled
-                  ? { background: '#fef2f2', color: '#991b1b' }
-                  : booking.status === 'modified'
-                    ? { background: '#eff6ff', color: '#1d4ed8' }
-                    : { background: '#f3f4f6', color: '#374151' }),
-              }}
-            >
-              {booking.status}
-            </span>
-          </p>
-          <p><strong>Notes:</strong> {booking.notes ?? '—'}</p>
-          {!isCancelled && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              style={{
-                marginTop: '0.5rem',
-                marginRight: '0.5rem',
-                padding: '0.5rem 0.75rem',
-                background: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-              }}
-            >
-              Edit
-            </button>
-          )}
-          {canCancelBooking && (
-            <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+      <div style={cardStyle}>
+        <div style={{ ...rowStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <div style={labelStyle}>Booking ID</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <code style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: '#7dd3fc', background: 'rgba(15, 23, 42, 0.6)', padding: '0.25rem 0.5rem', borderRadius: 6 }}>
+                {booking.id}
+              </code>
               <button
                 type="button"
-                onClick={() => void handleCancelBooking()}
-                disabled={cancelling}
-                title="Permanently cancel this booking"
-                aria-label="Cancel booking — permanent and irreversible"
+                onClick={() => { navigator.clipboard.writeText(booking.id).catch(() => {}); }}
                 style={{
-                  padding: '0.5rem 0.75rem',
-                  background: '#b91c1c',
-                  color: '#fff',
-                  border: '2px solid #991b1b',
-                  borderRadius: '0.375rem',
-                  cursor: cancelling ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
+                  padding: '0.2rem 0.5rem',
+                  fontSize: '0.75rem',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: 6,
+                  color: 'rgba(148, 163, 184, 0.95)',
+                  cursor: 'pointer',
                 }}
+                aria-label="Copy booking ID"
               >
-                {cancelling ? 'Cancelling…' : '⚠ Cancel booking (irreversible)'}
+                Copy
               </button>
             </div>
+          </div>
+          {hasConversation && (
+            <Link
+              href={`/instructor/inbox/${booking.conversation_id}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0.5rem 1rem',
+                background: 'rgba(59, 130, 246, 0.2)',
+                color: '#93c5fd',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                textDecoration: 'none',
+              }}
+            >
+              Open conversation
+            </Link>
           )}
-        </>
-      )}
+        </div>
 
-      <p style={{ marginTop: '1rem' }}>
-        <Link href="/instructor/bookings" style={{ color: '#2563eb', textDecoration: 'underline', fontSize: '0.875rem' }}>
+        {editing ? (
+          <div style={{ maxWidth: '28rem', marginTop: '1rem' }}>
+            <div style={rowStyle}>
+              <div style={labelStyle}>Customer</div>
+              <div style={valueStyle}>{bookingCustomerLabel(booking)} (read-only)</div>
+            </div>
+            <div style={rowStyle}>
+              <label style={labelStyle}>Start</label>
+              <input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: 8, background: 'rgba(0,0,0,0.2)', color: 'rgba(226, 232, 240, 0.95)' }}
+              />
+            </div>
+            <div style={rowStyle}>
+              <label style={labelStyle}>End</label>
+              <input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: 8, background: 'rgba(0,0,0,0.2)', color: 'rgba(226, 232, 240, 0.95)' }}
+              />
+            </div>
+            <div style={rowStyle}>
+              <label style={labelStyle}>Notes</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: 8, background: 'rgba(0,0,0,0.2)', color: 'rgba(226, 232, 240, 0.95)' }}
+              />
+            </div>
+            {isDirty && <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.5rem' }}>Unsaved changes</p>}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <button type="button" onClick={handleSave} disabled={saving || !isDirty} style={{ padding: '0.5rem 1rem', background: isDirty && !saving ? '#3b82f6' : 'rgba(148, 163, 184, 0.5)', color: '#fff', border: 'none', borderRadius: 8, cursor: saving || !isDirty ? 'not-allowed' : 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+              <button type="button" onClick={handleDiscardEdit} disabled={saving} style={{ padding: '0.5rem 1rem', background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: 8, color: 'rgba(226, 232, 240, 0.95)', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '0.875rem' }}>
+                Discard
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={rowStyle}>
+              <div style={labelStyle}>Customer</div>
+              <div style={valueStyle}>{bookingCustomerLabel(booking)}</div>
+            </div>
+            <div style={rowStyle}>
+              <div style={labelStyle}>Start – End</div>
+              <div style={valueStyle}>{formatTimeRange(booking.start_time, booking.end_time)}</div>
+            </div>
+
+            {(booking.duration_minutes || (booking.party_size && booking.party_size > 1) || booking.skill_level) && (
+              <div style={{ ...rowStyle, padding: '0.75rem 1rem', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(148, 163, 184, 0.12)', borderRadius: 8 }}>
+                <div style={{ ...labelStyle, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Lesson details</div>
+                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
+                  {booking.duration_minutes && <span>Duration: {booking.duration_minutes} min</span>}
+                  {booking.party_size != null && <span>Group size: {booking.party_size}</span>}
+                  {booking.skill_level && <span>Skill level: {booking.skill_level}</span>}
+                </div>
+              </div>
+            )}
+
+            <div style={rowStyle}>
+              <div style={labelStyle}>Status</div>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: 6,
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  ...(isCancelled ? { background: 'rgba(239, 68, 68, 0.15)', color: 'rgba(252, 165, 165, 0.95)' }
+                    : booking.status === 'modified' || booking.status === 'completed' ? { background: 'rgba(59, 130, 246, 0.15)', color: 'rgba(147, 197, 253, 0.95)' }
+                    : { background: 'rgba(255, 255, 255, 0.06)', color: 'rgba(226, 232, 240, 0.95)' }),
+                }}
+              >
+                {booking.status}
+              </span>
+            </div>
+            <div style={rowStyle}>
+              <div style={labelStyle}>Notes</div>
+              <div style={{ ...valueStyle, whiteSpace: 'pre-wrap' }}>{booking.notes ?? '—'}</div>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <Link href={`/instructor/booking-lifecycle?bookingId=${booking.id}`} style={{ fontSize: '0.875rem', color: '#7dd3fc', textDecoration: 'none' }}>View lifecycle</Link>
+              {!isCancelled && (
+                <button type="button" onClick={() => setEditing(true)} style={{ padding: '0.4rem 0.75rem', background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: 8, color: 'rgba(226, 232, 240, 0.95)', cursor: 'pointer', fontSize: '0.875rem' }}>
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {canCancelBooking && (
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <button
+                  type="button"
+                  onClick={() => void handleCancelBooking()}
+                  disabled={cancelling}
+                  title="Permanently cancel this booking"
+                  aria-label="Cancel booking — permanent and irreversible"
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: 'rgba(185, 28, 28, 0.2)',
+                    color: '#fca5a5',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 8,
+                    cursor: cancelling ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {cancelling ? 'Cancelling…' : 'Cancel booking (irreversible)'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <p style={{ marginTop: '0.5rem' }}>
+        <Link href="/instructor/bookings" style={{ color: '#7dd3fc', textDecoration: 'none', fontSize: '0.875rem' }}>
           ← Back to Bookings
         </Link>
       </p>

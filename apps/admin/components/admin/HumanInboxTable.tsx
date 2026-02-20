@@ -80,23 +80,23 @@ export default function HumanInboxTable({ items }: HumanInboxTableProps) {
       <table 
         role="table"
         aria-label="Human inbox list"
-        style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}
+        style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.1)' }}
       >
         <thead>
           <tr style={{ backgroundColor: '#f9fafb' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
               Channel
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
               Status
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
               Last Message
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
               Direction
             </th>
-            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
               Last Activity
             </th>
           </tr>
@@ -141,22 +141,22 @@ export default function HumanInboxTable({ items }: HumanInboxTableProps) {
                 }}
                 aria-label={`View conversation ${item.conversation_id}`}
               >
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {item.channel}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   <StatusBadge 
                     status={getConversationSemanticStatusFromItem(item)} 
                     size="sm"
                   />
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827', maxWidth: '300px', wordBreak: 'break-word' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', maxWidth: '300px', wordBreak: 'break-word' }}>
                   {truncateText(item.last_message.text)}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {formatDirection(item.last_message.direction)}
                 </td>
-                <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', color: '#111827' }}>
+                <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)' }}>
                   {new Date(item.last_activity_at).toLocaleString()}
                 </td>
               </tr>

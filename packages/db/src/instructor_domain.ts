@@ -90,6 +90,7 @@ export interface AvailabilityWindow {
   start_time: string; // HH:mm
   end_time: string;
   is_active: boolean;
+  meeting_point_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -202,7 +203,7 @@ export interface ComputeSellableSlotsInput {
   from_utc: string;
   to_utc: string;
   timezone: string;
-  availability_windows: Array<Pick<AvailabilityWindow, 'day_of_week' | 'start_time' | 'end_time' | 'is_active'>>;
+  availability_windows: Array<Pick<AvailabilityWindow, 'day_of_week' | 'start_time' | 'end_time' | 'is_active' | 'meeting_point_id'>>;
   overrides: Array<Pick<AvailabilityOverride, 'start_utc' | 'end_utc' | 'is_available'>>;
   bookings: Array<{ start_time: string; end_time: string }>;
   external_busy_blocks: Array<Pick<ExternalBusyBlock, 'start_utc' | 'end_utc'>>;
@@ -217,6 +218,7 @@ export const computeSellableSlotsInputSchema = z.object({
     start_time: z.string(),
     end_time: z.string(),
     is_active: z.boolean(),
+    meeting_point_id: z.string().uuid().nullable().optional(),
   })),
   overrides: z.array(z.object({
     start_utc: z.string(),

@@ -25,7 +25,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
         {items.map((item, index) => (
           <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
             {index > 0 && (
-              <span style={{ margin: '0 0.5rem', color: '#d1d5db' }}>/</span>
+              <span style={{ margin: '0 0.5rem', color: 'rgba(255, 255, 255, 0.12)' }}>/</span>
             )}
             {item.href ? (
               <Link
@@ -55,7 +55,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
                 {item.label}
               </Link>
             ) : (
-              <span style={{ color: '#111827', fontWeight: '500' }} aria-current="page">{item.label}</span>
+              <span style={{ color: 'rgba(226, 232, 240, 0.95)', fontWeight: '500' }} aria-current="page">{item.label}</span>
             )}
           </li>
         ))}

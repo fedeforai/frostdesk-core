@@ -15,7 +15,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
   if (error || !booking) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
         backgroundColor: '#ffffff',
@@ -23,7 +23,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
       }}>
         <div style={{ 
           marginBottom: '1.5rem', 
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
           display: 'flex',
           alignItems: 'center',
@@ -32,7 +32,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
           <h2 style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
             margin: 0,
           }}>
             Booking Details
@@ -42,11 +42,11 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
         <div style={{ 
           padding: '1.5rem', 
           textAlign: 'center',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <p style={{ color: '#374151', fontSize: '0.875rem', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
+          <p style={{ color: 'rgba(148, 163, 184, 0.9)', fontSize: '0.875rem', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
             Booking details could not be loaded
           </p>
           <p style={{ color: '#6b7280', fontSize: '0.75rem', margin: 0 }}>
@@ -57,7 +57,8 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
     );
   }
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: string | null | undefined) => {
+    if (timestamp == null || timestamp === '') return '—';
     try {
       return new Date(timestamp).toLocaleString('en-US', {
         year: 'numeric',
@@ -78,7 +79,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
       backgroundColor: '#ffffff',
@@ -86,7 +87,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
     }}>
       <div style={{ 
         marginBottom: '1.5rem', 
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
         display: 'flex',
         alignItems: 'center',
@@ -95,7 +96,7 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           margin: 0,
         }}>
           Booking Details
@@ -105,19 +106,19 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
       <div style={{ display: 'grid', gap: '1.25rem' }}>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>ID</strong>
-          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#111827' }}>{booking.id}</span>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>{booking.id}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Instructor ID</strong>
-          <span style={{ color: '#111827' }}>{booking.instructor_id}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{booking.instructor_id}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Customer Name</strong>
-          <span style={{ color: '#111827' }}>{booking.customer_name}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{booking.customer_name}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Phone</strong>
-          <span style={{ color: '#111827' }}>{booking.phone}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{booking.phone}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Status</strong>
@@ -127,37 +128,37 @@ export default function BookingDetail({ booking, error = false }: BookingDetailP
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Booking Date</strong>
-          <span style={{ color: '#111827' }}>{formatTimestamp(booking.booking_date)}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(booking.booking_date)}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Start Time</strong>
-          <span style={{ color: '#111827' }}>{formatTimestamp(booking.start_time)}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(booking.start_time)}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>End Time</strong>
-          <span style={{ color: '#111827' }}>{formatTimestamp(booking.end_time)}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(booking.end_time)}</span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Calendar Event ID</strong>
-          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.calendar_event_id ? '#111827' : '#9ca3af' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.calendar_event_id ? 'rgba(226, 232, 240, 0.95)' : '#9ca3af' }}>
             {booking.calendar_event_id || 'N/A'}
           </span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Payment Intent ID</strong>
-          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.payment_intent_id ? '#111827' : '#9ca3af' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.payment_intent_id ? 'rgba(226, 232, 240, 0.95)' : '#9ca3af' }}>
             {booking.payment_intent_id || 'N/A'}
           </span>
         </div>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Conversation ID</strong>
-          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.conversation_id ? '#111827' : '#9ca3af' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: booking.conversation_id ? 'rgba(226, 232, 240, 0.95)' : '#9ca3af' }}>
             {booking.conversation_id || '—'}
           </span>
         </div>
         <div>
           <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Created At</strong>
-          <span style={{ color: '#111827' }}>{formatTimestamp(booking.created_at)}</span>
+          <span style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{formatTimestamp(booking.created_at)}</span>
         </div>
       </div>
     </div>

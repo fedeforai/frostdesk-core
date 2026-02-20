@@ -8,13 +8,16 @@ export interface CreateInstructorProfileParamsDisplayName {
 }
 
 /**
- * Resolve display_name for insert: explicit value, or fallback to full_name or ''.
- * Ensures we never send undefined to DB; draft-friendly when DB allows NULL (caller can pass null).
+ * Resolve display_name for insert.
+ * Returns the explicit value when provided, otherwise null.
+ * We intentionally do NOT fallback to full_name because the partial unique
+ * index uq_instructor_profiles_display_name would cause collisions when
+ * multiple profiles share the same full_name.
  */
 export function resolveDisplayNameForInsert(
   params: CreateInstructorProfileParamsDisplayName
-): string {
-  const { display_name, full_name } = params;
-  if (display_name !== undefined && display_name !== null) return display_name;
-  return full_name || '';
+): string | null {
+  const { display_name } = params;
+  if (display_name !== undefined && display_name !== null && display_name.trim() !== '') return display_name;
+  return null;
 }

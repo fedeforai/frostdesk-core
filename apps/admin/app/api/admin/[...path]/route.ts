@@ -45,7 +45,7 @@ async function proxy(
   const pathSegments = Array.isArray(pathParams)
     ? pathParams
     : typeof pathParams === 'string'
-      ? pathParams.split('/').filter(Boolean)
+      ? (pathParams as string).split('/').filter(Boolean)
       : [];
   const backendPath = `/admin/${pathSegments.join('/')}`;
   const url = new URL(request.url);

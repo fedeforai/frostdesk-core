@@ -20,15 +20,15 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
   if (error) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       }}>
         <div style={{ 
           marginBottom: '1.5rem', 
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
           display: 'flex',
           alignItems: 'center',
@@ -37,7 +37,7 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
           <h2 style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
             margin: 0,
           }}>
             Lifecycle
@@ -47,9 +47,9 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
         <div style={{ 
           padding: '1.5rem', 
           textAlign: 'center',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.06)',
           borderRadius: '0.375rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
           <p style={{ color: '#374151', fontSize: '0.875rem', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
             Lifecycle data unavailable
@@ -65,15 +65,15 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
   if (!events || events.length === 0) {
     return (
       <div style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid rgba(255, 255, 255, 0.1)', 
         borderRadius: '0.5rem', 
         padding: '1.5rem',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       }}>
         <div style={{ 
           marginBottom: '1.5rem', 
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
           display: 'flex',
           alignItems: 'center',
@@ -82,7 +82,7 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
           <h2 style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600',
-            color: '#111827',
+            color: 'rgba(226, 232, 240, 0.95)',
             margin: 0,
           }}>
             Lifecycle
@@ -100,15 +100,15 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
 
   return (
     <div style={{ 
-      border: '1px solid #e5e7eb', 
+      border: '1px solid rgba(255, 255, 255, 0.1)', 
       borderRadius: '0.5rem', 
       padding: '1.5rem',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
       <div style={{ 
         marginBottom: '1.5rem', 
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
         display: 'flex',
         alignItems: 'center',
@@ -117,7 +117,7 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
         <h2 style={{ 
           fontSize: '1.25rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           margin: 0,
         }}>
           Lifecycle
@@ -133,7 +133,7 @@ export default function BookingLifecycleTimeline({ events, error = false }: Book
           top: '0.5rem',
           bottom: '0.5rem',
           width: '2px',
-          backgroundColor: '#d1d5db',
+          backgroundColor: 'rgba(255, 255, 255, 0.12)',
         }} />
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

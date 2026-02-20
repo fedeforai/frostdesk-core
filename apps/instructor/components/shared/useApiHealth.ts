@@ -19,17 +19,23 @@ export function useApiHealth(url: string) {
   const [status, setStatus] = useState<Status>('idle');
   const safeUrl = useMemo(() => normalizeHealthUrl(url), [url]);
 
+  const HEALTH_TIMEOUT_MS = 10_000;
+
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
       try {
-        const res = await fetch(safeUrl, { cache: 'no-store' });
+        const res = await fetch(safeUrl, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error(`Health status ${res.status}`);
         const json = (await res.json()) as { ok?: boolean };
         if (!json?.ok) throw new Error('Health payload not ok');
         if (!cancelled) setStatus('ok');
       } catch {
+        clearTimeout(timeoutId);
         if (!cancelled) setStatus('error');
       }
     }

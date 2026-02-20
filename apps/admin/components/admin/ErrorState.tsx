@@ -29,7 +29,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
       <div style={{ 
         padding: '3rem 2rem', 
         textAlign: 'center',
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.5rem',
         backgroundColor: '#ffffff',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -44,7 +44,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
         <h2 style={{ 
           fontSize: '1.5rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.5rem',
         }}>
           Resource Not Found
@@ -101,7 +101,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
       <div style={{ 
         padding: '3rem 2rem', 
         textAlign: 'center',
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.5rem',
         backgroundColor: '#ffffff',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -116,7 +116,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
         <h2 style={{ 
           fontSize: '1.5rem', 
           fontWeight: '600',
-          color: '#111827',
+          color: 'rgba(226, 232, 240, 0.95)',
           marginBottom: '0.5rem',
         }}>
           Server Error
@@ -136,7 +136,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
     <div style={{ 
       padding: '3rem 2rem', 
       textAlign: 'center',
-      border: '1px solid #e5e7eb',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
       borderRadius: '0.5rem',
       backgroundColor: '#ffffff',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -151,7 +151,7 @@ export default function ErrorState({ status, message }: ErrorStateProps) {
       <h2 style={{ 
         fontSize: '1.5rem', 
         fontWeight: '600',
-        color: '#111827',
+        color: 'rgba(226, 232, 240, 0.95)',
         marginBottom: '0.5rem',
       }}>
         Error

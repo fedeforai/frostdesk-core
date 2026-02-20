@@ -90,7 +90,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
           style={{
             marginBottom: '1rem',
             padding: '0.75rem',
-            backgroundColor: '#fee2e2',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
             color: '#991b1b',
             borderRadius: '0.375rem',
             border: '1px solid #fca5a5',
@@ -108,7 +108,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Name *
@@ -147,7 +147,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Description *
@@ -188,7 +188,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           Address
@@ -226,7 +226,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(226, 232, 240, 0.95)',
             }}
           >
             Latitude
@@ -263,7 +263,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(226, 232, 240, 0.95)',
             }}
           >
             Longitude
@@ -302,7 +302,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}
         >
           What3Words
@@ -330,9 +330,9 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             e.currentTarget.style.outline = 'none';
           }}
         />
-        <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+        <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)' }}>
           Codice a tre parole per il punto esatto (3×3 m). Trovalo su{' '}
-          <a href="https://what3words.com" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>what3words.com</a> o nell’app — utile da comunicare al cliente.
+          <a href="https://what3words.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(129, 140, 248, 0.95)' }}>what3words.com</a> or in the app — useful to communicate to the customer.
         </p>
       </div>
 
@@ -344,7 +344,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
             gap: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
             cursor: 'pointer',
           }}
         >
@@ -372,7 +372,7 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
               gap: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(226, 232, 240, 0.95)',
               cursor: 'pointer',
             }}
           >
@@ -399,8 +399,8 @@ export default function MeetingPointForm({ meetingPoint, onCancel, onSuccess }: 
           disabled={loading}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            color: 'rgba(226, 232, 240, 0.95)',
             border: '1px solid #d1d5db',
             borderRadius: '0.375rem',
             cursor: loading ? 'not-allowed' : 'pointer',

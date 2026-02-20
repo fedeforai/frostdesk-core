@@ -21,13 +21,15 @@ const tdStyle: React.CSSProperties = {
 
 interface Props {
   draft: AIBookingDraft;
+  /** If the draft was confirmed and a booking was created, this is the real booking ID. */
+  bookingId?: string | null;
 }
 
 function formatIso(iso: string): string {
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleString('it-IT', {
+    return d.toLocaleString('en-GB', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -39,7 +41,7 @@ function formatIso(iso: string): string {
   }
 }
 
-export function AIBookingDraftPreview({ draft }: Props) {
+export function AIBookingDraftPreview({ draft, bookingId }: Props) {
   return (
     <section style={{
       border: '1px solid rgba(71, 85, 105, 0.5)',
@@ -50,13 +52,23 @@ export function AIBookingDraftPreview({ draft }: Props) {
       marginBottom: '1.5rem',
     }}>
       <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
-        Bozza prenotazione (anteprima)
+        Booking draft (preview)
       </h2>
 
       <table style={tableStyle}>
         <tbody>
+          {bookingId && (
+            <tr>
+              <th style={thStyle}>Booking ID</th>
+              <td style={tdStyle}>
+                <code style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: '#7dd3fc', background: 'rgba(15, 23, 42, 0.5)', padding: '0.15rem 0.4rem', borderRadius: 4 }}>
+                  {bookingId}
+                </code>
+              </td>
+            </tr>
+          )}
           <tr>
-            <th style={thStyle}>Cliente</th>
+            <th style={thStyle}>Customer</th>
             <td style={tdStyle}>{draft.customer_name ?? '—'}</td>
           </tr>
           <tr>
@@ -68,19 +80,19 @@ export function AIBookingDraftPreview({ draft }: Props) {
             <td style={tdStyle}>{formatIso(draft.end_time)}</td>
           </tr>
           <tr>
-            <th style={thStyle}>Servizio</th>
+            <th style={thStyle}>Service</th>
             <td style={tdStyle}>{draft.service_id ?? '—'}</td>
           </tr>
           <tr>
-            <th style={thStyle}>Luogo di ritrovo</th>
+            <th style={thStyle}>Meeting place</th>
             <td style={tdStyle}>{draft.meeting_point_id ?? '—'}</td>
           </tr>
           <tr>
-            <th style={thStyle}>Motivo bozza</th>
+            <th style={thStyle}>Draft reason</th>
             <td style={tdStyle}>{draft.draft_reason}</td>
           </tr>
           <tr>
-            <th style={thStyle}>Generato il</th>
+            <th style={thStyle}>Generated on</th>
             <td style={tdStyle}>{formatIso(draft.created_at)}</td>
           </tr>
         </tbody>

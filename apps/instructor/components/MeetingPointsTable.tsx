@@ -12,7 +12,7 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
           Meeting Points
         </h2>
         <button
@@ -46,23 +46,23 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
         <table
           role="table"
           aria-label="Meeting points list"
-          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}
+          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         >
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb' }}>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 Name
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 Description
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 Default
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 Active
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 Actions
               </th>
             </tr>
@@ -70,7 +70,7 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
           <tbody>
             {meetingPoints.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
                   No meeting points yet. Click "Add meeting point" to create one.
                 </td>
               </tr>
@@ -80,27 +80,27 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
                   key={point.id}
                   role="row"
                   style={{
-                    borderBottom: '1px solid #e5e7eb',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.06)', color: 'rgba(226, 232, 240, 0.95)' }}>
                     {point.name}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.06)', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'rgba(226, 232, 240, 0.95)' }}>
                     {point.description}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.06)', color: 'rgba(226, 232, 240, 0.95)' }}>
                     {point.is_default ? (
                       <span style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#dbeafe',
+                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
                         color: '#1e40af',
                         borderRadius: '0.25rem',
                         fontSize: '0.75rem',
@@ -112,18 +112,18 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
                       '—'
                     )}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.06)', color: 'rgba(226, 232, 240, 0.95)' }}>
                     {point.is_active ? 'Yes' : 'No'}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                     <button
                       type="button"
                       onClick={() => onEdit(point)}
                       style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#f3f4f6',
-                        color: '#374151',
-                        border: '1px solid #d1d5db',
+                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        color: 'rgba(148, 163, 184, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
                         fontSize: '0.875rem',
