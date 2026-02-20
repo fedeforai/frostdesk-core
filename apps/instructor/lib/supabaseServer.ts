@@ -1,9 +1,10 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient, createClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 /**
  * Supabase client for Server Components / Route Handlers.
  * Reads session from request cookies so getSession() returns the logged-in user.
+ * Uses anon key — all requests are subject to RLS.
  */
 export async function getSupabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,6 +41,18 @@ export async function getSupabaseServer() {
       },
     },
   });
+}
+
+/**
+ * Server-only Supabase client with service role key.
+ * Bypasses RLS — use only for trusted server-side ops (e.g. creating instructor_profiles row on first login).
+ * Returns null if SUPABASE_SERVICE_ROLE_KEY is not set.
+ */
+export async function getSupabaseServerAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 /** Session type returned by Supabase Auth getSession(). */

@@ -32,9 +32,14 @@ export default function ConnectionStatusBadges({
   const [stripeTone, setStripeTone] = useState<BadgeTone>('gray');
   const [stripeLabel, setStripeLabel] = useState('Stripe: checking…');
 
+  const STRIPE_CHECK_TIMEOUT_MS = 10_000;
+
   useEffect(() => {
     let cancelled = false;
-    getStripeConnectStatus()
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Stripe check timed out')), STRIPE_CHECK_TIMEOUT_MS)
+    );
+    Promise.race([getStripeConnectStatus(), timeoutPromise])
       .then((res) => {
         if (cancelled) return;
         if (res.status === 'enabled' && res.chargesEnabled) {

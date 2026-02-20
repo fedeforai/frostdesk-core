@@ -86,6 +86,8 @@ export default function InstructorDashboardClient() {
     void loadFunnel();
   }, [loadFunnel]);
 
+  const CONVERSATIONS_TIMEOUT_MS = 15_000;
+
   const loadConversations = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true;
     if (!silent) {
@@ -93,7 +95,12 @@ export default function InstructorDashboardClient() {
       setLoading(true);
     }
     try {
-      const list = await getConversations();
+      const list = await Promise.race([
+        getConversations(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timed out')), CONVERSATIONS_TIMEOUT_MS)
+        ),
+      ]);
       setConversations(list);
     } catch (e: unknown) {
       const err = e as { status?: number; message?: string };

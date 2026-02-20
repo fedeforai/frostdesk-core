@@ -61,10 +61,17 @@ export default function HomeDashboard({
   const [calendarConnected, setCalendarConnected] = useState<boolean | null>(null);
   const kpiTiles = kpiTilesProp;
 
+  const AI_STATUS_TIMEOUT_MS = 10_000;
+
   const loadAiStatus = useCallback(async () => {
     setAutomationLoading(true);
     try {
-      const res = await getAIFeatureStatus();
+      const res = await Promise.race([
+        getAIFeatureStatus(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('AI status timed out')), AI_STATUS_TIMEOUT_MS)
+        ),
+      ]);
       setAutomationOn(res.enabled);
     } catch {
       setAutomationOn(false);
@@ -91,9 +98,16 @@ export default function HomeDashboard({
     }
   }, [automationOn, automationLoading, automationActing, onToast]);
 
+  const DASHBOARD_CALENDAR_TIMEOUT_MS = 10_000;
+
   const loadDashboardCalendar = useCallback(async () => {
     try {
-      const data = await fetchInstructorDashboardViaApi();
+      const data = await Promise.race([
+        fetchInstructorDashboardViaApi(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Dashboard request timed out')), DASHBOARD_CALENDAR_TIMEOUT_MS)
+        ),
+      ]);
       setCalendarConnected(data.calendar?.connected ?? false);
     } catch {
       setCalendarConnected(false);

@@ -13,7 +13,7 @@
  *   // gate === 'ready' — render children
  */
 
-import { getServerSession, getSupabaseServer } from '@/lib/supabaseServer';
+import { getServerSession, getSupabaseServer, getSupabaseServerAdmin } from '@/lib/supabaseServer';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -119,10 +119,13 @@ export async function requireInstructorAccess(): Promise<InstructorAccessResult>
     };
   }
 
-  // ── 4. Insert row if missing (minimal columns for reconciled schema) ─────
+  // ── 4. Insert row if missing. Prefer service-role client so RLS cannot block. ─────
   if (!instructor) {
     try {
-      const inserted = await supabase
+      const admin = await getSupabaseServerAdmin();
+      const insertClient = admin ?? supabase;
+
+      const inserted = await insertClient
         .from('instructor_profiles')
         .insert({
           user_id: userId,
@@ -136,13 +139,31 @@ export async function requireInstructorAccess(): Promise<InstructorAccessResult>
       if (inserted.data) {
         instructor = inserted.data;
       } else {
-        const retry = await supabase
+        if (inserted.error) {
+          console.error('[requireInstructorAccess] instructor_profiles insert (user_id) failed:', inserted.error.message, inserted.error.code);
+        }
+        const legacy = await insertClient
           .from('instructor_profiles')
+          .insert({
+            id: userId,
+            approval_status: 'pending',
+            full_name: '',
+          })
           .select(PROFILE_COLUMNS)
-          .or(`user_id.eq.${userId},id.eq.${userId}`)
           .maybeSingle<InstructorRow>();
-
-        instructor = retry.data ?? null;
+        if (legacy.data) {
+          instructor = legacy.data;
+        } else {
+          if (legacy.error) {
+            console.error('[requireInstructorAccess] instructor_profiles insert (legacy id) failed:', legacy.error.message, legacy.error.code);
+          }
+          const retry = await supabase
+            .from('instructor_profiles')
+            .select(PROFILE_COLUMNS)
+            .or(`user_id.eq.${userId},id.eq.${userId}`)
+            .maybeSingle<InstructorRow>();
+          instructor = retry.data ?? null;
+        }
       }
     } catch (err) {
       return {

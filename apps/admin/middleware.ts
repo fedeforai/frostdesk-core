@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 /**
- * In production, /admin/dev-tools returns 404.
+ * In production, /admin/dev-tools redirects to dashboard (no 404 → no blank page).
  * On /admin and /api/admin: refresh Supabase session cookies so the proxy and getServerSession see the session.
  */
 const DEV_ONLY_PATHS = ['/admin/dev-tools'];
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (process.env.NODE_ENV === 'production' && DEV_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return new NextResponse(null, { status: 404 });
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url), 302);
   }
 
   if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')) {

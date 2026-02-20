@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getSupabaseServer, getServerSession } from '@/lib/supabaseServer';
+import { getSupabaseServer, getSupabaseServerAdmin, getServerSession } from '@/lib/supabaseServer';
 
 function isSafeNext(next: string | null | undefined): boolean {
   if (!next || typeof next !== 'string') return false;
@@ -53,9 +53,12 @@ export default async function GatePage({
     instructor = byId.data ?? null;
   }
 
-  // 2) If no row, insert minimal profile (only columns that exist in reconciled schema)
+  // 2) If no row, insert minimal profile. Prefer service-role client so RLS cannot block the insert.
   if (!instructor) {
-    const withUserId = await supabase
+    const admin = await getSupabaseServerAdmin();
+    const insertClient = admin ?? supabase;
+
+    const withUserId = await insertClient
       .from('instructor_profiles')
       .insert({
         user_id: userId,
@@ -69,8 +72,11 @@ export default async function GatePage({
     if (withUserId.data) {
       instructor = withUserId.data;
     } else {
+      if (withUserId.error) {
+        console.error('[gate] instructor_profiles insert (user_id) failed:', withUserId.error.message, withUserId.error.code);
+      }
       // Legacy schema: id = auth user id; minimal columns to avoid "column does not exist"
-      const legacy = await supabase
+      const legacy = await insertClient
         .from('instructor_profiles')
         .insert({
           id: userId,
@@ -80,6 +86,9 @@ export default async function GatePage({
         .select('id, approval_status, onboarding_status, profile_status')
         .maybeSingle<InstructorRow>();
       instructor = legacy.data ?? null;
+      if (!instructor && legacy.error) {
+        console.error('[gate] instructor_profiles insert (legacy id) failed:', legacy.error.message, legacy.error.code);
+      }
     }
     if (!instructor) {
       const retry = await supabase

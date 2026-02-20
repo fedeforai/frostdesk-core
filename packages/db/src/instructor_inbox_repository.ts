@@ -54,18 +54,24 @@ type InstructorInboxRow = {
   customer_last_seen_at: string | null;
 };
 
+const DEFAULT_INBOX_LIMIT = 20;
+
 /**
  * Gets instructor inbox: conversations for this instructor with last message,
  * needs_human signal, and customer profile data.
  *
  * Read-only. Filtered by instructor_id. Ordered by last_activity_at DESC.
+ * Capped to limit (default 20) to avoid slow responses and timeouts.
  *
  * @param instructorId - Instructor ID (instructor_profiles.id, UUID)
+ * @param limit - Max conversations to return (default 20)
  * @returns List of inbox items
  */
 export async function getInstructorInbox(
-  instructorId: string
+  instructorId: string,
+  limit: number = DEFAULT_INBOX_LIMIT
 ): Promise<InstructorInboxItem[]> {
+  const cappedLimit = Math.min(Math.max(1, limit), 100);
   const result = await sql<InstructorInboxRow[]>`
     WITH last_messages AS (
       SELECT DISTINCT ON (conversation_id)
@@ -159,6 +165,7 @@ export async function getInstructorInbox(
     LEFT JOIN customer_stats cs ON cs.profile_id = rc.customer_profile_id
     WHERE ca.instructor_id = ${instructorId}::uuid
     ORDER BY ca.last_activity_at DESC
+    LIMIT ${cappedLimit}
   `;
 
   return result.map((row) => ({

@@ -19,6 +19,7 @@ import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
+import { now, logTiming, withTimeout } from '../../lib/timing.js';
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -240,10 +241,16 @@ export async function instructorDraftRoutes(app: FastifyInstance): Promise<void>
   });
 
   // GET /instructor/kpis/summary?window=7d|30d
+  const KPI_SUMMARY_TIMEOUT_MS = 10_000;
   app.get<{ Querystring: { window?: string } }>('/instructor/kpis/summary', async (request, reply) => {
+    const routeStart = now();
     try {
+      const t0 = now();
       const userId = await getUserIdFromJwt(request);
+      logTiming('GET /instructor/kpis/summary', 'getUserIdFromJwt', t0);
+      const t1 = now();
       const profile = await getInstructorProfileByUserId(userId);
+      logTiming('GET /instructor/kpis/summary', 'getInstructorProfileByUserId', t1);
       if (!profile) {
         return reply.status(404).send({
           ok: false,
@@ -260,7 +267,27 @@ export async function instructorDraftRoutes(app: FastifyInstance): Promise<void>
       }
       const windowParam = (request.query?.window ?? '7d').toLowerCase();
       const window = windowParam === '30d' ? '30d' : '7d';
-      const drafts = await getInstructorDraftKpiSummary(profile.id, window);
+      const t2 = now();
+      let drafts;
+      try {
+        drafts = await withTimeout(
+          getInstructorDraftKpiSummary(profile.id, window),
+          KPI_SUMMARY_TIMEOUT_MS,
+          'getInstructorDraftKpiSummary'
+        );
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('timed out')) {
+          logTiming('GET /instructor/kpis/summary', 'getInstructorDraftKpiSummary_timeout', t2);
+          return reply.status(503).send({
+            ok: false,
+            error: 'INTERNAL_ERROR',
+            message: 'KPI summary timed out',
+          });
+        }
+        throw err;
+      }
+      logTiming('GET /instructor/kpis/summary', 'getInstructorDraftKpiSummary', t2);
+      logTiming('GET /instructor/kpis/summary', 'total', routeStart);
       return reply.send({
         ok: true,
         window,

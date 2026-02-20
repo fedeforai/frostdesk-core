@@ -11,6 +11,11 @@ import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
+import { now, logTiming, withTimeout } from '../../lib/timing.js';
+
+const ROUTE_LIST = 'GET /instructor/conversations';
+const CONVERSATIONS_LIST_TIMEOUT_MS = 12_000;
+const INBOX_LIMIT = 20;
 
 type Channel = 'whatsapp' | 'instagram' | 'web';
 type Status = 'hot' | 'waiting' | 'resolved';
@@ -21,11 +26,6 @@ function mapChannel(channel: string): Channel {
 }
 
 function mapStatus(status: string): Status {
-  // RULES:
-  // - "hot" stays hot until the CUSTOMER replies again.
-  // - "resolved" only when booking is confirmed (we do NOT have that signal in STEP 1 inbox list),
-  //   so we must NOT mark resolved based on generic "closed/resolved" flags coming from legacy status.
-  // - Everything else is "waiting".
   if (status === 'requires_human') return 'hot';
   return 'waiting';
 }
@@ -35,14 +35,22 @@ function mapStatus(status: string): Status {
  * GET /instructor/conversations — list conversations for this instructor.
  * GET /instructor/conversations/:id/messages — messages for one conversation (instructor-scoped).
  * Auth: JWT. 401/403/404/500 as per contract.
+ * Instrumentation: timing. Cap: 20 conversations. Fast-path: empty list on timeout.
  */
 export async function instructorConversationsRoutes(
   app: FastifyInstance
 ): Promise<void> {
   app.get('/instructor/conversations', async (request, reply) => {
+    const routeStart = now();
+
     try {
+      const t0 = now();
       const userId = await getUserIdFromJwt(request);
+      logTiming(ROUTE_LIST, 'getUserIdFromJwt', t0);
+
+      const t1 = now();
       const profile = await getInstructorProfileByUserId(userId);
+      logTiming(ROUTE_LIST, 'getInstructorProfileByUserId', t1);
 
       if (!profile) {
         return reply.status(404).send({
@@ -60,10 +68,26 @@ export async function instructorConversationsRoutes(
         });
       }
 
-      const items = await getInstructorInbox(profile.id);
+      const t2 = now();
+      let items;
+      try {
+        items = await withTimeout(
+          getInstructorInbox(profile.id, INBOX_LIMIT),
+          CONVERSATIONS_LIST_TIMEOUT_MS,
+          'getInstructorInbox'
+        );
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('timed out')) {
+          logTiming(ROUTE_LIST, 'getInstructorInbox_timeout', t2);
+          return reply.send({ ok: true, conversations: [] });
+        }
+        throw err;
+      }
+      logTiming(ROUTE_LIST, 'getInstructorInbox', t2);
+      logTiming(ROUTE_LIST, 'total', routeStart);
+
       const conversations = items.map((item) => ({
         id: item.conversation_id,
-        // CM-2: prefer display_name from customer_profiles, fall back to phone identifier
         customerName:
           item.customer_display_name?.trim()
           || (item.customer_identifier || '').trim()
@@ -78,10 +102,8 @@ export async function instructorConversationsRoutes(
             : typeof (item as any).unreadCount === 'number'
               ? (item as any).unreadCount
               : 0,
-        // CM-2: customer profile link
         customerProfileId: item.customer_profile_id ?? null,
         customerPhone: item.customer_phone ?? null,
-        // CM-3: trust signals
         customerBookingsCount: item.customer_bookings_count,
         customerNotesCount: item.customer_notes_count,
         customerFirstSeenAt: item.customer_first_seen_at ?? null,
