@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getSupabaseServer, getSupabaseServerAdmin, getServerSession } from '@/lib/supabaseServer';
+import { getSupabaseServer, getServerSession } from '@/lib/supabaseServer';
 
 function isSafeNext(next: string | null | undefined): boolean {
   if (!next || typeof next !== 'string') return false;
@@ -53,50 +53,23 @@ export default async function GatePage({
     instructor = byId.data ?? null;
   }
 
-  // 2) If no row, insert minimal profile. Prefer service-role client so RLS cannot block the insert.
-  if (!instructor) {
-    const admin = await getSupabaseServerAdmin();
-    const insertClient = admin ?? supabase;
-
-    const withUserId = await insertClient
-      .from('instructor_profiles')
-      .insert({
-        user_id: userId,
-        approval_status: 'pending',
-        profile_status: 'draft',
-        full_name: '',
-      })
-      .select('id, approval_status, onboarding_status, profile_status')
-      .maybeSingle<InstructorRow>();
-
-    if (withUserId.data) {
-      instructor = withUserId.data;
-    } else {
-      if (withUserId.error) {
-        console.error('[gate] instructor_profiles insert (user_id) failed:', withUserId.error.message, withUserId.error.code);
+  // 2) If no row, ensure profile via API (same DB as admin; no RLS).
+  if (!instructor && session.access_token) {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? 'http://localhost:3001';
+    try {
+      const res = await fetch(`${apiBase}/instructor/ensure-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { ok?: boolean; profile?: InstructorRow };
+        if (data?.ok && data?.profile) instructor = data.profile;
       }
-      // Legacy schema: id = auth user id; minimal columns to avoid "column does not exist"
-      const legacy = await insertClient
-        .from('instructor_profiles')
-        .insert({
-          id: userId,
-          approval_status: 'pending',
-          full_name: '',
-        })
-        .select('id, approval_status, onboarding_status, profile_status')
-        .maybeSingle<InstructorRow>();
-      instructor = legacy.data ?? null;
-      if (!instructor && legacy.error) {
-        console.error('[gate] instructor_profiles insert (legacy id) failed:', legacy.error.message, legacy.error.code);
-      }
-    }
-    if (!instructor) {
-      const retry = await supabase
-        .from('instructor_profiles')
-        .select('id, approval_status, onboarding_status, profile_status')
-        .or(`user_id.eq.${userId},id.eq.${userId}`)
-        .maybeSingle<InstructorRow>();
-      instructor = retry.data ?? null;
+    } catch (e) {
+      console.error('[gate] ensure-profile request failed:', e);
     }
   }
 

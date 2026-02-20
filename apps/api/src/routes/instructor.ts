@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { instructorEnsureProfileRoutes } from './instructor/ensure_profile.js';
 import { instructorProfileRoutes } from './instructor/profile.js';
 import { instructorAvailabilityRoutes } from './instructor/availability.js';
 import { instructorServicesRoutes } from './instructor/services.js';
@@ -35,6 +36,7 @@ import { instructorAIToggleWhatsAppRoutes } from './instructor/ai_toggle_whatsap
  * Proxy: GET/POST /api/instructor/* → Fastify /instructor/*.
  */
 export async function instructorRoutes(fastify: FastifyInstance): Promise<void> {
+  await fastify.register(instructorEnsureProfileRoutes);
   await fastify.register(instructorProfileRoutes);
   await fastify.register(instructorDashboardRoutes);
   await fastify.register(instructorAvailabilityRoutes);

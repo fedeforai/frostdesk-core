@@ -490,11 +490,12 @@ export type {
   InstructorDraftKpiSummary,
 } from './instructor_draft_events_repository.js';
 
-// Instructor approval (admin)
+// Instructor approval (admin) & ensure-profile (gate)
 export {
   listPendingInstructors,
   setInstructorApprovalStatus,
   listAllInstructorProfiles,
+  ensureInstructorProfile,
 } from './instructor_approval_repository.js';
 export type {
   PendingInstructor,
@@ -502,6 +503,7 @@ export type {
   AdminInstructorRow,
   ListAllInstructorProfilesParams,
   ListAllInstructorProfilesResult,
+  EnsureInstructorProfileRow,
 } from './instructor_approval_repository.js';
 
 // Booking field extraction (pure regex, no LLM)
