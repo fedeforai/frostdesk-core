@@ -140,7 +140,8 @@ export interface EnsureInstructorProfileRow {
 
 /**
  * Ensures an instructor_profiles row exists for the given auth user_id.
- * SELECT by user_id or id first; if none, INSERT minimal row (user_id, approval_status 'pending', profile_status 'draft', full_name '').
+ * Idempotent: SELECT by user_id or id first; if none, INSERT with id=userId and user_id=userId
+ * (satisfies NOT NULL id and CHECK(user_id = id)). Defaults: approval_status 'pending', profile_status 'draft'.
  * Uses same DB client as listPendingInstructors (no RLS). Returns row for gate redirect logic.
  */
 export async function ensureInstructorProfile(userId: string): Promise<EnsureInstructorProfileRow> {
@@ -161,8 +162,8 @@ export async function ensureInstructorProfile(userId: string): Promise<EnsureIns
     };
   }
   const inserted = await sql<Row[]>`
-    INSERT INTO instructor_profiles (user_id, approval_status, profile_status, full_name)
-    VALUES (${userId}::uuid, 'pending', 'draft', '')
+    INSERT INTO instructor_profiles (id, user_id, approval_status, profile_status, full_name)
+    VALUES (${userId}::uuid, ${userId}::uuid, 'pending', 'draft', '')
     RETURNING id, approval_status, profile_status, onboarding_completed_at
   `;
   if (inserted.length === 0) throw new Error('ensureInstructorProfile: insert failed');

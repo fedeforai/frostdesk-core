@@ -126,6 +126,18 @@ Se tutti e tre i build passano, il deploy su Railway/Vercel dovrebbe andare a bu
 
 ---
 
+## Post-deploy: verifica ensure-profile (onboarding istruttore)
+
+Dopo il deploy dell’API (Railway), verifica che il flusso **primo login istruttore** crei il profilo in pending:
+
+1. **Gate-debug** — Login come istruttore sull’app Instructor (Vercel), apri `/instructor/gate-debug`. Atteso: **Response status 200**, body con `ok: true` e `profile` (id, approval_status: `pending`).
+2. **Admin Pending** — In Admin → Instructors → tab **Pending**. Atteso: l’istruttore appare in lista.
+3. **(Opzionale) curl** — `POST https://TUO-URL-RAILWAY/instructor/ensure-profile` con `Authorization: Bearer <token>` e `Content-Type: application/json` + body `{}`. Atteso: `200` e `{"ok":true,"profile":{...}}`.
+
+Se vedi 500 con "null value in column id", l’API non ha ancora la fix: assicurati che il branch deployato includa `ensureInstructorProfile` con INSERT `(id, user_id, ...)` e `VALUES (userId, userId, ...)` in `packages/db`.
+
+---
+
 ## Riepilogo URL
 
 | Servizio    | URL esempio |
