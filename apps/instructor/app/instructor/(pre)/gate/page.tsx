@@ -36,7 +36,6 @@ export default async function GatePage({
   }
 
   const userId = session.user.id;
-  const userEmail = session.user.email ?? null;
 
   // 1) Load instructor_profiles by user_id (reconciled) or id (legacy)
   let { data: instructor } = await supabase
@@ -54,7 +53,7 @@ export default async function GatePage({
     instructor = byId.data ?? null;
   }
 
-  // 2) If no row, insert minimal profile (schema may have user_id or id = userId)
+  // 2) If no row, insert minimal profile (only columns that exist in reconciled schema)
   if (!instructor) {
     const withUserId = await supabase
       .from('instructor_profiles')
@@ -63,7 +62,6 @@ export default async function GatePage({
         approval_status: 'pending',
         profile_status: 'draft',
         full_name: '',
-        contact_email: userEmail ?? '',
       })
       .select('id, approval_status, onboarding_status, profile_status')
       .maybeSingle<InstructorRow>();
@@ -71,16 +69,13 @@ export default async function GatePage({
     if (withUserId.data) {
       instructor = withUserId.data;
     } else {
+      // Legacy schema: id = auth user id; minimal columns to avoid "column does not exist"
       const legacy = await supabase
         .from('instructor_profiles')
         .insert({
           id: userId,
           approval_status: 'pending',
-          onboarding_status: 'pending',
-          contact_email: userEmail ?? '',
           full_name: '',
-          working_language: 'en',
-          onboarding_payload: {},
         })
         .select('id, approval_status, onboarding_status, profile_status')
         .maybeSingle<InstructorRow>();

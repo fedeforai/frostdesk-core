@@ -84,7 +84,6 @@ export async function requireInstructorAccess(): Promise<InstructorAccessResult>
   }
 
   const userId = session.user.id;
-  const userEmail = session.user.email ?? null;
 
   // ── 3. Fetch instructor_profiles row ────────────────────────────────────
   let instructor: InstructorRow | null = null;
@@ -120,19 +119,16 @@ export async function requireInstructorAccess(): Promise<InstructorAccessResult>
     };
   }
 
-  // ── 4. Insert row if missing ────────────────────────────────────────────
+  // ── 4. Insert row if missing (minimal columns for reconciled schema) ─────
   if (!instructor) {
     try {
-      // Try with user_id column (current schema)
       const inserted = await supabase
         .from('instructor_profiles')
         .insert({
           user_id: userId,
           approval_status: 'pending',
-          onboarding_status: 'pending',
           profile_status: 'draft',
           full_name: '',
-          contact_email: userEmail ?? '',
         })
         .select(PROFILE_COLUMNS)
         .maybeSingle<InstructorRow>();
@@ -140,7 +136,6 @@ export async function requireInstructorAccess(): Promise<InstructorAccessResult>
       if (inserted.data) {
         instructor = inserted.data;
       } else {
-        // Unique violation or schema mismatch — retry SELECT
         const retry = await supabase
           .from('instructor_profiles')
           .select(PROFILE_COLUMNS)
