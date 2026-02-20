@@ -63,10 +63,13 @@ export default async function GatePage({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: '{}',
       });
       if (res.ok) {
         const data = (await res.json()) as { ok?: boolean; profile?: InstructorRow };
         if (data?.ok && data?.profile) instructor = data.profile;
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn('[gate] ensure-profile', res.status);
       }
     } catch (e) {
       console.error('[gate] ensure-profile request failed:', e);

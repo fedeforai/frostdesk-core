@@ -28,6 +28,7 @@ export default async function GateDebugPage() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
+      body: '{}',
     });
     status = res.status;
     statusText = res.statusText;
