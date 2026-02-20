@@ -22,9 +22,6 @@
     "node_modules",
     "dist",
     "src/**/__tests__/**",
-    "src/**/*.test.ts",
-    "src/routes/instructor/conversation_timeline.ts",
-    "src/routes/instructor/conversations_handoff.ts",
-    "src/routes/instructor/onboarding.ts"
+    "src/**/*.test.ts"
   ]
 }

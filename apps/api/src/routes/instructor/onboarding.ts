@@ -1,11 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import {
-  getInstructorProfileForDraft,
-  upsertInstructorOnboardingComplete,
-  upsertInstructorOnboardingDraft,
-  setInstructorOnboardingStatusCompleted,
-  setInstructorOnboardingStatusInProgress,
   getInstructorProfileByUserId,
+  createInstructorProfile,
+  updateInstructorProfileByUserId,
+  completeInstructorOnboarding,
   connectInstructorWhatsappAccount,
 } from '@frostdesk/db';
 import { getAuthUserFromJwt } from '../../lib/auth_instructor.js';
@@ -25,8 +23,8 @@ function optionalString(v: unknown): string | null {
 
 /**
  * POST /instructor/onboarding/draft
- * Auth: Bearer JWT. Merges body into existing profile; sets onboarding_status = 'in_progress'.
- * Body: optional full_name, base_resort, working_language, whatsapp_phone, onboarding_payload (merged).
+ * Auth: Bearer JWT. Merges body into existing profile; in-progress = profile exists with onboarding_completed_at null.
+ * Body: optional full_name, base_resort, working_language, whatsapp_phone, onboarding_payload (merged in-memory only).
  */
 export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<void> {
   app.post<{
@@ -42,22 +40,16 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
     try {
       const { id: userId, email } = await getAuthUserFromJwt(request);
       const body = request.body ?? {};
-      let existing: Awaited<ReturnType<typeof getInstructorProfileForDraft>> = null;
+      let existing: Awaited<ReturnType<typeof getInstructorProfileByUserId>> = null;
       try {
-        existing = await getInstructorProfileForDraft(userId);
+        existing = await getInstructorProfileByUserId(userId);
       } catch {
         existing = null;
       }
-      const existingPayload = (existing?.onboarding_payload ?? {}) as Record<string, unknown>;
-      const incomingPayload =
-        body.onboarding_payload != null && typeof body.onboarding_payload === 'object' && !Array.isArray(body.onboarding_payload)
-          ? (body.onboarding_payload as Record<string, unknown>)
-          : {};
-      const mergedPayload = { ...existingPayload, ...incomingPayload };
       const full_name = optionalString(body.full_name) ?? existing?.full_name ?? '';
       const base_resort = optionalString(body.base_resort) ?? existing?.base_resort ?? '';
       const working_language = optionalString(body.working_language) ?? existing?.working_language ?? 'en';
-      const whatsapp_phone = optionalString(body.whatsapp_phone) ?? existing?.whatsapp_phone ?? null;
+      const whatsapp_phone = optionalString(body.whatsapp_phone) ?? null;
       const contactEmail = email ?? existing?.contact_email ?? '';
 
       if (!existing && (!full_name || !base_resort || !working_language)) {
@@ -79,16 +71,23 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
         });
       }
 
-      await upsertInstructorOnboardingDraft({
-        userId,
-        contactEmail,
-        full_name,
-        base_resort,
-        working_language,
-        whatsapp_phone,
-        onboarding_payload: mergedPayload,
-      });
-      await setInstructorOnboardingStatusInProgress(userId);
+      if (!existing) {
+        await createInstructorProfile({
+          id: userId,
+          full_name,
+          base_resort,
+          working_language,
+          contact_email: contactEmail,
+        });
+      } else {
+        await updateInstructorProfileByUserId({
+          userId,
+          full_name,
+          base_resort,
+          working_language,
+          contact_email: contactEmail,
+        });
+      }
       return reply.send({ ok: true });
     } catch (error) {
       const normalized = normalizeError(error);
@@ -117,10 +116,6 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
       const base_resort = isNonEmptyString(body.base_resort) ? body.base_resort.trim() : '';
       const working_language = isNonEmptyString(body.working_language) ? body.working_language.trim() : '';
       const whatsapp_phone = isNonEmptyString(body.whatsapp_phone) ? body.whatsapp_phone.trim() : '';
-      const onboarding_payload =
-        body.onboarding_payload != null && typeof body.onboarding_payload === 'object' && !Array.isArray(body.onboarding_payload)
-          ? (body.onboarding_payload as Record<string, unknown>)
-          : {};
 
       if (!full_name || !base_resort || !working_language || !whatsapp_phone) {
         const normalized = normalizeError({ code: ERROR_CODES.INVALID_PAYLOAD });
@@ -132,21 +127,21 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
         });
       }
 
-      await upsertInstructorOnboardingComplete({
+      await updateInstructorProfileByUserId({
         userId,
-        contactEmail: email ?? '',
         full_name,
         base_resort,
         working_language,
-        whatsapp_phone,
-        onboarding_payload,
+        contact_email: email ?? '',
       });
 
-      await setInstructorOnboardingStatusCompleted(userId);
+      const profile = await getInstructorProfileByUserId(userId);
+      if (profile?.id) {
+        await completeInstructorOnboarding(profile.id);
+      }
 
       // Link WhatsApp number so Settings shows "Il tuo numero WhatsApp è collegato a FrostDesk"
       try {
-        const profile = await getInstructorProfileByUserId(userId);
         if (profile?.id && whatsapp_phone) {
           await connectInstructorWhatsappAccount(profile.id, whatsapp_phone);
         }

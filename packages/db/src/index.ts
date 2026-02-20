@@ -54,6 +54,22 @@ export {
   getConversationCustomerId,
 } from './conversation_customer_link.js';
 
+// Conversation decision timeline (read-only)
+export { getConversationDecisionTimeline } from './conversation_decision_timeline_repository.js';
+export type {
+  DecisionTimelineEventType,
+  DecisionTimelineActorType,
+  ConversationDecisionTimelineEvent,
+} from './conversation_decision_timeline_repository.js';
+
+// Conversation handoff
+export {
+  recordHandoff,
+  HandoffNotOwnerError,
+  HandoffConflictError,
+} from './conversation_handoff_repository.js';
+export type { RecordHandoffParams, RecordHandoffResult } from './conversation_handoff_repository.js';
+
 // Inbound messages
 export {
   findInboundMessageByExternalId,
@@ -216,6 +232,10 @@ export type {
   UpdateInstructorProfileByUserIdParams,
   UpdateInstructorProfileByUserIdExtendedParams,
 } from './instructor_profile_repository.js';
+
+// Instructor referrals (trusted peers)
+export { listReferralsForInstructor, isReferredInstructor } from './instructor_referrals_repository.js';
+export type { InstructorReferralRow, ReferralWithProfile } from './instructor_referrals_repository.js';
 
 // Instructor dashboard (read-only aggregated data)
 export { getInstructorDashboardData } from './instructor_dashboard_repository.js';
