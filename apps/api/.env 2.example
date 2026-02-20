@@ -1,5 +1,0 @@
-# Database: Supabase Project Settings → Database → Connection string → URI
-# Use direct connection (port 5432) or pooler; pick one and keep it consistent.
-# DATABASE_URL=postgresql://postgres:<PASSWORD>@db.<PROJECT_REF>.supabase.co:5432/postgres
-
-DATABASE_URL=postgresql://postgres:frostdesk2025!@db.fggheegqtghedvibisma.supabase.co:5432/postgres

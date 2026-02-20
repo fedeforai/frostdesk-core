@@ -80,20 +80,18 @@ export default async function GatePage({
     redirect('/instructor/login?next=/instructor/gate');
   }
 
-  // 3) Redirect by state
-  if (instructor.approval_status !== 'approved') {
-    redirect('/instructor/approval-pending');
-  }
-  const onboardingDone =
-    instructor.onboarding_status === 'completed' || instructor.profile_status === 'active';
-  if (!onboardingDone) {
-    redirect('/instructor/onboarding');
-  }
-
+  // TEMPORARY: any instructor with a profile → dashboard (demo for colleagues). To restore full flow, uncomment the block below and remove the redirect to dashboard.
   const params = await searchParams;
   const nextParam = typeof params.next === 'string' ? params.next : Array.isArray(params.next) ? params.next[0] : undefined;
   if (isSafeNext(nextParam)) {
     redirect(nextParam!);
   }
   redirect('/instructor/dashboard');
+
+  // 3) Full redirect by state (restore when removing temporary bypass above):
+  // if (instructor.approval_status !== 'approved') redirect('/instructor/approval-pending');
+  // const onboardingDone = instructor.onboarding_status === 'completed' || instructor.profile_status === 'active';
+  // if (!onboardingDone) redirect('/instructor/onboarding');
+  // if (isSafeNext(nextParam)) redirect(nextParam!);
+  // redirect('/instructor/dashboard');
 }
