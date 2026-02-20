@@ -301,11 +301,16 @@ export async function updateInstructorProfileByUserIdExtended(
 
 /**
  * Marks onboarding as completed for the given instructor.
+ * Sets onboarding_completed_at, onboarding_status and profile_status so the app (requireInstructorAccess) sees gate 'ready' and keeps user on dashboard.
  */
 export async function completeInstructorOnboarding(instructorId: string): Promise<void> {
   await sql`
     UPDATE instructor_profiles
-    SET onboarding_completed_at = NOW(), updated_at = NOW()
+    SET
+      onboarding_completed_at = NOW(),
+      onboarding_status = 'completed',
+      profile_status = 'active',
+      updated_at = NOW()
     WHERE id = ${instructorId}::uuid
   `;
 }
