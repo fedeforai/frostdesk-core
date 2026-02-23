@@ -19,6 +19,7 @@ type InstructorRow = {
 /**
  * Single gate: session → ensure instructor_profiles row (user_id or id = auth user) → redirect by state.
  * Insert-only; on unique violation we re-SELECT and continue.
+ * Route at /instructor/gate (no route group) so builds reliably include it.
  */
 export default async function GatePage({
   searchParams,
