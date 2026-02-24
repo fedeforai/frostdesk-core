@@ -48,9 +48,11 @@ The API loads `.env` from several candidate paths (see `apps/api/src/loadEnv.ts`
 
 Without real Supabase credentials, the API starts and responds to `/health` but DB-dependent routes will fail.
 
-### Generating the .env file
+### Generating .env files
 
-The environment secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `DATABASE_URL` are injected as environment variables. Write a root `.env` file that expands them for dotenv:
+The environment secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `DATABASE_URL` are injected as shell environment variables. You must write **two** files:
+
+**1. Root `.env`** — consumed by the API via `apps/api/src/loadEnv.ts`:
 
 ```bash
 cat > /workspace/.env << ENVEOF
@@ -68,6 +70,27 @@ META_VERIFY_TOKEN=placeholder
 ENVEOF
 ```
 
+**2. Next.js app `.env.local` files** — Next.js reads `.env.local` from each app's own directory, NOT the workspace root. The `NEXT_PUBLIC_*` variables must be present at Next.js startup (they are inlined at build/dev time). Create these for each frontend you want to run:
+
+```bash
+# Admin
+cat > /workspace/apps/admin/.env.local << ENVEOF
+NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+NEXT_PUBLIC_API_URL=http://localhost:3001
+SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+ENVEOF
+
+# Instructor (if needed)
+cat > /workspace/apps/instructor/.env.local << ENVEOF
+NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+NEXT_PUBLIC_API_URL=http://localhost:3001
+ENVEOF
+```
+
+**Critical**: If you only create the root `.env`, the API will work but the Next.js frontends' Supabase browser client (`getSupabaseBrowser()`) will return `null` and login forms won't submit. Always create the per-app `.env.local` files too.
+
 ### Non-obvious caveats
 
 - **Admin app ESLint**: The admin app does not ship with an `.eslintrc.json`. You must create one (e.g. `{"extends": "next/core-web-vitals"}`) and install `eslint@8` + `eslint-config-next@14` as devDependencies for `pnpm --filter @frostdesk/admin lint` to work.
@@ -76,3 +99,5 @@ ENVEOF
 - **pnpm onlyBuiltDependencies**: Configured in `pnpm-workspace.yaml` to allow `esbuild` postinstall. Other build scripts may need `pnpm approve-builds` (interactive) — avoid in CI.
 - **Starting services**: Start the API first (`pnpm --filter @frostdesk/api dev`), then any frontend. The admin frontend proxies API calls through `/api/*` routes to `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:3001`).
 - **Webhook verification**: `GET /webhook?hub.mode=subscribe&hub.verify_token=<META_VERIFY_TOKEN>&hub.challenge=test` returns the challenge value — useful for quick connectivity checks without auth.
+- **Test admin credentials**: `TEST_ADMIN_EMAIL` / `TEST_ADMIN_PASSWORD` secrets are available but may not correspond to a registered Supabase auth user. Verify credentials work with a direct Supabase auth call before relying on browser login: `curl -s -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{"email":"'$TEST_ADMIN_EMAIL'","password":"'$TEST_ADMIN_PASSWORD'"}'`
+- **Database query via service role**: To verify DB connectivity without auth, use `curl -s "$SUPABASE_URL/rest/v1/<table>?select=*&limit=5" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"`.
