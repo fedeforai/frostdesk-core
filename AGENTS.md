@@ -48,9 +48,31 @@ The API loads `.env` from several candidate paths (see `apps/api/src/loadEnv.ts`
 
 Without real Supabase credentials, the API starts and responds to `/health` but DB-dependent routes will fail.
 
+### Generating the .env file
+
+The environment secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `DATABASE_URL` are injected as environment variables. Write a root `.env` file that expands them for dotenv:
+
+```bash
+cat > /workspace/.env << ENVEOF
+SUPABASE_URL=$SUPABASE_URL
+SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL=$DATABASE_URL
+NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+NEXT_PUBLIC_API_URL=http://localhost:3001
+AI_EMERGENCY_DISABLE=true
+META_WHATSAPP_TOKEN=placeholder
+META_WHATSAPP_PHONE_NUMBER_ID=placeholder
+META_VERIFY_TOKEN=placeholder
+ENVEOF
+```
+
 ### Non-obvious caveats
 
 - **Admin app ESLint**: The admin app does not ship with an `.eslintrc.json`. You must create one (e.g. `{"extends": "next/core-web-vitals"}`) and install `eslint@8` + `eslint-config-next@14` as devDependencies for `pnpm --filter @frostdesk/admin lint` to work.
-- **Instructor and Admin ports**: Both default to port 3000. Run only one at a time, or use the `dev:3002` script for the instructor app on port 3002.
+- **Instructor and Admin ports**: Both default to port 3000. Run only one at a time, or use the `dev:3002` script for the instructor app on port 3002. If port 3000 is occupied, Next.js will auto-increment to 3001, then 3002, etc.
 - **postgres client is lazy**: `packages/db/src/client.ts` validates `DATABASE_URL` exists at import time but the actual TCP connection happens on first query, so placeholder values let the API start.
 - **pnpm onlyBuiltDependencies**: Configured in `pnpm-workspace.yaml` to allow `esbuild` postinstall. Other build scripts may need `pnpm approve-builds` (interactive) — avoid in CI.
+- **Starting services**: Start the API first (`pnpm --filter @frostdesk/api dev`), then any frontend. The admin frontend proxies API calls through `/api/*` routes to `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:3001`).
+- **Webhook verification**: `GET /webhook?hub.mode=subscribe&hub.verify_token=<META_VERIFY_TOKEN>&hub.challenge=test` returns the challenge value — useful for quick connectivity checks without auth.
