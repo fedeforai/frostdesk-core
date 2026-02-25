@@ -1,6 +1,9 @@
 import './loadEnv.js';
 import { getLoadedEnvPath } from './loadEnv.js';
+import { initSentry } from './lib/sentry.js';
 import { buildServer } from './server.js';
+
+initSentry();
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '0.0.0.0';

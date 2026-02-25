@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import { UnauthorizedError, BookingNotFoundError, InvalidBookingTransitionError } from '@frostdesk/db';
+import { captureError } from '../lib/sentry.js';
 
 /**
  * Unified error envelope format.
@@ -177,6 +178,16 @@ export async function registerErrorHandler(app: FastifyInstance): Promise<void> 
   // Error handler: catches thrown errors
   app.setErrorHandler(async (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     const { statusCode, payload } = normalizeError(error);
+
+    if (statusCode >= 500) {
+      captureError(error, {
+        request_id: (request as any).id,
+        route: request.routeOptions?.url ?? request.url,
+        method: request.method,
+        statusCode,
+      });
+    }
+
     return reply.status(statusCode).send(payload);
   });
 
