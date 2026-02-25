@@ -61,6 +61,53 @@ export async function getInstructorWhatsappAccount(
   return result.length === 0 ? null : result[0];
 }
 
+export interface ListInstructorWhatsappAccountRow {
+  instructor_id: string;
+  phone_number: string;
+  status: string;
+  connected_at: string | null;
+  created_at: string;
+  full_name: string | null;
+}
+
+/**
+ * Lists instructor WhatsApp accounts for admin. Optional filter by status.
+ */
+export async function listInstructorWhatsappAccounts(options?: {
+  status?: 'pending' | 'verified';
+}): Promise<ListInstructorWhatsappAccountRow[]> {
+  const statusFilter = options?.status;
+  if (statusFilter) {
+    const result = await sql<ListInstructorWhatsappAccountRow[]>`
+      SELECT
+        iwa.instructor_id,
+        iwa.phone_number,
+        iwa.status,
+        iwa.connected_at,
+        iwa.created_at,
+        ip.full_name
+      FROM instructor_whatsapp_accounts iwa
+      LEFT JOIN instructor_profiles ip ON ip.id = iwa.instructor_id
+      WHERE iwa.status = ${statusFilter}
+      ORDER BY iwa.created_at DESC
+    `;
+    return result;
+  }
+  const result = await sql<ListInstructorWhatsappAccountRow[]>`
+    SELECT
+      iwa.instructor_id,
+      iwa.phone_number,
+      iwa.status,
+      iwa.connected_at,
+      iwa.created_at,
+      ip.full_name
+    FROM instructor_whatsapp_accounts iwa
+    LEFT JOIN instructor_profiles ip ON ip.id = iwa.instructor_id
+    ORDER BY iwa.created_at DESC
+  `;
+  return result;
+}
+
 export interface ConnectInstructorWhatsappParams {
   instructorId: string;
   phoneNumber: string;

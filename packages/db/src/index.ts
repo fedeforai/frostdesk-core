@@ -432,11 +432,13 @@ export {
   getInstructorWhatsappAccount,
   connectInstructorWhatsappAccount,
   verifyInstructorWhatsappAccount,
+  listInstructorWhatsappAccounts,
 } from './instructor_whatsapp_repository.js';
 export type {
   InstructorWhatsappAccount,
   ConnectInstructorWhatsappParams,
   VerifyInstructorWhatsappParams,
+  ListInstructorWhatsappAccountRow,
 } from './instructor_whatsapp_repository.js';
 
 // Instructor inbox (repository — read-only)
