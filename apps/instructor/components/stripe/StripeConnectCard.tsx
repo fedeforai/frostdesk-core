@@ -35,11 +35,26 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   },
 };
 
-export function StripeConnectCard() {
+const lightContainer = {
+  padding: '1.25rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: 10,
+  background: '#ffffff',
+};
+
+const darkContainer = {
+  padding: '1.25rem',
+  border: '1px solid rgba(148, 163, 184, 0.25)',
+  borderRadius: 10,
+  background: 'rgba(30, 41, 59, 0.4)',
+};
+
+export function StripeConnectCard({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
   const [status, setStatus] = useState<StripeConnectStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isLight = variant === 'light';
 
   useEffect(() => {
     getStripeConnectStatus()
@@ -74,15 +89,17 @@ export function StripeConnectCard() {
 
   const config = STATUS_CONFIG[status?.status ?? 'not_connected'] ?? STATUS_CONFIG.not_connected;
 
+  const containerStyle = isLight ? lightContainer : darkContainer;
+  const titleColor = isLight ? '#111827' : 'rgba(226, 232, 240, 0.95)';
+  const bodyColor = isLight ? '#6b7280' : 'rgba(148, 163, 184, 0.85)';
+  const loadingColor = isLight ? '#6b7280' : 'rgba(148, 163, 184, 0.7)';
+  const errorColor = isLight ? '#dc2626' : '#fca5a5';
+  const enabledBadgeMuted = isLight ? '#6b7280' : 'rgba(148, 163, 184, 0.7)';
+
   return (
-    <div style={{
-      padding: '1.25rem',
-      border: '1px solid rgba(148, 163, 184, 0.25)',
-      borderRadius: 10,
-      background: 'rgba(30, 41, 59, 0.4)',
-    }}>
+    <div style={containerStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-        <strong style={{ fontSize: '1rem', color: 'rgba(226, 232, 240, 0.95)' }}>
+        <strong style={{ fontSize: '1rem', color: titleColor }}>
           Stripe Connect
         </strong>
         {!loading && (
@@ -101,15 +118,15 @@ export function StripeConnectCard() {
       </div>
 
       {loading ? (
-        <p style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.7)' }}>Loading...</p>
+        <p style={{ fontSize: '0.8125rem', color: loadingColor }}>Loading...</p>
       ) : (
         <>
-          <p style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.85)', marginBottom: '0.75rem' }}>
+          <p style={{ fontSize: '0.8125rem', color: bodyColor, marginBottom: '0.75rem' }}>
             {config.description}
           </p>
 
           {error && (
-            <p style={{ color: '#fca5a5', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>{error}</p>
+            <p style={{ color: errorColor, fontSize: '0.8125rem', marginBottom: '0.5rem' }}>{error}</p>
           )}
 
           {status?.status === 'not_connected' && (
@@ -121,7 +138,7 @@ export function StripeConnectCard() {
                 padding: '0.5rem 1.25rem',
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                background: '#6366f1',
+                background: isLight ? '#3b82f6' : '#6366f1',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 6,
@@ -141,9 +158,9 @@ export function StripeConnectCard() {
                 padding: '0.5rem 1.25rem',
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                background: 'rgba(245, 158, 11, 0.2)',
-                color: 'rgba(251, 191, 36, 0.95)',
-                border: 'none',
+                background: isLight ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.2)',
+                color: isLight ? '#b45309' : 'rgba(251, 191, 36, 0.95)',
+                border: isLight ? '1px solid #f59e0b' : 'none',
                 borderRadius: 6,
                 cursor: acting ? 'not-allowed' : 'pointer',
               }}
@@ -160,9 +177,9 @@ export function StripeConnectCard() {
               {status.chargesEnabled && (
                 <span style={{
                   fontSize: '0.6875rem',
-                  color: 'rgba(148, 163, 184, 0.7)',
+                  color: enabledBadgeMuted,
                   padding: '0.1rem 0.35rem',
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
+                  border: `1px solid ${isLight ? '#d1d5db' : 'rgba(148, 163, 184, 0.2)'}`,
                   borderRadius: 3,
                 }}>
                   charges_enabled

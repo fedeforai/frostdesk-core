@@ -1,5 +1,6 @@
 import SubscriptionStatusPanel from '@/components/SubscriptionStatusPanel';
 import WhatsAppSettingsSection from '@/components/settings/WhatsAppSettingsSection';
+import { StripeConnectCard } from '@/components/stripe/StripeConnectCard';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -55,6 +56,25 @@ export default function SettingsPage() {
         >
           Apri Profilo
         </Link>
+      </section>
+
+      <section
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '0.75rem' }}>
+          Pagamenti
+        </h2>
+        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>
+          Collega il tuo account Stripe per ricevere i pagamenti dai clienti.
+        </p>
+        <StripeConnectCard variant="light" />
       </section>
 
       <WhatsAppSettingsSection />
