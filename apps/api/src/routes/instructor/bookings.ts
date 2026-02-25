@@ -24,6 +24,9 @@ import {
   insertAuditEvent,
   validateAvailability,
   AvailabilityConflictError,
+  syncBookingToCalendar,
+  syncBookingUpdateToCalendar,
+  syncBookingCancelToCalendar,
 } from '@frostdesk/db';
 import type { ListInstructorBookingsFilters } from '@frostdesk/db';
 import type { UpdateBookingDetailsPatch } from '@frostdesk/db';
@@ -415,14 +418,29 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
     }
   });
 
-  // POST /instructor/bookings/:id/accept — pending → confirmed
+  // POST /instructor/bookings/:id/accept — pending → confirmed + calendar sync
   app.post<{ Params: { id: string } }>('/instructor/bookings/:id/accept', async (request, reply) => {
     try {
       const ctx = await loadBookingAndEnforceOwnership(request, reply);
       if (!ctx) return;
       const { booking, instructorId } = ctx;
       const updated = await applyTransition(booking.id, booking.status, 'confirmed', instructorId);
-      return reply.send({ ok: true, booking: updated });
+
+      const calendarResult = await syncBookingToCalendar({
+        id: booking.id,
+        instructor_id: instructorId,
+        start_time: String(booking.start_time),
+        end_time: String(booking.end_time),
+        customer_name: booking.customer_name ?? null,
+        notes: booking.notes ?? null,
+      });
+
+      return reply.send({
+        ok: true,
+        booking: updated,
+        calendar_synced: calendarResult.calendarSynced,
+        calendar_error: calendarResult.calendarError ?? null,
+      });
     } catch (err) {
       const normalized = normalizeError(err);
       const status = mapErrorToHttp(normalized.error);
@@ -460,7 +478,7 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
     }
   });
 
-  // POST /instructor/bookings/:id/cancel — confirmed | modified → cancelled.
+  // POST /instructor/bookings/:id/cancel — confirmed | modified → cancelled + calendar delete.
   // Uses current DB status (so Edit→Save→Cancel correctly yields modified→cancelled in timeline).
   app.post<{ Params: { id: string } }>('/instructor/bookings/:id/cancel', async (request, reply) => {
     try {
@@ -478,8 +496,22 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
       if (billingBlock) {
         return reply.status(402).send({ ok: false, error: billingBlock.error, message: billingBlock.message });
       }
+
+      const calendarResult = await syncBookingCancelToCalendar({
+        id: booking.id,
+        instructor_id: instructorId,
+        start_time: String(booking.start_time),
+        end_time: String(booking.end_time),
+        customer_name: booking.customer_name ?? null,
+      });
+
       const updated = await applyTransition(booking.id, booking.status, 'cancelled', instructorId);
-      return reply.send({ ok: true, booking: updated });
+      return reply.send({
+        ok: true,
+        booking: updated,
+        calendar_synced: calendarResult.calendarSynced,
+        calendar_error: calendarResult.calendarError ?? null,
+      });
     } catch (err) {
       const normalized = normalizeError(err);
       const status = mapErrorToHttp(normalized.error);
@@ -597,7 +629,21 @@ export async function instructorBookingRoutes(app: FastifyInstance): Promise<voi
         entity_id: booking.id,
         payload: { bookingId: booking.id },
       }).catch(() => { /* fail-open */ });
-      return reply.send(updated);
+
+      const calendarResult = await syncBookingUpdateToCalendar({
+        id: booking.id,
+        instructor_id: instructorId,
+        start_time: String(updated.start_time ?? booking.start_time),
+        end_time: String(updated.end_time ?? booking.end_time),
+        customer_name: updated.customer_name ?? booking.customer_name ?? null,
+        notes: updated.notes ?? booking.notes ?? null,
+      });
+
+      return reply.send({
+        ...updated,
+        calendar_synced: calendarResult.calendarSynced,
+        calendar_error: calendarResult.calendarError ?? null,
+      });
     } catch (err) {
       const normalized = normalizeError(err);
       const status = mapErrorToHttp(normalized.error);

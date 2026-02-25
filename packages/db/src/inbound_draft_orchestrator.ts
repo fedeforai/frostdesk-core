@@ -31,6 +31,9 @@ import { validateAvailability, AvailabilityConflictError } from './availability_
 import { getConversationSummary, getMessageCountSinceLastSummary, getRecentMessagesForSummary, updateConversationSummary } from './conversation_summary_repository.js';
 import { shouldUpdateSummary, estimateTokens } from './summary_policy.js';
 import { generateSummary } from './summary_generator.js';
+// Booking draft extraction + insertion (P2: structured booking proposals from inbound)
+import { extractBookingFields } from './booking_field_extractor.js';
+import { insertAIBookingDraft } from './ai_booking_draft_repository_v2.js';
 
 /**
  * Helper: Resolves instructor_id from a conversation row.
@@ -616,6 +619,81 @@ export async function orchestrateInboundDraft(
   if (gate.allowDraft && intentOperative && confidenceOk) {
     try {
       const instructorId = resolvedInstructorId ?? await getConversationInstructorId(conversationId);
+
+      // ── Structured booking draft extraction (NEW_BOOKING / RESCHEDULE) ──
+      if (classification.intent === 'NEW_BOOKING' || classification.intent === 'RESCHEDULE') {
+        try {
+          const extraction = extractBookingFields(messageText);
+          const customerPhone = await getConversationCustomerIdentifier(conversationId);
+
+          if (extraction.complete && extraction.fields.date && extraction.fields.startTime && extraction.fields.endTime) {
+            const draft = await insertAIBookingDraft({
+              conversationId,
+              instructorId: instructorId!,
+              messageId,
+              customerName: extraction.fields.customerName ?? null,
+              customerPhone: customerPhone ?? null,
+              bookingDate: extraction.fields.date,
+              startTime: extraction.fields.startTime,
+              endTime: extraction.fields.endTime,
+              durationMinutes: extraction.fields.durationMinutes ?? null,
+              partySize: extraction.fields.partySize ?? 1,
+              skillLevel: extraction.fields.skillLevel ?? null,
+              lessonType: extraction.fields.lessonType ?? null,
+              sport: extraction.fields.sport ?? null,
+              resort: extraction.fields.resort ?? null,
+              meetingPointText: extraction.fields.meetingPointText ?? null,
+              rawExtraction: extraction.fields as unknown as Record<string, unknown>,
+              extractionConfidence: extraction.extractionConfidence,
+              draftReason: `AI auto-extracted from inbound ${classification.intent} message`,
+              aiCustomerReply: generateBookingReceivedReply(detectedLanguage ?? language),
+            });
+
+            bookingDraftId = draft.id;
+            bookingDraftReply = draft.ai_customer_reply;
+
+            try {
+              await insertAuditEvent({
+                actor_type: 'system',
+                actor_id: null,
+                action: 'ai_booking_draft_created',
+                entity_type: 'conversation',
+                entity_id: conversationId,
+                severity: 'info',
+                request_id: requestId ?? null,
+                payload: {
+                  draft_id: draft.id,
+                  intent: classification.intent,
+                  extraction_confidence: extraction.extractionConfidence,
+                  booking_date: extraction.fields.date,
+                  start_time: extraction.fields.startTime,
+                  end_time: extraction.fields.endTime,
+                  party_size: extraction.fields.partySize,
+                  customer_phone: customerPhone,
+                },
+              });
+            } catch { /* fail-open */ }
+          } else {
+            try {
+              await insertAuditEvent({
+                actor_type: 'system',
+                actor_id: null,
+                action: 'ai_booking_draft_skipped',
+                entity_type: 'conversation',
+                entity_id: conversationId,
+                severity: 'info',
+                request_id: requestId ?? null,
+                payload: {
+                  intent: classification.intent,
+                  extraction_complete: extraction.complete,
+                  missing_fields: extraction.missingFields,
+                  extraction_confidence: extraction.extractionConfidence,
+                },
+              });
+            } catch { /* fail-open */ }
+          }
+        } catch { /* fail-open: booking draft extraction must never block text draft */ }
+      }
 
       // ── Generic text draft generation ──────────────────────────────────
       {

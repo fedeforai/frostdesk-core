@@ -651,3 +651,11 @@ export type {
 
 export { generateSummary } from './summary_generator.js';
 export type { SummaryInput, SummaryOutput } from './summary_generator.js';
+
+// Booking ↔ Google Calendar sync (multi-tenant, per-instructor OAuth)
+export {
+  syncBookingToCalendar,
+  syncBookingUpdateToCalendar,
+  syncBookingCancelToCalendar,
+} from './booking_calendar_sync.js';
+export type { CalendarSyncResult } from './booking_calendar_sync.js';
