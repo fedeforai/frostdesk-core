@@ -1,8 +1,10 @@
 import './loadEnv.js';
 import { getLoadedEnvPath } from './loadEnv.js';
+import { enforceStartupChecks } from './lib/startup_checks.js';
 import { initSentry } from './lib/sentry.js';
 import { buildServer } from './server.js';
 
+enforceStartupChecks();
 initSentry();
 
 const PORT = Number(process.env.PORT) || 3001;
