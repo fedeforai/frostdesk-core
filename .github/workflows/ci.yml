@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable corepack
+        run: corepack enable && corepack prepare pnpm@10.29.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages (ai + db)
+        run: |
+          pnpm --filter @frostdesk/ai build
+          pnpm --filter @frostdesk/db build
+
+      - name: Lint (admin)
+        run: pnpm --filter @frostdesk/admin lint
+
+      - name: Test (db)
+        run: pnpm --filter @frostdesk/db test
+
+      - name: Test (api)
+        run: pnpm --filter @frostdesk/api test
+
+      - name: Build API
+        run: pnpm --filter @frostdesk/api build
+
+      - name: Build Web
+        run: pnpm --filter @frostdesk/web build
