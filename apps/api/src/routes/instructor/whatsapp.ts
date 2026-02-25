@@ -11,12 +11,17 @@ import { ERROR_CODES } from '../../errors/error_codes.js';
 
 type ConnectWhatsappBody = {
   phone_number: string;
+  phone_number_id?: string | null;
+  waba_id?: string | null;
 };
 
 function isValidConnectBody(body: unknown): body is ConnectWhatsappBody {
   if (!body || typeof body !== 'object') return false;
   const b = body as Record<string, unknown>;
-  return typeof b.phone_number === 'string' && b.phone_number.trim().length > 0;
+  if (typeof b.phone_number !== 'string' || !b.phone_number.trim()) return false;
+  if (b.phone_number_id !== undefined && b.phone_number_id !== null && typeof b.phone_number_id !== 'string') return false;
+  if (b.waba_id !== undefined && b.waba_id !== null && typeof b.waba_id !== 'string') return false;
+  return true;
 }
 
 function toApiAccount(account: { phone_number: string; status: string }) {
@@ -100,7 +105,12 @@ export async function instructorWhatsappRoutes(app: FastifyInstance): Promise<vo
         });
       }
 
-      const account = await connectInstructorWhatsappAccount(profile.id, body.phone_number.trim());
+      const account = await connectInstructorWhatsappAccount({
+        instructorId: profile.id,
+        phoneNumber: body.phone_number.trim(),
+        phoneNumberId: body.phone_number_id?.trim() || null,
+        wabaId: body.waba_id?.trim() || null,
+      });
       return reply.status(201).send({
         ok: true,
         account: toApiAccount(account),

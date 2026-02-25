@@ -19,6 +19,10 @@ export const ENV_NOT_CONFIGURED = 'ENV_NOT_CONFIGURED';
 export interface SendWhatsAppTextParams {
   to: string;
   text: string;
+  /** Meta phone_number_id for this WABA; if omitted, uses META_WHATSAPP_PHONE_NUMBER_ID */
+  phoneNumberId?: string | null;
+  /** Bearer token for this number; if omitted, uses META_WHATSAPP_TOKEN */
+  token?: string | null;
   context?: {
     conversationId?: string;
     messageId?: string;
@@ -57,16 +61,22 @@ function normalizeTo(to: string): string {
 export async function sendWhatsAppText(
   params: SendWhatsAppTextParams
 ): Promise<SendWhatsAppTextResult> {
-  const token = process.env.META_WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID;
+  const token =
+    params.token != null && String(params.token).trim()
+      ? String(params.token).trim()
+      : process.env.META_WHATSAPP_TOKEN;
+  const phoneNumberId =
+    params.phoneNumberId != null && String(params.phoneNumberId).trim()
+      ? String(params.phoneNumberId).trim()
+      : process.env.META_WHATSAPP_PHONE_NUMBER_ID;
 
   if (!token || typeof token !== 'string' || !token.trim()) {
-    const err = new Error('META_WHATSAPP_TOKEN is required');
+    const err = new Error('META_WHATSAPP_TOKEN is required (or pass token in params)');
     (err as any).code = ENV_NOT_CONFIGURED;
     throw err;
   }
   if (!phoneNumberId || typeof phoneNumberId !== 'string' || !phoneNumberId.trim()) {
-    const err = new Error('META_WHATSAPP_PHONE_NUMBER_ID is required');
+    const err = new Error('META_WHATSAPP_PHONE_NUMBER_ID is required (or pass phoneNumberId in params)');
     (err as any).code = ENV_NOT_CONFIGURED;
     throw err;
   }

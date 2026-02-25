@@ -1,6 +1,7 @@
 import './loadEnv.js';
 import { getLoadedEnvPath } from './loadEnv.js';
 import { buildServer } from './server.js';
+import { startOutboundSendWorker } from './whatsapp/send_worker.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -17,6 +18,7 @@ async function start() {
 
   try {
     await server.listen({ port: PORT, host: HOST });
+    startOutboundSendWorker({ log: server.log, enabled: true });
     console.log(`🚀 FrostDesk API server listening on http://${HOST}:${PORT}`);
     console.log(`📡 Webhook endpoint: POST http://${HOST}:${PORT}/webhook`);
     console.log(`❤️  Health check: GET http://${HOST}:${PORT}/health`);

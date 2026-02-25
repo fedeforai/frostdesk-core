@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { persistOutboundMessage, isValidUUID } from '@frostdesk/db';
+import { persistOutboundMessage, isValidUUID, enqueueOutboundSend, OutboundQueueFullError } from '@frostdesk/db';
 import { requireAdminUser } from '../../lib/auth_instructor.js';
-import { sendWhatsAppText } from '../../integrations/whatsapp_cloud_api.js';
 import { resolveWhatsAppTargetPhone, TARGET_NOT_FOUND } from '../../integrations/whatsapp_target_resolution.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
@@ -20,13 +19,12 @@ function safeErrorMessage(err: Error): string {
  * - Exposes POST /admin/messages/outbound endpoint
  * - Enforces admin access
  * - Persists outbound message to messages table
- * - Sends text via WhatsApp Cloud API after persistence
+ * - Enqueues send job for WhatsApp (worker delivers via Meta API)
  *
  * WHAT IT DOES NOT DO:
  * - No AI calls
  * - No booking creation
- * - No automation
- * - No retries
+ * - No synchronous send (delivery is async via worker)
  */
 
 export async function adminOutboundMessageRoutes(app: FastifyInstance) {
@@ -85,17 +83,38 @@ export async function adminOutboundMessageRoutes(app: FastifyInstance) {
       });
 
       const to = await resolveWhatsAppTargetPhone(body.conversation_id);
-      await sendWhatsAppText({
+      const enqueueResult = await enqueueOutboundSend({
+        messageId: result.id,
+        conversationId: body.conversation_id,
         to,
         text: body.text.trim(),
-        context: { conversationId: body.conversation_id, messageId: result.id },
+        idempotencyKey: result.id,
       });
+
+      request.log.info(
+        {
+          event: 'whatsapp.send.enqueued',
+          job_id: enqueueResult.jobId,
+          message_id: result.id,
+          conversation_id: body.conversation_id,
+        },
+        'Outbound WhatsApp message enqueued'
+      );
 
       return reply.send({
         ok: true,
         message_id: result.id,
       });
     } catch (error) {
+      if (error instanceof OutboundQueueFullError) {
+        return reply.status(503).send({
+          ok: false,
+          error: {
+            code: 'QUEUE_FULL',
+            message: 'Queue full; try again later',
+          },
+        });
+      }
       const code = (error as any)?.code;
       if (code === TARGET_NOT_FOUND) {
         return reply.status(404).send({
@@ -106,7 +125,7 @@ export async function adminOutboundMessageRoutes(app: FastifyInstance) {
           },
         });
       }
-      if (error instanceof Error && (error.message.includes('WhatsApp') || error.message.includes('META_WHATSAPP') || error.message.includes('sendWhatsAppText'))) {
+      if (error instanceof Error && (error.message.includes('WhatsApp') || error.message.includes('META_WHATSAPP') || error.message.includes('enqueueOutboundSend'))) {
         return reply.status(502).send({
           ok: false,
           error: {

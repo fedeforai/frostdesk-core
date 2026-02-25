@@ -1,14 +1,9 @@
 import { sql } from './client.js';
 
 /**
- * Assumes table instructor_whatsapp_accounts exists with:
- * instructor_id UUID PRIMARY KEY REFERENCES instructor_profiles(id),
- * phone_number TEXT,
- * provider TEXT,
- * status TEXT,
- * connected_at TIMESTAMPTZ NULL,
- * created_at TIMESTAMPTZ,
- * updated_at TIMESTAMPTZ
+ * Table instructor_whatsapp_accounts: one row per instructor.
+ * Columns: instructor_id, phone_number, provider, status, connected_at, created_at, updated_at,
+ * phone_number_id (Meta Cloud API), waba_id (optional).
  */
 
 export interface InstructorWhatsappAccount {
@@ -19,6 +14,8 @@ export interface InstructorWhatsappAccount {
   connected_at: string | null;
   created_at: string;
   updated_at: string;
+  phone_number_id: string | null;
+  waba_id: string | null;
 }
 
 /**
@@ -27,6 +24,22 @@ export interface InstructorWhatsappAccount {
  * @param instructorId - Instructor ID (instructor_profiles.id)
  * @returns Account row or null
  */
+/**
+ * Returns instructor_id for the given Meta phone_number_id, or null if not found.
+ * Used by the webhook to route inbound messages to the correct instructor.
+ */
+export async function getInstructorIdByPhoneNumberId(
+  phoneNumberId: string
+): Promise<string | null> {
+  const result = await sql<Array<{ instructor_id: string }>>`
+    SELECT instructor_id
+    FROM instructor_whatsapp_accounts
+    WHERE phone_number_id = ${phoneNumberId}
+    LIMIT 1
+  `;
+  return result.length === 0 ? null : result[0].instructor_id;
+}
+
 export async function getInstructorWhatsappAccount(
   instructorId: string
 ): Promise<InstructorWhatsappAccount | null> {
@@ -38,7 +51,9 @@ export async function getInstructorWhatsappAccount(
       status,
       connected_at,
       created_at,
-      updated_at
+      updated_at,
+      phone_number_id,
+      waba_id
     FROM instructor_whatsapp_accounts
     WHERE instructor_id = ${instructorId}
     LIMIT 1
@@ -46,32 +61,55 @@ export async function getInstructorWhatsappAccount(
   return result.length === 0 ? null : result[0];
 }
 
+export interface ConnectInstructorWhatsappParams {
+  instructorId: string;
+  phoneNumber: string;
+  phoneNumberId?: string | null;
+  wabaId?: string | null;
+}
+
 /**
  * Creates or replaces the instructor's WhatsApp link. Sets status='pending', provider='whatsapp_business'.
- * No OTP, no webhook, no messaging — linking only.
+ * When Meta Cloud API identifiers are provided, stores them for webhook routing and outbound send.
  *
- * @param instructorId - Instructor ID
- * @param phoneNumber - E.164-style phone number (e.g. +393401234567)
+ * @param params - instructorId, phoneNumber, optional phoneNumberId and wabaId from Meta
  * @returns The upserted account row
  */
 export async function connectInstructorWhatsappAccount(
-  instructorId: string,
-  phoneNumber: string
+  instructorIdOrParams: string | ConnectInstructorWhatsappParams,
+  phoneNumber?: string
 ): Promise<InstructorWhatsappAccount> {
+  const instructorId =
+    typeof instructorIdOrParams === 'object'
+      ? instructorIdOrParams.instructorId
+      : instructorIdOrParams;
+  const phone =
+    typeof instructorIdOrParams === 'object'
+      ? instructorIdOrParams.phoneNumber
+      : (phoneNumber ?? '');
+  const phoneNumberId =
+    typeof instructorIdOrParams === 'object' ? instructorIdOrParams.phoneNumberId ?? null : null;
+  const wabaId =
+    typeof instructorIdOrParams === 'object' ? instructorIdOrParams.wabaId ?? null : null;
+
   const result = await sql<InstructorWhatsappAccount[]>`
     INSERT INTO instructor_whatsapp_accounts (
       instructor_id,
       phone_number,
       provider,
       status,
+      phone_number_id,
+      waba_id,
       created_at,
       updated_at
     )
     VALUES (
       ${instructorId},
-      ${phoneNumber},
+      ${phone},
       'whatsapp_business',
       'pending',
+      ${phoneNumberId},
+      ${wabaId},
       NOW(),
       NOW()
     )
@@ -79,6 +117,8 @@ export async function connectInstructorWhatsappAccount(
       phone_number = EXCLUDED.phone_number,
       provider = EXCLUDED.provider,
       status = EXCLUDED.status,
+      phone_number_id = COALESCE(EXCLUDED.phone_number_id, instructor_whatsapp_accounts.phone_number_id),
+      waba_id = COALESCE(EXCLUDED.waba_id, instructor_whatsapp_accounts.waba_id),
       updated_at = NOW()
     RETURNING
       instructor_id,
@@ -87,7 +127,9 @@ export async function connectInstructorWhatsappAccount(
       status,
       connected_at,
       created_at,
-      updated_at
+      updated_at,
+      phone_number_id,
+      waba_id
   `;
   return result[0];
 }
@@ -120,7 +162,9 @@ export async function verifyInstructorWhatsappAccount(
       status,
       connected_at,
       created_at,
-      updated_at
+      updated_at,
+      phone_number_id,
+      waba_id
   `;
 
   if (result.length === 0) {

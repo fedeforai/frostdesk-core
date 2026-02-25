@@ -22,6 +22,7 @@ import { adminIntentConfidenceRoutes } from './admin/intent_confidence.js';
 import { adminAIGatingRoutes } from './admin/ai_gating.js';
 import { adminAIDraftRoutes } from './admin/ai_draft.js';
 import { adminSendAIDraftRoutes } from './admin/send_ai_draft.js';
+import { adminWhatsAppQueueRoutes } from './admin/whatsapp_queue.js';
 import { adminInstructorApprovalRoutes } from './admin/instructor_approval.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
@@ -378,6 +379,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
 
   // Register send AI draft routes
   await adminSendAIDraftRoutes(fastify);
+  await adminWhatsAppQueueRoutes(fastify);
 
   // Register AI feature flags routes
   // Disabled for pilot stability
