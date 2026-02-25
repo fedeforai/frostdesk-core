@@ -12,12 +12,14 @@ import {
   linkConversationToCustomer,
   normalizePhoneE164,
 } from '@frostdesk/db';
+import { verifyWhatsAppSignature } from '../lib/whatsapp_webhook_verify.js';
 
 /**
  * WhatsApp Webhook Routes (Pilot)
  *
  * WHAT IT DOES:
  * - Exposes POST /webhook/whatsapp endpoint
+ * - Verifies Meta's X-Hub-Signature-256 (HMAC-SHA256 with App Secret)
  * - Parses and validates WhatsApp webhook payloads
  * - Resolves conversation via channel identity mapping
  * - Persists inbound message (inbound_messages + messages)
@@ -30,10 +32,52 @@ import {
  */
 
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
+  // Raw body parser — scoped to this plugin's encapsulation context.
+  // Meta webhook signature verification requires the raw bytes, not parsed JSON.
+  fastify.addContentTypeParser(
+    'application/json',
+    { parseAs: 'buffer' },
+    (_req, body, done) => {
+      done(null, body);
+    },
+  );
+
   fastify.post('/webhook/whatsapp', async (request, reply) => {
     try {
-      // Parse WhatsApp payload structure (inbound + message echo when business replies from phone)
-      const body = request.body as {
+      // ── Signature verification ──────────────────────────────────────────
+      const appSecret = process.env.META_APP_SECRET;
+      const skipVerify = process.env.NODE_ENV !== 'production'
+        && process.env.SKIP_WHATSAPP_SIGNATURE_VERIFY === '1';
+
+      if (!skipVerify) {
+        if (!appSecret) {
+          request.log.error('META_APP_SECRET not configured — rejecting webhook');
+          return reply.status(500).send({
+            ok: false,
+            error: 'WEBHOOK_SECRET_NOT_CONFIGURED',
+            message: 'WhatsApp webhook secret not configured',
+          });
+        }
+
+        const signature = request.headers['x-hub-signature-256'] as string | undefined;
+        const rawBody = request.body as Buffer;
+
+        if (!signature || !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
+          request.log.warn({ hasSignature: !!signature }, 'WhatsApp webhook signature verification failed');
+          return reply.status(401).send({
+            ok: false,
+            error: 'INVALID_SIGNATURE',
+            message: 'Webhook signature verification failed',
+          });
+        }
+      }
+
+      // Parse the raw buffer into JSON for subsequent processing
+      const body = JSON.parse(
+        Buffer.isBuffer(request.body)
+          ? (request.body as Buffer).toString('utf-8')
+          : JSON.stringify(request.body),
+      ) as {
         entry?: Array<{
           changes?: Array<{
             value?: {
