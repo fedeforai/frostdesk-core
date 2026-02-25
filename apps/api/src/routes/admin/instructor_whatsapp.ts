@@ -1,16 +1,39 @@
 import type { FastifyInstance } from 'fastify';
-import { verifyInstructorWhatsappAccount, insertAuditEvent } from '@frostdesk/db';
+import {
+  verifyInstructorWhatsappAccount,
+  listInstructorWhatsappAccounts,
+  insertAuditEvent,
+} from '@frostdesk/db';
 import { requireAdminUser } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 
 /**
- * Admin instructor WhatsApp routes (manual verify only).
+ * Admin instructor WhatsApp routes (list + manual verify).
+ * GET /admin/instructor/whatsapp/list — list accounts (optional ?status=pending|verified).
  * POST /admin/instructor/whatsapp/verify — set instructor WhatsApp account to verified (admin-only).
- * No webhook, no Meta API, no inbox logic — state only.
  */
 export async function adminInstructorWhatsappRoutes(app: FastifyInstance): Promise<void> {
+  app.get('/admin/instructor/whatsapp/list', async (request, reply) => {
+    try {
+      await requireAdminUser(request);
+      const query = request.query as { status?: string };
+      const status =
+        query.status === 'pending' || query.status === 'verified' ? query.status : undefined;
+      const items = await listInstructorWhatsappAccounts({ status });
+      return reply.send({ ok: true, items });
+    } catch (error) {
+      const normalized = normalizeError(error);
+      const httpStatus = mapErrorToHttp(normalized.error);
+      return reply.status(httpStatus).send({
+        ok: false,
+        error: normalized.error,
+        ...(normalized.message ? { message: normalized.message } : {}),
+      });
+    }
+  });
+
   app.post('/admin/instructor/whatsapp/verify', async (request, reply) => {
     try {
       const userId = await requireAdminUser(request);

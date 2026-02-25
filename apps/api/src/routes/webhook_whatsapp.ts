@@ -11,13 +11,17 @@ import {
   upsertCustomer,
   linkConversationToCustomer,
   normalizePhoneE164,
+  getInstructorIdByPhoneNumberId,
+  connectInstructorWhatsappAccount,
 } from '@frostdesk/db';
+import { verifyWhatsappSignature } from '../lib/whatsapp_signature.js';
 
 /**
  * WhatsApp Webhook Routes (Pilot)
  *
  * WHAT IT DOES:
  * - Exposes POST /webhook/whatsapp endpoint
+ * - Verifies request signature via X-Hub-Signature-256 (META_WHATSAPP_APP_SECRET)
  * - Parses and validates WhatsApp webhook payloads
  * - Resolves conversation via channel identity mapping
  * - Persists inbound message (inbound_messages + messages)
@@ -30,31 +34,101 @@ import {
  */
 
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
+  // GET: Meta webhook verification (Callback URL validation)
+  fastify.get('/webhook/whatsapp', async (request, reply) => {
+    const query = request.query as {
+      'hub.mode'?: string;
+      'hub.verify_token'?: string;
+      'hub.challenge'?: string;
+    };
+    const mode = query['hub.mode'];
+    const verifyToken = query['hub.verify_token'];
+    const challenge = query['hub.challenge'];
+
+    if (!mode || !verifyToken || !challenge) {
+      return reply.status(400).send({ ok: false, error: 'Missing hub.mode, hub.verify_token or hub.challenge' });
+    }
+
+    const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || process.env.META_VERIFY_TOKEN;
+    if (!expectedToken || verifyToken !== expectedToken) {
+      request.log.warn('WhatsApp webhook verification failed: token mismatch or META_WHATSAPP_VERIFY_TOKEN unset');
+      return reply.status(403).send({ ok: false, error: 'Invalid verify token' });
+    }
+
+    if (mode === 'subscribe') {
+      return reply.type('text/plain').send(challenge);
+    }
+
+    return reply.status(400).send({ ok: false, error: 'Invalid hub.mode' });
+  });
+
+  // Raw body parser — scoped to this plugin (signature verification needs raw bytes).
+  fastify.addContentTypeParser(
+    'application/json',
+    { parseAs: 'buffer' },
+    (_req, body, done) => {
+      done(null, body);
+    },
+  );
+
   fastify.post('/webhook/whatsapp', async (request, reply) => {
     try {
+      // ── Signature verification ──────────────────────────────────────────────
+      const secret = process.env.META_WHATSAPP_APP_SECRET;
+      if (!secret || typeof secret !== 'string' || !secret.trim()) {
+        request.log.warn('META_WHATSAPP_APP_SECRET not configured');
+        return reply.status(500).send({
+          ok: false,
+          error: 'Webhook secret not configured',
+        });
+      }
+
+      const signature = request.headers['x-hub-signature-256'] as string | undefined;
+      if (!signature || typeof signature !== 'string') {
+        request.log.warn('Missing X-Hub-Signature-256 header');
+        return reply.status(400).send({
+          ok: false,
+          error: 'Missing X-Hub-Signature-256 header',
+        });
+      }
+
+      const rawBody = Buffer.isBuffer(request.body) ? request.body.toString('utf8') : String(request.body);
+      if (!verifyWhatsappSignature({ payload: rawBody, signature, secret })) {
+        request.log.warn('WhatsApp webhook signature verification failed');
+        return reply.status(401).send({
+          ok: false,
+          error: 'Invalid signature',
+        });
+      }
+
       // Parse WhatsApp payload structure (inbound + message echo when business replies from phone)
-      const body = request.body as {
+      type WhatsAppWebhookPayload = {
         entry?: Array<{
           changes?: Array<{
             value?: {
-              metadata?: {
-                display_phone_number?: string;
-                phone_number_id?: string;
-              };
+              metadata?: { display_phone_number?: string; phone_number_id?: string };
               messages?: Array<{
                 id?: string;
                 from?: string;
                 to?: string;
                 timestamp?: string;
                 type?: string;
-                text?: {
-                  body?: string;
-                };
+                text?: { body?: string };
               }>;
             };
           }>;
         }>;
       };
+      let body: WhatsAppWebhookPayload;
+      try {
+        body = JSON.parse(rawBody) as WhatsAppWebhookPayload;
+      } catch (parseErr) {
+        request.log.warn({ err: parseErr }, 'WhatsApp webhook body JSON parse failed');
+        return reply.status(400).send({
+          ok: false,
+          error: 'Invalid JSON body',
+        });
+      }
 
       // Extract first message: entry[0].changes[0].value.messages[0]
       if (!body.entry || !Array.isArray(body.entry) || body.entry.length === 0) {
@@ -135,6 +209,33 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       }
 
       const value = change.value;
+      const phoneNumberId = value.metadata?.phone_number_id;
+      const displayPhone = value.metadata?.display_phone_number?.trim() ?? '';
+
+      // Resolve instructor from Meta phone_number_id (multi-tenant). Auto-link unknown numbers to default instructor.
+      const defaultInstructorId =
+        process.env.DEFAULT_INSTRUCTOR_ID?.trim() || '00000000-0000-0000-0000-000000000001';
+      let instructorIdForConversation: string;
+      if (typeof phoneNumberId === 'string' && phoneNumberId) {
+        const resolved = await getInstructorIdByPhoneNumberId(phoneNumberId);
+        if (resolved) {
+          instructorIdForConversation = resolved;
+        } else {
+          // First time we see this phone_number_id: link it to the default instructor so future lookups succeed.
+          try {
+            await connectInstructorWhatsappAccount({
+              instructorId: defaultInstructorId,
+              phoneNumber: displayPhone || 'unknown',
+              phoneNumberId,
+            });
+          } catch (err) {
+            request.log.warn({ err, phoneNumberId, defaultInstructorId }, 'Auto-link phone_number_id to default instructor failed');
+          }
+          instructorIdForConversation = defaultInstructorId;
+        }
+      } else {
+        instructorIdForConversation = defaultInstructorId;
+      }
 
       // Message echo: business replied from WhatsApp app (from = business number). Sync to inbox.
       const businessPhone = value.metadata?.display_phone_number;
@@ -155,11 +256,10 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           return reply.status(200).send({ ok: true });
         }
         const customerIdentifier = normalizePhoneE164(message.to) ?? message.to;
-        const instructorIdForConversation = 1;
         const conversation = await resolveConversationByChannel(
           'whatsapp',
           customerIdentifier,
-          instructorIdForConversation
+          instructorIdForConversation as string
         );
         const conversationId = conversation?.id;
         if (
@@ -233,11 +333,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         received_at: new Date(Number(message.timestamp) * 1000),
       };
 
-      // Resolve conversation by channel and customer identifier.
-      // NOTE: resolveConversationByChannel expects instructorId as number (legacy schema).
-      // DEFAULT_INSTRUCTOR_ID (UUID) support deferred until column type is migrated.
-      const instructorIdForConversation = 1;
-
+      // Resolve conversation by channel and customer identifier (instructor already resolved above from phone_number_id).
       const conversation = await resolveConversationByChannel(
         'whatsapp',
         normalizedMessage.sender_identifier,
@@ -263,10 +359,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
 
       // CM-2: Upsert customer profile and link to conversation (fail-open)
       try {
-        const instructorIdStr =
-          typeof instructorIdForConversation === 'string'
-            ? instructorIdForConversation
-            : '00000000-0000-0000-0000-000000000001';
+        const instructorIdStr = instructorIdForConversation;
 
         const customer = await upsertCustomer({
           instructorId: instructorIdStr,

@@ -10,7 +10,7 @@ Pagine sotto `apps/instructor/app/instructor/(pre)/` — **nessun layout guard**
 |-----|------|------|
 | `/login` | `(pre)/login/page.tsx` → re-export da `app/login/page.tsx` | Default after login: `/instructor/gate` |
 | `/auth/callback` | `app/auth/callback/page.tsx` (root) | Default next: `/instructor/gate` |
-| `/instructor/gate` | `(pre)/gate/page.tsx` | Single gate: session → ensure row (insert only) → redirect per stato |
+| `/instructor/gate` | `instructor/gate/page.tsx` | Single gate: session → ensure row (insert only) → redirect per stato |
 | `/instructor/approval-pending` | `(pre)/approval-pending/page.tsx` | UI + “Aggiorna stato” → gate |
 | `/instructor/onboarding` | `(pre)/onboarding/page.tsx` | Assume row da gate; redirect se manca row / non approved / completed |
 | `/instructor/signup` | `(pre)/signup/page.tsx` | Re-export signup |

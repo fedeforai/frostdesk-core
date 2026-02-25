@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { approveAndSendAIDraft, insertAuditEvent, DraftNotFoundError } from '@frostdesk/db';
+import { approveAndSendAIDraft, insertAuditEvent, DraftNotFoundError, enqueueOutboundSend, OutboundQueueFullError } from '@frostdesk/db';
 import { requireAdminUser } from '../../lib/auth_instructor.js';
-import { sendWhatsAppText } from '../../integrations/whatsapp_cloud_api.js';
 import { resolveWhatsAppTargetPhone, TARGET_NOT_FOUND } from '../../integrations/whatsapp_target_resolution.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
@@ -35,11 +34,23 @@ export async function adminSendAIDraftRoutes(app: FastifyInstance) {
       });
 
       const to = await resolveWhatsAppTargetPhone(conversationId);
-      await sendWhatsAppText({
+      const enqueueResult = await enqueueOutboundSend({
+        messageId: result.message_id,
+        conversationId,
         to,
         text: result.text,
-        context: { conversationId, messageId: result.message_id },
+        idempotencyKey: result.message_id,
       });
+
+      request.log.info(
+        {
+          event: 'whatsapp.send.enqueued',
+          job_id: enqueueResult.jobId,
+          message_id: result.message_id,
+          conversation_id: conversationId,
+        },
+        'Outbound WhatsApp AI draft enqueued'
+      );
 
       try {
         await insertAuditEvent({
@@ -111,6 +122,13 @@ export async function adminSendAIDraftRoutes(app: FastifyInstance) {
         message_id: result.message_id,
       });
     } catch (error) {
+      if (error instanceof OutboundQueueFullError) {
+        return reply.status(503).send({
+          ok: false,
+          error: 'QUEUE_FULL',
+          message: 'Queue full; try again later',
+        });
+      }
       if (error instanceof DraftNotFoundError) {
         const normalized = normalizeError({ code: ERROR_CODES.NOT_FOUND });
         return reply.status(404).send({
@@ -128,7 +146,7 @@ export async function adminSendAIDraftRoutes(app: FastifyInstance) {
           message: normalized.message ?? 'Target phone not found for conversation',
         });
       }
-      if (error instanceof Error && (error.message.includes('WhatsApp') || error.message.includes('META_WHATSAPP') || error.message.includes('sendWhatsAppText'))) {
+      if (error instanceof Error && (error.message.includes('WhatsApp') || error.message.includes('META_WHATSAPP') || error.message.includes('enqueueOutboundSend'))) {
         return reply.status(502).send({
           ok: false,
           error: ERROR_CODES.WHATSAPP_SEND_FAILED,

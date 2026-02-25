@@ -21,6 +21,23 @@ export type {
   PersistOutboundMessageFromEchoParams,
 } from './message_repository.js';
 
+// Outbound send jobs (WhatsApp queue)
+export {
+  enqueueOutboundSend,
+  claimNextPendingJob,
+  markOutboundJobSent,
+  markOutboundJobFailed,
+  getOutboundQueueStats,
+  OutboundQueueFullError,
+} from './outbound_send_jobs_repository.js';
+export type {
+  OutboundSendJobStatus,
+  EnqueueOutboundSendParams,
+  EnqueueOutboundSendResult,
+  OutboundSendJobRow,
+  OutboundQueueStats,
+} from './outbound_send_jobs_repository.js';
+
 // Channel identity mapping
 export {
   findChannelIdentityMapping,
@@ -411,13 +428,17 @@ export type { InstructorGuardrails, UpdateInstructorGuardrailsPatch } from './in
 
 // Instructor WhatsApp (repository — linking only)
 export {
+  getInstructorIdByPhoneNumberId,
   getInstructorWhatsappAccount,
   connectInstructorWhatsappAccount,
   verifyInstructorWhatsappAccount,
+  listInstructorWhatsappAccounts,
 } from './instructor_whatsapp_repository.js';
 export type {
   InstructorWhatsappAccount,
+  ConnectInstructorWhatsappParams,
   VerifyInstructorWhatsappParams,
+  ListInstructorWhatsappAccountRow,
 } from './instructor_whatsapp_repository.js';
 
 // Instructor inbox (repository — read-only)

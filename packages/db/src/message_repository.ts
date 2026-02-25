@@ -151,10 +151,6 @@ export interface PersistInboundMessageWithInboxBridgeParams {
 export async function persistInboundMessageWithInboxBridge(
   params: PersistInboundMessageWithInboxBridgeParams
 ): Promise<string> {
-  console.log('[DEBUG PERSIST] persistInboundMessageWithInboxBridge called');
-  console.log('[DEBUG PERSIST] params.conversationId:', params.conversationId, 'type:', typeof params.conversationId);
-  console.log('[DEBUG PERSIST] Full params:', JSON.stringify({ ...params, rawPayload: '[omitted]' }, null, 2));
-  
   // Idempotency check: if inbound_message already exists, return existing id
   const existing = await findInboundMessageByExternalId(
     params.channel,
@@ -168,16 +164,12 @@ export async function persistInboundMessageWithInboxBridge(
 
   // Message doesn't exist: insert into both tables atomically using a transaction
   const receivedAtISO = params.receivedAt.toISOString();
-  
-  console.log('[DEBUG PERSIST] About to INSERT - conversationId:', params.conversationId, 'type:', typeof params.conversationId);
-  
+
   // Use transaction to ensure both inserts succeed or both fail (atomicity)
   return await sql.begin(async (tx) => {
     const db = txAsSql(tx);
     // Step 1: Insert into inbound_messages
-    console.log('[DEBUG PERSIST] Inside transaction - conversationId:', params.conversationId, 'type:', typeof params.conversationId);
     // PILOT MODE: message_type column not in schema, removed from INSERT
-    
     const inboundMessageResult = await db<Array<{ id: string }>>`
       INSERT INTO inbound_messages (
         channel,

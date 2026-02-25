@@ -1621,6 +1621,89 @@ export async function approveInstructor(
   return response.json();
 }
 
+// --- Instructor WhatsApp (admin: list + verify) ---
+
+export interface InstructorWhatsappAccountItem {
+  instructor_id: string;
+  phone_number: string;
+  status: string;
+  connected_at: string | null;
+  created_at: string;
+  full_name: string | null;
+}
+
+export interface FetchInstructorWhatsappAccountsResponse {
+  ok: true;
+  items: InstructorWhatsappAccountItem[];
+}
+
+export async function fetchInstructorWhatsappAccounts(
+  status?: 'pending' | 'verified'
+): Promise<FetchInstructorWhatsappAccountsResponse> {
+  const useProxy = typeof window !== 'undefined';
+  const qs = status ? `?status=${status}` : '';
+  let response: Response;
+
+  if (useProxy) {
+    response = await fetch(`/api/admin/instructor/whatsapp/list${qs}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/instructor/whatsapp/list${qs}`, {
+      method: 'GET',
+      ...getAdminFetchOptions(session),
+    });
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to load WhatsApp accounts');
+    const errorObj = new Error(message);
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+  return response.json();
+}
+
+export async function verifyInstructorWhatsapp(
+  instructorId: string
+): Promise<{ ok: true; account: { instructor_id: string; phone_number: string; status: string } }> {
+  const useProxy = typeof window !== 'undefined';
+  let response: Response;
+
+  if (useProxy) {
+    response = await fetch('/api/admin/instructor/whatsapp/verify', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ instructor_id: instructorId }),
+    });
+  } else {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session found');
+    response = await fetch(`${API_BASE_URL}/admin/instructor/whatsapp/verify`, {
+      method: 'POST',
+      ...getAdminFetchOptions(session),
+      body: JSON.stringify({ instructor_id: instructorId }),
+    });
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to verify WhatsApp account');
+    const errorObj = new Error(message);
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+  return response.json();
+}
+
 // --- AI Draft Approval ---
 // MVP v1: Admin approves AI-generated draft and sends it via WhatsApp
 // Backend already exists: POST /admin/conversations/:conversationId/send-ai-draft

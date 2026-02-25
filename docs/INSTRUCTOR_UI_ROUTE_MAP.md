@@ -9,7 +9,7 @@ Derived from `apps/instructor/app/instructor/**/page.tsx`. Route groups `(app)` 
 | `/instructor/login` | `(pre)/login/page.tsx` | client | Supabase auth (getSupabaseBrowser), no instructorApi |
 | `/instructor/signup` | `(pre)/signup/page.tsx` | client | Supabase auth only |
 | `/instructor/approval-pending` | `(pre)/approval-pending/page.tsx` | — | — |
-| `/instructor/gate` | `(pre)/gate/page.tsx` | server | getServerSession, getSupabaseServer, direct DB/Supabase client |
+| `/instructor/gate` | `instructor/gate/page.tsx` | server | getServerSession, getSupabaseServer, direct DB/Supabase client |
 | `/instructor/onboarding` | `(pre)/onboarding/page.tsx` | server | getServerSession, redirect logic |
 | `/instructor/onboarding/form` | `(pre)/onboarding/form/page.tsx` | server + client | Server: getServerSession, supabase.from(); Client: InstructorOnboardingForm → saveOnboardingDraft, submitOnboardingComplete (instructorApi) |
 | `/instructor/dashboard` | `(app)/dashboard/page.tsx` | server (wrapper) | InstructorDashboardClient (client) → getConversations, getMessages, getKpiSummary (instructorApi) |

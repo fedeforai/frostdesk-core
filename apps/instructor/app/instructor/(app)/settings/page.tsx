@@ -1,4 +1,5 @@
 import SubscriptionStatusPanel from '@/components/SubscriptionStatusPanel';
+import WhatsAppSettingsSection from '@/components/settings/WhatsAppSettingsSection';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -55,6 +56,8 @@ export default function SettingsPage() {
           Apri Profilo
         </Link>
       </section>
+
+      <WhatsAppSettingsSection />
     </div>
   );
 }

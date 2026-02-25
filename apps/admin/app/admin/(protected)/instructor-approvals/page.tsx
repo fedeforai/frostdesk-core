@@ -5,7 +5,10 @@ import Link from 'next/link';
 import {
   fetchPendingInstructors,
   approveInstructor,
+  fetchInstructorWhatsappAccounts,
+  verifyInstructorWhatsapp,
   type PendingInstructorItem,
+  type InstructorWhatsappAccountItem,
 } from '@/lib/adminApi';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -59,7 +62,12 @@ const HEALTH_COLORS: Record<string, { bg: string; fg: string }> = {
   critical: { bg: '#fee2e2', fg: '#991b1b' },
 };
 
-type Tab = 'pending' | 'all';
+const WHATSAPP_STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  pending: { bg: '#fef3c7', fg: '#92400e' },
+  verified: { bg: '#d1fae5', fg: '#065f46' },
+};
+
+type Tab = 'pending' | 'all' | 'whatsapp';
 
 // ── Main Component ───────────────────────────────────────────────────────
 
@@ -79,9 +87,12 @@ export default function InstructorApprovalsPage() {
       <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid rgba(255, 255, 255, 0.1)', marginBottom: '1.5rem' }}>
         <TabButton label="Pending" active={tab === 'pending'} onClick={() => setTab('pending')} />
         <TabButton label="All Instructors" active={tab === 'all'} onClick={() => setTab('all')} />
+        <TabButton label="WhatsApp" active={tab === 'whatsapp'} onClick={() => setTab('whatsapp')} />
       </div>
 
-      {tab === 'pending' ? <PendingTab /> : <AllInstructorsTab />}
+      {tab === 'pending' && <PendingTab />}
+      {tab === 'all' && <AllInstructorsTab />}
+      {tab === 'whatsapp' && <WhatsAppTab />}
     </div>
   );
 }
@@ -333,6 +344,143 @@ function AllInstructorsTab() {
           </div>
         </>
       )}
+    </>
+  );
+}
+
+// ── WhatsApp Tab (list + verify) ─────────────────────────────────────────
+
+function WhatsAppTab() {
+  const [items, setItems] = useState<InstructorWhatsappAccountItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetchInstructorWhatsappAccounts();
+      setItems(res.items ?? []);
+    } catch (e: unknown) {
+      setError((e as Error)?.message ?? 'Failed to load WhatsApp accounts');
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleVerify = async (instructorId: string) => {
+    setActingId(instructorId);
+    setError(null);
+    try {
+      await verifyInstructorWhatsapp(instructorId);
+      await load();
+    } catch (e: unknown) {
+      setError((e as Error)?.message ?? 'Failed to verify');
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const th: React.CSSProperties = {
+    padding: '0.625rem 0.75rem',
+    textAlign: 'left',
+    fontSize: '0.6875rem',
+    fontWeight: 600,
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+    whiteSpace: 'nowrap',
+  };
+
+  const td: React.CSSProperties = {
+    padding: '0.5rem 0.75rem',
+    fontSize: '0.8125rem',
+    color: 'rgba(148, 163, 184, 0.9)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+  };
+
+  if (loading) {
+    return <div style={{ padding: '2rem', color: '#6b7280', fontSize: '0.875rem' }}>Loading…</div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '1rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b', fontSize: '0.875rem' }}>
+        {error}
+        <br />
+        <button type="button" onClick={load} style={{ marginTop: '0.5rem', padding: '0.375rem 0.75rem', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '0.375rem', background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', fontSize: '0.8125rem' }}>Retry</button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <p style={{ fontSize: '0.8125rem', color: '#9ca3af', marginBottom: '1rem' }}>
+        Collegamenti WhatsApp degli istruttori. Conferma i numeri in attesa con &quot;Verifica&quot;.
+      </p>
+      <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+          <thead>
+            <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+              <th style={th}>Instructor</th>
+              <th style={th}>Phone number</th>
+              <th style={th}>Status</th>
+              <th style={th}>Created</th>
+              <th style={th}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No WhatsApp accounts linked.</td>
+              </tr>
+            ) : (
+              items.map((row) => (
+                <tr key={row.instructor_id} style={{ transition: 'background 0.1s' }}>
+                  <td style={td}>
+                    <div style={{ fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)' }}>{row.full_name ?? '—'}</div>
+                    <div style={{ fontSize: '0.6875rem', color: '#9ca3af', fontFamily: 'monospace' }}>{truncateId(row.instructor_id, 12)}</div>
+                  </td>
+                  <td style={td}>{row.phone_number}</td>
+                  <td style={td}>{statusBadge(row.status, WHATSAPP_STATUS_COLORS)}</td>
+                  <td style={{ ...td, fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>{formatDate(row.created_at)}</td>
+                  <td style={td}>
+                    {row.status === 'pending' ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleVerify(row.instructor_id)}
+                        disabled={actingId !== null}
+                        style={{
+                          padding: '0.375rem 0.75rem',
+                          borderRadius: '0.375rem',
+                          border: '1px solid #059669',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          color: '#059669',
+                          fontWeight: 600,
+                          fontSize: '0.8125rem',
+                          cursor: actingId !== null ? 'not-allowed' : 'pointer',
+                          opacity: actingId !== null ? 0.7 : 1,
+                        }}
+                      >
+                        {actingId === row.instructor_id ? '…' : 'Verifica'}
+                      </button>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }
