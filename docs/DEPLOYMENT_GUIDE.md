@@ -303,6 +303,10 @@ Clicca **Deploy**. Otterrai un URL tipo `frostdesk-admin.vercel.app`.
 > - Controlla che `META_VERIFY_TOKEN` su Railway corrisponda esattamente
 > - Controlla i logs Railway per vedere la richiesta di verifica
 
+**Firma webhook POST:** Ogni POST a `/webhook/whatsapp` deve essere firmata da Meta. Imposta **`META_WHATSAPP_APP_SECRET`** (App Secret dalla Meta Developer Console) su Railway. Senza questo, le richieste in arrivo al webhook verranno rifiutate con 401.
+
+**Coda outbound e worker:** Gli invii WhatsApp (messaggi manuali e draft approvati) non vengono più inviati in modo sincrono: vengono accodati nella tabella `outbound_send_jobs` e processati da un worker nello stesso processo API (polling ogni 2 s). Variabili opzionali: `WHATSAPP_SEND_MAX_RPS` (default 80, max invii/s verso Meta), `OUTBOUND_QUEUE_MAX_PENDING` (default 10000; oltre questa soglia le route restituiscono 503 "Queue full"). Per monitorare: GET `/admin/whatsapp/queue-stats` (solo admin) restituisce `pending`, `dead_last_24h`, `sent_last_24h`. I job in stato **dead** (dopo 5 tentativi falliti) vanno monitorati: query `SELECT * FROM outbound_send_jobs WHERE status = 'dead'` o alert su `dead_last_24h > 0`.
+
 ### 5.2 Webhook Stripe (Pagamenti)
 
 1. Vai su https://dashboard.stripe.com/webhooks
