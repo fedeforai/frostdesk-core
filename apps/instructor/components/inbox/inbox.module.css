@@ -770,6 +770,43 @@
   font-size: 14px;
 }
 
+.emptyStateBlock {
+  padding: 28px 20px;
+  text-align: left;
+}
+
+.emptyStateBlockTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.95);
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyStateBlockBody {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.emptyStateCta {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.emptyStateCta:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--muted);
+}
+
 .emptyMessages {
   flex: 1;
   display: flex;

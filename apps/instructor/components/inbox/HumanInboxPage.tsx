@@ -1049,7 +1049,15 @@ export default function HumanInboxPage() {
             {listLoading ? (
               <div className={styles.listLoading}>Loading conversations…</div>
             ) : filtered.length === 0 ? (
-              <div className={styles.emptyList}>No conversations</div>
+              <div className={styles.emptyStateBlock}>
+                <p className={styles.emptyStateBlockTitle}>Nessuna conversazione</p>
+                <p className={styles.emptyStateBlockBody}>
+                  I messaggi che i clienti inviano al tuo numero WhatsApp appariranno qui. Collega e verifica il numero in Impostazioni per ricevere i messaggi.
+                </p>
+                <Link href="/instructor/settings" className={styles.emptyStateCta}>
+                  Vai a Impostazioni
+                </Link>
+              </div>
             ) : (
               <ConversationListVirtual
                 filtered={filtered}
