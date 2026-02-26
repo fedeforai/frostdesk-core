@@ -35,7 +35,9 @@
       "excludedFiles": [
         "**/*client*",
         "**/*.client.ts",
-        "**/*.client.tsx"
+        "**/*.client.tsx",
+        "app/instructor/(app)/**/*.tsx",
+        "app/instructor/(app)/**/*.ts"
       ],
       "rules": {
         "no-restricted-imports": [
