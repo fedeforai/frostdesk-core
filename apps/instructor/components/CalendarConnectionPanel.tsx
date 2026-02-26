@@ -75,7 +75,7 @@ export default function CalendarConnectionPanel({
       marginBottom: '1.5rem',
     }}>
       <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
-        Collegamento calendario
+        Calendar connection
       </h2>
 
       {error && (

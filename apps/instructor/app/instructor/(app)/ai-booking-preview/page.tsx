@@ -36,7 +36,7 @@ export default function AIBookingPreviewPage() {
       const isConnectionError =
         /Failed to fetch|Load failed|NetworkError|UPSTREAM_DOWN|context|contesto|could not be loaded|non è raggiungibile|servizio sia disponibile/i.test(raw);
       setError(isConnectionError
-        ? 'L\'API non è raggiungibile. Verifica che l\'API sia avviata (es. porta 3001) e riprova.'
+        ? 'API unreachable. Make sure the API is running (e.g. port 3001) and try again.'
         : raw);
     } finally {
       setLoading(false);
@@ -50,7 +50,7 @@ export default function AIBookingPreviewPage() {
   if (loading && !data && !error) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Caricamento…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.92)' }}>Loading…</p>
       </div>
     );
   }

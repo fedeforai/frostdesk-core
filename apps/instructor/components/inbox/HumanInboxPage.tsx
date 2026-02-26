@@ -1253,7 +1253,7 @@ export default function HumanInboxPage() {
                               handleOpenConfirmDraft(contextByConversationId[selectedId]!.pending_booking_draft!)
                             }
                           >
-                            Conferma prenotazione
+                            Confirm booking
                           </button>
                         </div>
                       </div>

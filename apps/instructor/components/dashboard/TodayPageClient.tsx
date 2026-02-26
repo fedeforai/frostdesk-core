@@ -192,17 +192,17 @@ export default function TodayPageClient() {
             </div>
           </div>
         ) : (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>Nessuna lezione oggi</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>No lessons today</p>
         )}
       </section>
 
       {/* Lezioni di oggi */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Lezioni di oggi ({todayBookings.length})
+          Today's lessons ({todayBookings.length})
         </h2>
         {todayBookings.length === 0 ? (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>Nessuna lezione oggi</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>No lessons today</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {sorted.slice(0, 5).map((b) => (

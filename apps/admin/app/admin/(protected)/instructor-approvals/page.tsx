@@ -423,7 +423,7 @@ function WhatsAppTab() {
   return (
     <>
       <p style={{ fontSize: '0.8125rem', color: '#9ca3af', marginBottom: '1rem' }}>
-        Collegamenti WhatsApp degli istruttori. Conferma i numeri in attesa con &quot;Verifica&quot;.
+        Instructor WhatsApp links. Confirm pending numbers with &quot;Verify&quot;.
       </p>
       <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
