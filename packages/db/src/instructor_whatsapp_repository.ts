@@ -14,6 +14,7 @@ import { sql } from './client.js';
 export interface InstructorWhatsappAccount {
   instructor_id: string;
   phone_number: string;
+  phone_number_id: string | null;
   provider: string;
   status: string;
   connected_at: string | null;
@@ -34,6 +35,7 @@ export async function getInstructorWhatsappAccount(
     SELECT
       instructor_id,
       phone_number,
+      phone_number_id,
       provider,
       status,
       connected_at,
@@ -83,6 +85,7 @@ export async function connectInstructorWhatsappAccount(
     RETURNING
       instructor_id,
       phone_number,
+      phone_number_id,
       provider,
       status,
       connected_at,
@@ -116,6 +119,7 @@ export async function verifyInstructorWhatsappAccount(
     RETURNING
       instructor_id,
       phone_number,
+      phone_number_id,
       provider,
       status,
       connected_at,
@@ -128,4 +132,54 @@ export async function verifyInstructorWhatsappAccount(
   }
 
   return result[0];
+}
+
+// ── Multi-tenant webhook routing ────────────────────────────────────────────
+
+/**
+ * Looks up instructor_id by Meta's phone_number_id (fast path for known numbers).
+ *
+ * @param phoneNumberId - Meta's phone_number_id from the webhook payload
+ * @returns instructor_id or null if not found
+ */
+export async function getInstructorIdByPhoneNumberId(
+  phoneNumberId: string,
+): Promise<string | null> {
+  const rows = await sql<Array<{ instructor_id: string }>>`
+    SELECT instructor_id
+    FROM instructor_whatsapp_accounts
+    WHERE phone_number_id = ${phoneNumberId}
+    LIMIT 1
+  `;
+  return rows.length > 0 ? rows[0].instructor_id : null;
+}
+
+/**
+ * Auto-associates a Meta phone_number_id to an instructor by matching the
+ * display_phone_number (E.164 normalized) against rows where phone_number_id is NULL.
+ *
+ * This handles the first-message scenario: the instructor registered their
+ * phone number during onboarding/settings but Meta's phone_number_id was not
+ * known until the first webhook delivery.
+ *
+ * @param normalizedPhone - The display_phone_number from the webhook, normalized to E.164
+ * @param phoneNumberId - Meta's phone_number_id to associate
+ * @returns instructor_id if association succeeded, null if no matching row found
+ */
+export async function autoAssociatePhoneNumberId(
+  normalizedPhone: string,
+  phoneNumberId: string,
+): Promise<string | null> {
+  const rows = await sql<Array<{ instructor_id: string }>>`
+    UPDATE instructor_whatsapp_accounts
+    SET phone_number_id = ${phoneNumberId},
+        phone_number = ${normalizedPhone},
+        status = 'verified',
+        connected_at = COALESCE(connected_at, NOW()),
+        updated_at = NOW()
+    WHERE phone_number = ${normalizedPhone}
+      AND phone_number_id IS NULL
+    RETURNING instructor_id
+  `;
+  return rows.length > 0 ? rows[0].instructor_id : null;
 }

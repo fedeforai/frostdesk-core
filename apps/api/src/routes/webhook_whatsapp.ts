@@ -11,6 +11,9 @@ import {
   upsertCustomer,
   linkConversationToCustomer,
   normalizePhoneE164,
+  getInstructorIdByPhoneNumberId,
+  autoAssociatePhoneNumberId,
+  connectInstructorWhatsappAccount,
 } from '@frostdesk/db';
 import { verifyWhatsAppSignature } from '../lib/whatsapp_webhook_verify.js';
 
@@ -30,6 +33,48 @@ import { verifyWhatsAppSignature } from '../lib/whatsapp_webhook_verify.js';
  * - No autonomous outbound send
  * - No booking creation
  */
+
+/**
+ * Resolves the instructor_id for a webhook message.
+ * Priority: phone_number_id lookup → auto-associate by display_phone_number → DEFAULT_INSTRUCTOR_ID.
+ */
+async function resolveInstructorId(
+  phoneNumberId: string | undefined,
+  displayPhoneNumber: string | undefined,
+  log: { info: (obj: unknown, msg?: string) => void },
+): Promise<string | number> {
+  const defaultId = process.env.DEFAULT_INSTRUCTOR_ID ?? 1;
+
+  if (!phoneNumberId) return defaultId;
+
+  const instructorId = await getInstructorIdByPhoneNumberId(phoneNumberId);
+  if (instructorId) return instructorId;
+
+  if (displayPhoneNumber) {
+    const normalizedDisplay = normalizePhoneE164(displayPhoneNumber);
+    if (normalizedDisplay) {
+      const associatedId = await autoAssociatePhoneNumberId(normalizedDisplay, phoneNumberId);
+      if (associatedId) {
+        log.info(
+          { phoneNumberId, displayPhoneNumber: normalizedDisplay, instructorId: associatedId },
+          'Auto-associated WhatsApp phone_number_id to instructor',
+        );
+        return associatedId;
+      }
+    }
+  }
+
+  if (typeof defaultId === 'string' && defaultId.includes('-')) {
+    try {
+      const displayNorm = displayPhoneNumber ? normalizePhoneE164(displayPhoneNumber) : null;
+      if (displayNorm) {
+        await connectInstructorWhatsappAccount(defaultId, displayNorm);
+      }
+    } catch { /* fail-open: default instructor may already have an account */ }
+  }
+
+  return defaultId;
+}
 
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
   // Raw body parser — scoped to this plugin's encapsulation context.
@@ -199,7 +244,11 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           return reply.status(200).send({ ok: true });
         }
         const customerIdentifier = normalizePhoneE164(message.to) ?? message.to;
-        const instructorIdForConversation = 1;
+        const instructorIdForConversation = await resolveInstructorId(
+          value.metadata?.phone_number_id,
+          value.metadata?.display_phone_number,
+          request.log,
+        );
         const conversation = await resolveConversationByChannel(
           'whatsapp',
           customerIdentifier,
@@ -277,10 +326,13 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         received_at: new Date(Number(message.timestamp) * 1000),
       };
 
-      // Resolve conversation by channel and customer identifier.
-      // NOTE: resolveConversationByChannel expects instructorId as number (legacy schema).
-      // DEFAULT_INSTRUCTOR_ID (UUID) support deferred until column type is migrated.
-      const instructorIdForConversation = 1;
+      // Resolve instructor from webhook metadata (multi-tenant routing).
+      // Priority: phone_number_id → auto-associate display_phone_number → DEFAULT_INSTRUCTOR_ID.
+      const instructorIdForConversation = await resolveInstructorId(
+        value.metadata?.phone_number_id,
+        value.metadata?.display_phone_number,
+        request.log,
+      );
 
       const conversation = await resolveConversationByChannel(
         'whatsapp',
@@ -310,7 +362,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         const instructorIdStr =
           typeof instructorIdForConversation === 'string'
             ? instructorIdForConversation
-            : '00000000-0000-0000-0000-000000000001';
+            : String(instructorIdForConversation);
 
         const customer = await upsertCustomer({
           instructorId: instructorIdStr,

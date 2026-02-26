@@ -409,11 +409,13 @@ export type {
 export { getInstructorGuardrails, updateInstructorGuardrails } from './instructor_guardrails_repository.js';
 export type { InstructorGuardrails, UpdateInstructorGuardrailsPatch } from './instructor_guardrails_repository.js';
 
-// Instructor WhatsApp (repository — linking only)
+// Instructor WhatsApp (repository — linking + multi-tenant routing)
 export {
   getInstructorWhatsappAccount,
   connectInstructorWhatsappAccount,
   verifyInstructorWhatsappAccount,
+  getInstructorIdByPhoneNumberId,
+  autoAssociatePhoneNumberId,
 } from './instructor_whatsapp_repository.js';
 export type {
   InstructorWhatsappAccount,
