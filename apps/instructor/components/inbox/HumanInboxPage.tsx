@@ -1264,7 +1264,7 @@ export default function HumanInboxPage() {
                 {cancelBookingModal && (
                   <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="cancel-booking-title">
                     <div className={styles.modalContent}>
-                      <h2 id="cancel-booking-title" className={styles.modalTitle}>Annulla prenotazione</h2>
+                      <h2 id="cancel-booking-title" className={styles.modalTitle}>Cancel booking</h2>
                       <p className={styles.modalBody}>
                         Vuoi annullare la prenotazione del {formatBookingDateTime(cancelBookingModal.startTime)}?
                         Il cliente riceverà una conferma dell’annullamento.
@@ -1275,7 +1275,7 @@ export default function HumanInboxPage() {
                           className={styles.modalBtnSecondary}
                           onClick={() => setCancelBookingModal(null)}
                         >
-                          Indietro
+                          Back
                         </button>
                         <button
                           type="button"
@@ -1283,7 +1283,7 @@ export default function HumanInboxPage() {
                           disabled={cancellingBookingId === cancelBookingModal.bookingId}
                           onClick={() => void handleCancelBooking(cancelBookingModal.bookingId)}
                         >
-                          {cancellingBookingId === cancelBookingModal.bookingId ? 'Annullamento…' : 'Sì, annulla'}
+                          {cancellingBookingId === cancelBookingModal.bookingId ? 'Cancelling…' : 'Yes, cancel'}
                         </button>
                       </div>
                     </div>
@@ -1315,7 +1315,7 @@ export default function HumanInboxPage() {
                           />
                         </label>
                         <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                          Durata (minuti)
+                          Duration (minutes)
                           <input
                             type="number"
                             min={15}
@@ -1332,7 +1332,7 @@ export default function HumanInboxPage() {
                           className={styles.modalBtnSecondary}
                           onClick={() => { setRescheduleModal(null); setRescheduleEdit(null); }}
                         >
-                          Annulla
+                          Cancel
                         </button>
                         <button
                           type="button"
@@ -1352,13 +1352,13 @@ export default function HumanInboxPage() {
                               setRescheduleModal(null);
                               setRescheduleEdit(null);
                             } catch (e) {
-                              setDraftError(e instanceof Error ? e.message : 'Errore riprogrammazione');
+                              setDraftError(e instanceof Error ? e.message : 'Reschedule error');
                             } finally {
                               setRescheduleSavingId(null);
                             }
                           }}
                         >
-                          {rescheduleSavingId === rescheduleModal.bookingId ? 'Salvataggio…' : 'Salva'}
+                          {rescheduleSavingId === rescheduleModal.bookingId ? 'Saving…' : 'Save'}
                         </button>
                       </div>
                     </div>
@@ -1369,10 +1369,10 @@ export default function HumanInboxPage() {
                 {preSendCheckPendingText !== null && (
                   <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="presend-check-title">
                     <div className={styles.modalContent}>
-                      <h2 id="presend-check-title" className={styles.modalTitle}>Conferma invio</h2>
+                      <h2 id="presend-check-title" className={styles.modalTitle}>Confirm send</h2>
                       <p className={styles.modalBody}>
-                        Il messaggio contiene una data o un orario. Controlla che sia corretto prima di inviare.
-                        Vuoi inviare comunque?
+                        The message contains a date or time. Please check it is correct before sending.
+                        Send anyway?
                       </p>
                       <div className={styles.modalActions}>
                         <button
@@ -1380,7 +1380,7 @@ export default function HumanInboxPage() {
                           className={styles.modalBtnSecondary}
                           onClick={() => setPreSendCheckPendingText(null)}
                         >
-                          Annulla
+                          Cancel
                         </button>
                         <button
                           type="button"
@@ -1391,7 +1391,7 @@ export default function HumanInboxPage() {
                             if (text) void doSend(text);
                           }}
                         >
-                          Invia comunque
+                          Send anyway
                         </button>
                       </div>
                     </div>
@@ -1403,13 +1403,13 @@ export default function HumanInboxPage() {
                   <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="confirm-draft-title">
                     <div className={styles.modalContent} style={{ maxWidth: 480 }}>
                       <h2 id="confirm-draft-title" className={styles.modalTitle}>
-                        {confirmDraftModal.step === 'conflict' ? 'Conflitto di disponibilità' : 'Stai creando questa prenotazione'}
+                        {confirmDraftModal.step === 'conflict' ? 'Availability conflict' : 'You are creating this booking'}
                       </h2>
                       <div className={styles.modalBody}>
                         {confirmDraftEdit ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                             <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                              Data
+                              Date
                               <input
                                 type="date"
                                 value={confirmDraftEdit.booking_date}
@@ -1419,7 +1419,7 @@ export default function HumanInboxPage() {
                             </label>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                               <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                                Inizio
+                                Start
                                 <input
                                   type="time"
                                   value={confirmDraftEdit.start_time}
@@ -1428,7 +1428,7 @@ export default function HumanInboxPage() {
                                 />
                               </label>
                               <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                                Fine
+                                End
                                 <input
                                   type="time"
                                   value={confirmDraftEdit.end_time}
@@ -1438,22 +1438,22 @@ export default function HumanInboxPage() {
                               </label>
                             </div>
                             <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                              Ospite
+                              Guest
                               <input
                                 type="text"
                                 value={confirmDraftEdit.customer_name}
                                 onChange={(e) => setConfirmDraftEdit((prev) => prev ? { ...prev, customer_name: e.target.value } : null)}
-                                placeholder="Nome cliente"
+                                placeholder="Customer name"
                                 style={{ display: 'block', marginTop: 4, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(148,163,184,0.3)', background: 'rgba(15,23,42,0.6)', color: 'rgba(226,232,240,0.95)', width: '100%', boxSizing: 'border-box' }}
                               />
                             </label>
                             <label style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)' }}>
-                              Punto ritrovo
+                              Meeting point
                               <input
                                 type="text"
                                 value={confirmDraftEdit.meeting_point_text}
                                 onChange={(e) => setConfirmDraftEdit((prev) => prev ? { ...prev, meeting_point_text: e.target.value } : null)}
-                                placeholder="Dove"
+                                placeholder="Where"
                                 style={{ display: 'block', marginTop: 4, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(148,163,184,0.3)', background: 'rgba(15,23,42,0.6)', color: 'rgba(226,232,240,0.95)', width: '100%', boxSizing: 'border-box' }}
                               />
                             </label>
@@ -1469,12 +1469,12 @@ export default function HumanInboxPage() {
                         )}
                         {confirmDraftModal.step === 'conflict' && confirmDraftModal.checkResult?.conflicts?.length ? (
                           <p style={{ fontSize: '0.875rem', color: '#fca5a5', marginTop: 8 }}>
-                            In questo slot risultano altri impegni in calendario. Puoi confermare comunque o cambiare orario.
+                            This slot has other calendar events. You can confirm anyway or change the time.
                           </p>
                         ) : null}
                         {confirmDraftModal.checkResult?.availabilityUnknown ? (
                           <p style={{ fontSize: '0.875rem', color: '#fbbf24', marginTop: 8 }}>
-                            Impossibile verificare il calendario; conferma a tuo rischio.
+                            Could not verify calendar; confirm at your own risk.
                           </p>
                         ) : null}
                       </div>
@@ -1486,7 +1486,7 @@ export default function HumanInboxPage() {
                             disabled={confirmDraftChecking}
                             onClick={() => void handleCheckAvailabilityForDraft()}
                           >
-                            {confirmDraftChecking ? 'Verifica…' : 'Verifica disponibilità'}
+                            {confirmDraftChecking ? 'Checking…' : 'Check availability'}
                           </button>
                         )}
                         {confirmDraftModal.step === 'conflict' && (
@@ -1495,7 +1495,7 @@ export default function HumanInboxPage() {
                             className={styles.modalBtnSecondary}
                             onClick={handleCloseConfirmDraftModal}
                           >
-                            Cambia orario
+                            Change time
                           </button>
                         )}
                         <button
@@ -1505,13 +1505,13 @@ export default function HumanInboxPage() {
                           onClick={() => void handleConfirmDraftSubmit()}
                         >
                           {confirmingDraftId === confirmDraftModal.draft.id
-                            ? 'Conferma…'
+                            ? 'Confirm…'
                             : confirmDraftModal.step === 'conflict'
-                              ? 'Conferma comunque'
-                              : 'Conferma prenotazione'}
+                              ? 'Confirm anyway'
+                              : 'Confirm booking'}
                         </button>
                         <button type="button" className={styles.modalBtnSecondary} onClick={handleCloseConfirmDraftModal}>
-                          Annulla
+                          Cancel
                         </button>
                       </div>
                     </div>
@@ -1542,7 +1542,7 @@ export default function HumanInboxPage() {
                           disabled={sendAsIsLoading}
                           onClick={() => void handleSendAsIs()}
                         >
-                          {sendAsIsLoading ? 'Invio…' : 'Invia così'}
+                          {sendAsIsLoading ? 'Sending…' : 'Send as is'}
                         </button>
                         <button
                           type="button"
@@ -1550,7 +1550,7 @@ export default function HumanInboxPage() {
                           disabled={sendAsIsLoading}
                           onClick={() => void handleInsertDraft()}
                         >
-                          Inserisci
+                          Insert
                         </button>
                         <button
                           type="button"
@@ -1558,7 +1558,7 @@ export default function HumanInboxPage() {
                           disabled={regenerating || sendAsIsLoading}
                           onClick={() => void handleRegenerateDraft()}
                         >
-                          {regenerating ? '…' : 'Rigenera'}
+                          {regenerating ? '…' : 'Regenerate'}
                         </button>
                         <button
                           type="button"
