@@ -314,6 +314,7 @@ export {
   getCalendarConnection,
   upsertCalendarConnection,
   updateCalendarConnectionSync,
+  clearCalendarConnectionTokens,
 } from './calendar_connections_repository.js';
 export type { CalendarConnection, CalendarConnectionStatus } from './calendar_connections_repository.js';
 
@@ -426,13 +427,14 @@ export type {
 export { getInstructorGuardrails, updateInstructorGuardrails } from './instructor_guardrails_repository.js';
 export type { InstructorGuardrails, UpdateInstructorGuardrailsPatch } from './instructor_guardrails_repository.js';
 
-// Instructor WhatsApp (repository — linking only)
+// Instructor WhatsApp (repository — linking + multi-tenant routing)
 export {
   getInstructorIdByPhoneNumberId,
   getInstructorWhatsappAccount,
   connectInstructorWhatsappAccount,
   verifyInstructorWhatsappAccount,
   listInstructorWhatsappAccounts,
+  autoAssociatePhoneNumberId,
 } from './instructor_whatsapp_repository.js';
 export type {
   InstructorWhatsappAccount,
@@ -672,3 +674,11 @@ export type {
 
 export { generateSummary } from './summary_generator.js';
 export type { SummaryInput, SummaryOutput } from './summary_generator.js';
+
+// Booking ↔ Google Calendar sync (multi-tenant, per-instructor OAuth)
+export {
+  syncBookingToCalendar,
+  syncBookingUpdateToCalendar,
+  syncBookingCancelToCalendar,
+} from './booking_calendar_sync.js';
+export type { CalendarSyncResult } from './booking_calendar_sync.js';

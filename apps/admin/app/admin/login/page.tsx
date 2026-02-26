@@ -60,7 +60,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
             color: 'rgba(226, 232, 240, 0.9)',
           }}
         >
-          Caricamento…
+          Loading…
         </div>
       }
     >

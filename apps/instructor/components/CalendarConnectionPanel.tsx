@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import {
-  connectCalendar,
+  getCalendarOAuthStartUrl,
   disconnectCalendar,
   syncCalendar,
   type InstructorCalendarConnection,
-  type ConnectCalendarParams,
 } from '@/lib/instructorApi';
 
 interface CalendarConnectionPanelProps {
@@ -20,37 +19,21 @@ export default function CalendarConnectionPanel({
 }: CalendarConnectionPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authCode, setAuthCode] = useState('');
-  const [calendarId, setCalendarId] = useState('');
 
   const handleConnect = async () => {
-    if (!authCode.trim() || !calendarId.trim()) {
-      setError('Please provide both auth code and calendar ID');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      const params: ConnectCalendarParams = {
-        auth_code: authCode.trim(),
-        calendar_id: calendarId.trim(),
-      };
-      const newConnection = await connectCalendar(params);
-      setAuthCode('');
-      setCalendarId('');
-      // Pass the connection object back to parent
-      onConnectionChange(newConnection);
-      window.location.reload();
+      const url = await getCalendarOAuthStartUrl();
+      window.location.href = url;
     } catch (err: any) {
-      setError(err.message || 'Failed to connect calendar');
-    } finally {
+      setError(err.message || 'Impossibile avviare il collegamento');
       setLoading(false);
     }
   };
 
   const handleDisconnect = async () => {
-    if (!confirm('Are you sure you want to disconnect your calendar?')) {
+    if (!confirm('Vuoi scollegare il calendario?')) {
       return;
     }
 
@@ -61,7 +44,7 @@ export default function CalendarConnectionPanel({
       onConnectionChange(null);
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'Failed to disconnect calendar');
+        setError(err.message || 'Scollegamento non riuscito');
     } finally {
       setLoading(false);
     }
@@ -76,7 +59,7 @@ export default function CalendarConnectionPanel({
       onConnectionChange();
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'Failed to sync calendar');
+      setError(err.message || 'Sincronizzazione non riuscita');
     } finally {
       setLoading(false);
     }
@@ -92,7 +75,7 @@ export default function CalendarConnectionPanel({
       marginBottom: '1.5rem',
     }}>
       <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
-        Calendar Connection
+        Calendar connection
       </h2>
 
       {error && (
@@ -125,8 +108,8 @@ export default function CalendarConnectionPanel({
               </div>
             )}
             <div>
-              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
-              <span style={{ color: 'rgba(74, 222, 128, 0.95)', fontWeight: '500' }}>Connected</span>
+              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Stato:</strong>{' '}
+              <span style={{ color: 'rgba(74, 222, 128, 0.95)', fontWeight: '500' }}>Connesso</span>
             </div>
           </div>
 
@@ -156,9 +139,9 @@ export default function CalendarConnectionPanel({
               onBlur={(e) => {
                 e.currentTarget.style.outline = 'none';
               }}
-              aria-label="Sync calendar"
+              aria-label="Aggiorna calendario"
             >
-              {loading ? 'Syncing...' : 'Sync'}
+              {loading ? 'Sincronizzazione...' : 'Aggiorna'}
             </button>
 
             <button
@@ -186,9 +169,9 @@ export default function CalendarConnectionPanel({
               onBlur={(e) => {
                 e.currentTarget.style.outline = 'none';
               }}
-              aria-label="Disconnect calendar"
+              aria-label="Scollega calendario"
             >
-              {loading ? 'Disconnecting...' : 'Disconnect'}
+              {loading ? 'Scollegamento...' : 'Scollega'}
             </button>
           </div>
         </div>
@@ -196,111 +179,29 @@ export default function CalendarConnectionPanel({
         <div>
           <div style={{ marginBottom: '1rem' }}>
             <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
-            <span style={{ color: 'rgba(248, 113, 113, 0.95)', fontWeight: '500' }}>Not connected</span>
+            <span style={{ color: 'rgba(248, 113, 113, 0.95)', fontWeight: '500' }}>Non connesso</span>
           </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              htmlFor="auth-code"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: 'rgba(226, 232, 240, 0.95)',
-              }}
-            >
-              OAuth Authorization Code
-            </label>
-            <input
-              id="auth-code"
-              type="text"
-              value={authCode}
-              onChange={(e) => setAuthCode(e.target.value)}
-              placeholder="Enter OAuth authorization code"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                color: 'rgba(226, 232, 240, 0.95)',
-                outline: 'none',
-                opacity: loading ? 0.6 : 1,
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              htmlFor="calendar-id"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: 'rgba(226, 232, 240, 0.95)',
-              }}
-            >
-              Calendar ID
-            </label>
-            <input
-              id="calendar-id"
-              type="text"
-              value={calendarId}
-              onChange={(e) => setCalendarId(e.target.value)}
-              placeholder="Enter calendar ID (e.g., 'primary')"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                color: 'rgba(226, 232, 240, 0.95)',
-                outline: 'none',
-                opacity: loading ? 0.6 : 1,
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            />
-          </div>
-
+          <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
+            Collega il tuo Google Calendar per evitare sovrapposizioni con le prenotazioni. Gli slot occupati sul calendario non saranno proposti ai clienti.
+          </p>
           <button
             type="button"
             onClick={handleConnect}
-            disabled={loading || !authCode.trim() || !calendarId.trim()}
+            disabled={loading}
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: 'rgba(99, 102, 241, 0.2)',
               color: 'rgba(165, 180, 252, 1)',
               border: '1px solid rgba(99, 102, 241, 0.4)',
               borderRadius: '0.375rem',
-              cursor: loading || !authCode.trim() || !calendarId.trim() ? 'not-allowed' : 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '0.875rem',
               fontWeight: '500',
-              opacity: loading || !authCode.trim() || !calendarId.trim() ? 0.6 : 1,
+              opacity: loading ? 0.6 : 1,
               outline: 'none',
             }}
             onFocus={(e) => {
-              if (!loading && authCode.trim() && calendarId.trim()) {
+              if (!loading) {
                 e.currentTarget.style.outline = '2px solid #3b82f6';
                 e.currentTarget.style.outlineOffset = '2px';
               }
@@ -308,9 +209,9 @@ export default function CalendarConnectionPanel({
             onBlur={(e) => {
               e.currentTarget.style.outline = 'none';
             }}
-            aria-label="Connect calendar"
+            aria-label="Collega calendario"
           >
-            {loading ? 'Connecting...' : 'Connect'}
+            {loading ? 'Reindirizzamento...' : 'Collega'}
           </button>
         </div>
       )}

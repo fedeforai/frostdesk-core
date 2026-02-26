@@ -12,6 +12,7 @@ import {
   getCalendarConnection,
   upsertCalendarConnection,
   updateCalendarConnectionSync,
+  clearCalendarConnectionTokens,
   deleteExternalBusyBlocksByConnection,
   upsertExternalBusyBlock,
   listInstructorEvents,
@@ -21,6 +22,7 @@ import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 import { fetchGoogleBusyEvents } from '../../lib/google_calendar_sync.js';
+import { signState, buildCalendarAuthUrl, exchangeCodeForTokens, verifyState } from '../../lib/google_oauth.js';
 
 async function getInstructorId(request: { headers?: { authorization?: string } }): Promise<string> {
   const userId = await getUserIdFromJwt(request);
@@ -84,6 +86,66 @@ export async function instructorCalendarRoutes(app: FastifyInstance): Promise<vo
         error: normalized.error,
         message: normalized.message,
       });
+    }
+  });
+
+  // --- GET /instructor/calendar/oauth/start (returns URL to Google consent; requires JWT) ---
+  app.get('/instructor/calendar/oauth/start', async (request, reply) => {
+    try {
+      const instructorId = await getInstructorId(request);
+      const state = signState(instructorId);
+      const url = buildCalendarAuthUrl(state);
+      return reply.send({ ok: true, url });
+    } catch (err) {
+      const normalized = normalizeError(err);
+      const status = mapErrorToHttp(normalized.error);
+      return reply.status(status).send({
+        ok: false,
+        error: normalized.error,
+        message: normalized.message,
+      });
+    }
+  });
+
+  // --- GET /instructor/calendar/oauth/callback (no auth; Google redirects here with ?code= & state=) ---
+  app.get<{
+    Querystring: { code?: string; state?: string; error?: string };
+  }>('/instructor/calendar/oauth/callback', async (request, reply) => {
+    const instructorAppUrl = process.env.INSTRUCTOR_APP_URL || 'http://localhost:3000';
+    const redirectBase = `${instructorAppUrl.replace(/\/$/, '')}/instructor/calendar`;
+    try {
+      const { code, state, error } = request.query;
+      if (error) {
+        const msg = typeof error === 'string' ? error : 'access_denied';
+        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent(msg)}`);
+      }
+      if (!code || !state) {
+        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent('missing_code_or_state')}`);
+      }
+      const instructorId = verifyState(state);
+      const redirectUri =
+        process.env.GOOGLE_CALENDAR_REDIRECT_URI?.trim() ||
+        (process.env.API_PUBLIC_URL
+          ? `${process.env.API_PUBLIC_URL.replace(/\/$/, '')}/instructor/calendar/oauth/callback`
+          : '');
+      if (!redirectUri) {
+        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent('server_config')}`);
+      }
+      const tokens = await exchangeCodeForTokens(code, redirectUri);
+      const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
+      await upsertCalendarConnection({
+        instructor_id: instructorId,
+        provider: 'google',
+        status: 'connected',
+        access_token_encrypted: tokens.access_token,
+        refresh_token_encrypted: tokens.refresh_token ?? null,
+        token_expires_at: expiresAt,
+      });
+      return reply.redirect(302, `${redirectBase}?connected=1`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      request.log.warn({ err }, 'Google Calendar OAuth callback failed');
+      return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent(message)}`);
     }
   });
 
@@ -215,6 +277,7 @@ export async function instructorCalendarRoutes(app: FastifyInstance): Promise<vo
         });
       }
       await deleteExternalBusyBlocksByConnection(connection.id);
+      await clearCalendarConnectionTokens(connection.id);
       await upsertCalendarConnection({
         instructor_id: instructorId,
         provider: 'google',

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  fetchCalendarConnection,
   fetchCalendarEvents,
   type CalendarEvent,
   type InstructorCalendarConnection,
@@ -12,10 +13,24 @@ import CalendarEventsTable from '@/components/CalendarEventsTable';
 
 export default function CalendarPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [connection, setConnection] = useState<InstructorCalendarConnection | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [oauthMessage, setOauthMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const connected = searchParams.get('connected');
+    const errParam = searchParams.get('error');
+    if (connected === '1') {
+      setOauthMessage({ type: 'success', text: 'Calendar connected.' });
+      window.history.replaceState({}, '', '/instructor/calendar');
+    } else if (errParam) {
+      setOauthMessage({ type: 'error', text: errParam === 'access_denied' ? 'Autorizzazione annullata.' : decodeURIComponent(errParam) });
+      window.history.replaceState({}, '', '/instructor/calendar');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadData();
@@ -25,54 +40,28 @@ export default function CalendarPage() {
     try {
       setLoading(true);
       setError(null);
-      
-      // Try to fetch events - if successful, we have a connection
-      // If it fails with specific error, we don't have a connection
-      try {
-        const eventsData = await fetchCalendarEvents();
-        setEvents(eventsData);
-        
-        // If we can fetch events, we have a connection
-        // Note: We don't have connection details (provider/calendar_id) without a GET endpoint
-        // Connection details will be shown after connecting (stored in state)
-        // For now, we'll use a placeholder to indicate connection exists
-        if (!connection) {
-          // Connection exists but we don't have details - will be shown after connect
-          setConnection({
-            id: '',
-            provider: 'google',
-            calendar_id: '',
-            expires_at: null,
-            created_at: '',
-            updated_at: '',
-          });
-        }
-      } catch (fetchErr: any) {
-        const status = fetchErr.status || 500;
-        if (status === 400) {
-          // No connection
-          setConnection(null);
+      const conn = await fetchCalendarConnection();
+      setConnection(conn);
+      if (conn) {
+        try {
+          const eventsData = await fetchCalendarEvents();
+          setEvents(eventsData);
+        } catch {
           setEvents([]);
-        } else {
-          throw fetchErr;
         }
+      } else {
+        setEvents([]);
       }
     } catch (err: any) {
       const status = err.status || 500;
-
-      // 401 → redirect to login
       if (status === 401) {
         router.push('/login');
         return;
       }
-
-      // 403 → static "Not authorized"
       if (status === 403) {
         setError('Not authorized');
         return;
       }
-
-      // 500 → static error
       setError('Unable to load calendar data');
     } finally {
       setLoading(false);
@@ -101,6 +90,20 @@ export default function CalendarPage() {
       <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
         Calendar
       </h1>
+
+      {oauthMessage && (
+        <div style={{
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          backgroundColor: oauthMessage.type === 'success' ? '#f0fdf4' : '#fef2f2',
+          border: `1px solid ${oauthMessage.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          color: oauthMessage.type === 'success' ? '#166534' : '#991b1b',
+        }}>
+          {oauthMessage.text}
+        </div>
+      )}
 
       {error && (
         <div style={{

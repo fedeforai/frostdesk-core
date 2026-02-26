@@ -12,6 +12,13 @@ Checklist operativa per mettere online **API**, **Instructor App** e **Admin App
 
 ---
 
+## Prerequisiti deploy (multi-tenant WhatsApp)
+
+- [ ] **Migration 20260326120000** applicata su **staging** poi **prod** (`supabase db push` o equivalente). La migration aggiunge indice e commento su `instructor_whatsapp_accounts.phone_number` per l’auto-associazione webhook.
+- [ ] **Per ogni instructor:** verificare che in `instructor_whatsapp_accounts` esista una riga con il **phone_number in formato E.164** (quello inserito in onboarding o in Impostazioni). Al primo messaggio ricevuto su quel numero, il webhook assocerà automaticamente il `phone_number_id` di Meta a quella riga; l’inbox di quell’instructor riceverà le conversazioni.
+
+---
+
 ## 1. API (Railway)
 
 1. **Railway** → New Project → Deploy from GitHub Repo → `frostdesk-core`
@@ -104,6 +111,21 @@ Senza questo il login Instructor/Admin in produzione non funziona.
   Signing secret → variabile `STRIPE_WEBHOOK_SECRET` su Railway.
 
 Dettagli in [DEPLOYMENT_GUIDE.md § FASE 5](./DEPLOYMENT_GUIDE.md#fase-5--configurare-i-webhook-esterni).
+
+---
+
+## 6. Google Calendar (opzionale)
+
+Per permettere a ogni maestro di collegare il proprio Google Calendar (gli slot occupati vengono esclusi dalla disponibilità):
+
+1. **Google Cloud Console** → APIs & Services → abilita **Google Calendar API** → Credentials → Crea **OAuth 2.0 Client ID** (tipo Applicazione web).
+2. **Authorized redirect URIs**: aggiungi `https://TUO-URL-RAILWAY/instructor/calendar/oauth/callback` (es. `https://frostdeskapi-production.up.railway.app/instructor/calendar/oauth/callback`).
+3. **Railway (API)** → Variables:
+   - `GOOGLE_CLIENT_ID` = Client ID
+   - `GOOGLE_CLIENT_SECRET` = Client secret
+   - `GOOGLE_CALENDAR_REDIRECT_URI` = stesso URL del callback (come sopra)
+   - `GOOGLE_OAUTH_STATE_SECRET` = genera con `openssl rand -hex 32`
+4. L’istruttore in **Calendario** → **Calendar Connection** clicca **Collega Google Calendar** → autorizza con il suo account Google → il sync popola gli slot occupati e il check disponibilità li esclude.
 
 ---
 

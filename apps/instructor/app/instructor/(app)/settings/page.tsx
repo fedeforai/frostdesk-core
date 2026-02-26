@@ -7,7 +7,7 @@ export default function SettingsPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.875rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem' }}>
-        Impostazioni
+        Settings
       </h1>
 
       <section
@@ -54,7 +54,7 @@ export default function SettingsPage() {
             fontSize: '0.875rem',
           }}
         >
-          Apri Profilo
+          Open Profile
         </Link>
       </section>
 

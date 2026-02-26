@@ -53,7 +53,7 @@ export default function SystemHealthClient() {
   if (loading) {
     return (
       <div style={{ padding: '2rem', color: '#6b7280', fontSize: '0.875rem' }}>
-        Caricamento dati da API e DB…
+        Loading data from API and DB…
       </div>
     );
   }
