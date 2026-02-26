@@ -12,6 +12,13 @@ Checklist operativa per mettere online **API**, **Instructor App** e **Admin App
 
 ---
 
+## Prerequisiti deploy (multi-tenant WhatsApp)
+
+- [ ] **Migration 20260326120000** applicata su **staging** poi **prod** (`supabase db push` o equivalente). La migration aggiunge indice e commento su `instructor_whatsapp_accounts.phone_number` per l’auto-associazione webhook.
+- [ ] **Per ogni instructor:** verificare che in `instructor_whatsapp_accounts` esista una riga con il **phone_number in formato E.164** (quello inserito in onboarding o in Impostazioni). Al primo messaggio ricevuto su quel numero, il webhook assocerà automaticamente il `phone_number_id` di Meta a quella riga; l’inbox di quell’instructor riceverà le conversazioni.
+
+---
+
 ## 1. API (Railway)
 
 1. **Railway** → New Project → Deploy from GitHub Repo → `frostdesk-core`
