@@ -15,7 +15,6 @@ export interface InstructorWhatsappAccount {
   connected_at: string | null;
   created_at: string;
   updated_at: string;
-  phone_number_id: string | null;
   waba_id: string | null;
 }
 
@@ -54,7 +53,6 @@ export async function getInstructorWhatsappAccount(
       connected_at,
       created_at,
       updated_at,
-      phone_number_id,
       waba_id
     FROM instructor_whatsapp_accounts
     WHERE instructor_id = ${instructorId}
@@ -178,7 +176,6 @@ export async function connectInstructorWhatsappAccount(
       connected_at,
       created_at,
       updated_at,
-      phone_number_id,
       waba_id
   `;
   return result[0];
@@ -214,7 +211,6 @@ export async function verifyInstructorWhatsappAccount(
       connected_at,
       created_at,
       updated_at,
-      phone_number_id,
       waba_id
   `;
 
@@ -226,24 +222,6 @@ export async function verifyInstructorWhatsappAccount(
 }
 
 // ── Multi-tenant webhook routing ────────────────────────────────────────────
-
-/**
- * Looks up instructor_id by Meta's phone_number_id (fast path for known numbers).
- *
- * @param phoneNumberId - Meta's phone_number_id from the webhook payload
- * @returns instructor_id or null if not found
- */
-export async function getInstructorIdByPhoneNumberId(
-  phoneNumberId: string,
-): Promise<string | null> {
-  const rows = await sql<Array<{ instructor_id: string }>>`
-    SELECT instructor_id
-    FROM instructor_whatsapp_accounts
-    WHERE phone_number_id = ${phoneNumberId}
-    LIMIT 1
-  `;
-  return rows.length > 0 ? rows[0].instructor_id : null;
-}
 
 /**
  * Auto-associates a Meta phone_number_id to an instructor by matching the
