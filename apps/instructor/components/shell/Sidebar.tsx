@@ -85,12 +85,12 @@ export function SidebarRail({ onOpenMenu }: { onOpenMenu: () => void }) {
       <button
         type="button"
         onClick={onOpenMenu}
-        aria-label="Apri menu"
+        aria-label="Open menu"
         className={styles.railMenuBtn}
       >
         <InstructorSidebarIcon name="menu" />
       </button>
-      <nav className={styles.railNav} aria-label="Navigazione rapida">
+      <nav className={styles.railNav} aria-label="Quick navigation">
         {RAIL_ITEMS.map(({ href, label, icon }) => (
           <Link
             key={href}
@@ -144,7 +144,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           type="button"
           className={styles.closeBtn}
           onClick={onClose}
-          aria-label="Chiudi menu"
+          aria-label="Close menu"
         >
           ×
         </button>

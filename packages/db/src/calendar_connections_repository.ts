@@ -85,3 +85,14 @@ export async function updateCalendarConnectionSync(
     WHERE id = ${connectionId}
   `;
 }
+
+/**
+ * Clears tokens for a connection (e.g. on disconnect). Keeps status and metadata.
+ */
+export async function clearCalendarConnectionTokens(connectionId: string): Promise<void> {
+  await sql`
+    UPDATE calendar_connections
+    SET access_token_encrypted = NULL, refresh_token_encrypted = NULL, token_expires_at = NULL, updated_at = NOW()
+    WHERE id = ${connectionId}
+  `;
+}

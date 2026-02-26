@@ -52,7 +52,7 @@ export function BookingLifecycleTimeline({ timeline }: BookingLifecycleTimelineP
   if (timeline.length === 0) {
     return (
       <p style={{ color: 'rgba(148, 163, 184, 0.75)', fontSize: '0.875rem', padding: '1rem 0' }}>
-        Nessun evento di stato registrato per questo booking.
+        No state events recorded for this booking.
       </p>
     );
   }

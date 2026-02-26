@@ -70,7 +70,7 @@ const titleStyle = { fontSize: '1.125rem', fontWeight: 600, color: '#111827', ma
 const textStyle = { color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem', lineHeight: 1.5 } as const;
 const listStyle = { ...textStyle, marginLeft: '1.25rem', paddingLeft: '0.25rem' } as const;
 
-export default function WhatsAppSettingsSection({ locale = 'it' }: { locale?: 'it' | 'en' }) {
+export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'it' | 'en' }) {
   const copy = COPY[locale];
   const [account, setAccount] = useState<WhatsappAccount | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);

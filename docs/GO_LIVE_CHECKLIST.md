@@ -114,6 +114,21 @@ Dettagli in [DEPLOYMENT_GUIDE.md § FASE 5](./DEPLOYMENT_GUIDE.md#fase-5--config
 
 ---
 
+## 6. Google Calendar (opzionale)
+
+Per permettere a ogni maestro di collegare il proprio Google Calendar (gli slot occupati vengono esclusi dalla disponibilità):
+
+1. **Google Cloud Console** → APIs & Services → abilita **Google Calendar API** → Credentials → Crea **OAuth 2.0 Client ID** (tipo Applicazione web).
+2. **Authorized redirect URIs**: aggiungi `https://TUO-URL-RAILWAY/instructor/calendar/oauth/callback` (es. `https://frostdeskapi-production.up.railway.app/instructor/calendar/oauth/callback`).
+3. **Railway (API)** → Variables:
+   - `GOOGLE_CLIENT_ID` = Client ID
+   - `GOOGLE_CLIENT_SECRET` = Client secret
+   - `GOOGLE_CALENDAR_REDIRECT_URI` = stesso URL del callback (come sopra)
+   - `GOOGLE_OAUTH_STATE_SECRET` = genera con `openssl rand -hex 32`
+4. L’istruttore in **Calendario** → **Calendar Connection** clicca **Collega Google Calendar** → autorizza con il suo account Google → il sync popola gli slot occupati e il check disponibilità li esclude.
+
+---
+
 ## Verifica build locale (opzionale)
 
 Dalla root del repo:

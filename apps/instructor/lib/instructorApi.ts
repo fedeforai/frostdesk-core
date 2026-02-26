@@ -2345,8 +2345,40 @@ export interface InstructorCalendarConnection {
 }
 
 export interface ConnectCalendarParams {
-  auth_code: string;
-  calendar_id: string;
+  auth_code?: string;
+  calendar_id?: string;
+}
+
+/**
+ * Returns the Google OAuth URL to start calendar connection. Redirect the user to this URL.
+ */
+export async function getCalendarOAuthStartUrl(): Promise<string> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/instructor/calendar/oauth/start`;
+  const opts: RequestInit = {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  };
+  if (baseUrl !== '/api') {
+    const auth = await getAuthHeadersForApi();
+    if (!auth) {
+      const err = new Error('No session found');
+      (err as any).status = 401;
+      throw err;
+    }
+    opts.headers = { ...(opts.headers as Record<string, string>), ...auth };
+  }
+  const response = await fetch(url, opts);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const errorObj = new Error((errorData as { message?: string }).message || 'Failed to get OAuth URL');
+    (errorObj as any).status = response.status;
+    throw errorObj;
+  }
+  const data = await response.json();
+  if (!data?.ok || !data?.url) throw new Error('Invalid OAuth start response');
+  return data.url;
 }
 
 /**

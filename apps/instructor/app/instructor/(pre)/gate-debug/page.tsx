@@ -62,7 +62,7 @@ export default async function GateDebugPage() {
 
       {fetchError ? (
         <section style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#f87171', marginBottom: '0.5rem' }}>Errore fetch</h2>
+          <h2 style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#f87171', marginBottom: '0.5rem' }}>Fetch error</h2>
           <pre style={{ padding: '0.75rem', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '0.375rem', fontSize: '0.8125rem', overflow: 'auto', color: '#fca5a5' }}>
             {fetchError}
           </pre>
