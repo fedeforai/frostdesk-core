@@ -1,7 +1,12 @@
 import './loadEnv.js';
 import { getLoadedEnvPath } from './loadEnv.js';
+import { enforceStartupChecks } from './lib/startup_checks.js';
+import { initSentry } from './lib/sentry.js';
 import { buildServer } from './server.js';
 import { startOutboundSendWorker } from './whatsapp/send_worker.js';
+
+enforceStartupChecks();
+initSentry();
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '0.0.0.0';

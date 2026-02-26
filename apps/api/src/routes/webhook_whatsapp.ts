@@ -12,16 +12,17 @@ import {
   linkConversationToCustomer,
   normalizePhoneE164,
   getInstructorIdByPhoneNumberId,
+  autoAssociatePhoneNumberId,
   connectInstructorWhatsappAccount,
 } from '@frostdesk/db';
-import { verifyWhatsappSignature } from '../lib/whatsapp_signature.js';
+import { verifyWhatsAppSignature } from '../lib/whatsapp_webhook_verify.js';
 
 /**
  * WhatsApp Webhook Routes (Pilot)
  *
  * WHAT IT DOES:
  * - Exposes POST /webhook/whatsapp endpoint
- * - Verifies request signature via X-Hub-Signature-256 (META_WHATSAPP_APP_SECRET)
+ * - Verifies Meta's X-Hub-Signature-256 (HMAC-SHA256 with App Secret)
  * - Parses and validates WhatsApp webhook payloads
  * - Resolves conversation via channel identity mapping
  * - Persists inbound message (inbound_messages + messages)
@@ -32,6 +33,48 @@ import { verifyWhatsappSignature } from '../lib/whatsapp_signature.js';
  * - No autonomous outbound send
  * - No booking creation
  */
+
+/**
+ * Resolves the instructor_id for a webhook message.
+ * Priority: phone_number_id lookup → auto-associate by display_phone_number → DEFAULT_INSTRUCTOR_ID.
+ */
+async function resolveInstructorId(
+  phoneNumberId: string | undefined,
+  displayPhoneNumber: string | undefined,
+  log: { info: (obj: unknown, msg?: string) => void },
+): Promise<string | number> {
+  const defaultId = process.env.DEFAULT_INSTRUCTOR_ID ?? 1;
+
+  if (!phoneNumberId) return defaultId;
+
+  const instructorId = await getInstructorIdByPhoneNumberId(phoneNumberId);
+  if (instructorId) return instructorId;
+
+  if (displayPhoneNumber) {
+    const normalizedDisplay = normalizePhoneE164(displayPhoneNumber);
+    if (normalizedDisplay) {
+      const associatedId = await autoAssociatePhoneNumberId(normalizedDisplay, phoneNumberId);
+      if (associatedId) {
+        log.info(
+          { phoneNumberId, displayPhoneNumber: normalizedDisplay, instructorId: associatedId },
+          'Auto-associated WhatsApp phone_number_id to instructor',
+        );
+        return associatedId;
+      }
+    }
+  }
+
+  if (typeof defaultId === 'string' && defaultId.includes('-')) {
+    try {
+      const displayNorm = displayPhoneNumber ? normalizePhoneE164(displayPhoneNumber) : null;
+      if (displayNorm) {
+        await connectInstructorWhatsappAccount(defaultId, displayNorm);
+      }
+    } catch { /* fail-open: default instructor may already have an account */ }
+  }
+
+  return defaultId;
+}
 
 export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
   // GET: Meta webhook verification (Callback URL validation)
@@ -73,36 +116,40 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
 
   fastify.post('/webhook/whatsapp', async (request, reply) => {
     try {
-      // ── Signature verification ──────────────────────────────────────────────
-      const secret = process.env.META_WHATSAPP_APP_SECRET;
-      if (!secret || typeof secret !== 'string' || !secret.trim()) {
-        request.log.warn('META_WHATSAPP_APP_SECRET not configured');
-        return reply.status(500).send({
-          ok: false,
-          error: 'Webhook secret not configured',
-        });
+      // ── Signature verification ──────────────────────────────────────────
+      const appSecret = process.env.META_APP_SECRET || process.env.META_WHATSAPP_APP_SECRET;
+      const skipVerify = process.env.NODE_ENV !== 'production'
+        && process.env.SKIP_WHATSAPP_SIGNATURE_VERIFY === '1';
+
+      if (!skipVerify) {
+        if (!appSecret) {
+          request.log.error('META_APP_SECRET / META_WHATSAPP_APP_SECRET not configured — rejecting webhook');
+          return reply.status(500).send({
+            ok: false,
+            error: 'WEBHOOK_SECRET_NOT_CONFIGURED',
+            message: 'WhatsApp webhook secret not configured',
+          });
+        }
+
+        const signature = request.headers['x-hub-signature-256'] as string | undefined;
+        const rawBody = request.body as Buffer;
+
+        if (!signature || !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
+          request.log.warn({ hasSignature: !!signature }, 'WhatsApp webhook signature verification failed');
+          return reply.status(401).send({
+            ok: false,
+            error: 'INVALID_SIGNATURE',
+            message: 'Webhook signature verification failed',
+          });
+        }
       }
 
-      const signature = request.headers['x-hub-signature-256'] as string | undefined;
-      if (!signature || typeof signature !== 'string') {
-        request.log.warn('Missing X-Hub-Signature-256 header');
-        return reply.status(400).send({
-          ok: false,
-          error: 'Missing X-Hub-Signature-256 header',
-        });
-      }
-
-      const rawBody = Buffer.isBuffer(request.body) ? request.body.toString('utf8') : String(request.body);
-      if (!verifyWhatsappSignature({ payload: rawBody, signature, secret })) {
-        request.log.warn('WhatsApp webhook signature verification failed');
-        return reply.status(401).send({
-          ok: false,
-          error: 'Invalid signature',
-        });
-      }
-
-      // Parse WhatsApp payload structure (inbound + message echo when business replies from phone)
-      type WhatsAppWebhookPayload = {
+      // Parse the raw buffer into JSON for subsequent processing
+      const body = JSON.parse(
+        Buffer.isBuffer(request.body)
+          ? (request.body as Buffer).toString('utf-8')
+          : JSON.stringify(request.body),
+      ) as {
         entry?: Array<{
           changes?: Array<{
             value?: {
@@ -256,6 +303,11 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           return reply.status(200).send({ ok: true });
         }
         const customerIdentifier = normalizePhoneE164(message.to) ?? message.to;
+        const instructorIdForConversation = await resolveInstructorId(
+          value.metadata?.phone_number_id,
+          value.metadata?.display_phone_number,
+          request.log,
+        );
         const conversation = await resolveConversationByChannel(
           'whatsapp',
           customerIdentifier,
@@ -333,7 +385,14 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         received_at: new Date(Number(message.timestamp) * 1000),
       };
 
-      // Resolve conversation by channel and customer identifier (instructor already resolved above from phone_number_id).
+      // Resolve instructor from webhook metadata (multi-tenant routing).
+      // Priority: phone_number_id → auto-associate display_phone_number → DEFAULT_INSTRUCTOR_ID.
+      const instructorIdForConversation = await resolveInstructorId(
+        value.metadata?.phone_number_id,
+        value.metadata?.display_phone_number,
+        request.log,
+      );
+
       const conversation = await resolveConversationByChannel(
         'whatsapp',
         normalizedMessage.sender_identifier,
@@ -359,7 +418,10 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
 
       // CM-2: Upsert customer profile and link to conversation (fail-open)
       try {
-        const instructorIdStr = instructorIdForConversation;
+        const instructorIdStr =
+          typeof instructorIdForConversation === 'string'
+            ? instructorIdForConversation
+            : String(instructorIdForConversation);
 
         const customer = await upsertCustomer({
           instructorId: instructorIdStr,
