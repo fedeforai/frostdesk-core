@@ -264,10 +264,10 @@ export default function InstructorConversationView({
             }}
           >
             <p style={{ fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)', fontWeight: 500, margin: '0 0 0.5rem 0' }}>
-              This conversation hasn't started yet.
+              This conversation hasn&apos;t started yet.
             </p>
             <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', margin: 0 }}>
-              You'll be able to reply
+              You&apos;ll be able to reply
               <br />
               as soon as the guest sends a message.
             </p>
@@ -314,7 +314,7 @@ export default function InstructorConversationView({
         <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', lineHeight: 1.4 }}>
           <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Payment & confirmation</div>
           <div>
-            You confirm the lesson; payment is handled separately and finalizes the booking. You can share the payment link when you're ready.
+            You confirm the lesson; payment is handled separately and finalizes the booking. You can share the payment link when you&apos;re ready.
           </div>
           <div style={{ marginTop: '0.25rem' }}>
             Until then, this booking should be considered a reservation.

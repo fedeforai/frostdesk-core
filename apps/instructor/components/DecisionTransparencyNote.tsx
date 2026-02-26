@@ -79,11 +79,11 @@ export default function DecisionTransparencyNote({
         ×
       </button>
       <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', marginBottom: '0.25rem' }}>
-        Why you're seeing this
+        Why you&apos;re seeing this
       </div>
       <div style={{ color: '#374151', lineHeight: 1.4 }}>{copy}</div>
       <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: 1.4 }}>
-        You're always in control. Suggested replies are optional.
+        You&apos;re always in control. Suggested replies are optional.
       </div>
     </div>
   );

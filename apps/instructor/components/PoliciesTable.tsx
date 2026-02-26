@@ -86,7 +86,7 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
             {policies.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                  No policies yet. Click "Add policy" to create one.
+                  No policies yet. Click &quot;Add policy&quot; to create one.
                 </td>
               </tr>
             ) : (

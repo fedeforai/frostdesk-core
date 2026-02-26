@@ -1,20 +1,8 @@
-import { requireAdmin } from '@/lib/requireAdmin';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
-import ErrorState from '@/components/admin/ErrorState';
 import StatusBadge from '@/components/admin/StatusBadge';
 import Link from 'next/link';
 
 export default async function PilotProtocolPage() {
-  try {
-    await requireAdmin();
-  } catch (error) {
-    return (
-      <div style={{ padding: '2rem' }}>
-        <ErrorState status={403} message="Admin access required" />
-      </div>
-    );
-  }
-
   const steps = [
     {
       number: 1,
@@ -75,7 +63,7 @@ export default async function PilotProtocolPage() {
         { label: 'Admin', href: '/admin' },
         { label: 'Pilot Protocol', href: '/admin/pilot' },
       ]} />
-      
+
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.5rem' }}>
           Pilot Protocol Guide
@@ -85,10 +73,10 @@ export default async function PilotProtocolPage() {
         </p>
       </div>
 
-      <div style={{ 
-        backgroundColor: '#f0f9ff', 
-        border: '1px solid #3b82f6', 
-        borderRadius: '0.5rem', 
+      <div style={{
+        backgroundColor: '#f0f9ff',
+        border: '1px solid #3b82f6',
+        borderRadius: '0.5rem',
         padding: '1.5rem',
         marginBottom: '2rem',
       }}>
@@ -96,7 +84,7 @@ export default async function PilotProtocolPage() {
           What is the Pilot?
         </h2>
         <p style={{ color: '#1e40af', fontSize: '0.875rem', lineHeight: '1.6', marginBottom: '1rem' }}>
-          The FrostDesk pilot is a <strong>governed, read-only observation phase</strong> designed to validate AI-assisted booking workflows 
+          The FrostDesk pilot is a <strong>governed, read-only observation phase</strong> designed to validate AI-assisted booking workflows
           under strict human supervision. All AI operations are <strong>draft-only</strong> and require explicit human approval before any action.
         </p>
         <p style={{ color: '#1e40af', fontSize: '0.875rem', lineHeight: '1.6', marginBottom: '0' }}>
@@ -104,24 +92,24 @@ export default async function PilotProtocolPage() {
         </p>
       </div>
 
-      <div style={{ 
+      <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '1rem',
         marginBottom: '2rem',
       }}>
-        <div style={{ 
-          backgroundColor: '#ffffff', 
-          border: '1px solid #e5e7eb', 
-          borderRadius: '0.5rem', 
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
           padding: '1.25rem',
         }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Active Flows
           </h3>
-          <ul style={{ 
-            color: '#374151', 
-            fontSize: '0.875rem', 
+          <ul style={{
+            color: '#374151',
+            fontSize: '0.875rem',
             lineHeight: '1.8',
             margin: 0,
             paddingLeft: '1.25rem',
@@ -135,18 +123,18 @@ export default async function PilotProtocolPage() {
           </ul>
         </div>
 
-        <div style={{ 
-          backgroundColor: '#ffffff', 
-          border: '1px solid #e5e7eb', 
-          borderRadius: '0.5rem', 
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
           padding: '1.25rem',
         }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Read-Only Operations
           </h3>
-          <ul style={{ 
-            color: '#374151', 
-            fontSize: '0.875rem', 
+          <ul style={{
+            color: '#374151',
+            fontSize: '0.875rem',
             lineHeight: '1.8',
             margin: 0,
             paddingLeft: '1.25rem',
@@ -160,18 +148,18 @@ export default async function PilotProtocolPage() {
           </ul>
         </div>
 
-        <div style={{ 
-          backgroundColor: '#ffffff', 
-          border: '1px solid #e5e7eb', 
-          borderRadius: '0.5rem', 
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
           padding: '1.25rem',
         }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Metrics Tracked
           </h3>
-          <ul style={{ 
-            color: '#374151', 
-            fontSize: '0.875rem', 
+          <ul style={{
+            color: '#374151',
+            fontSize: '0.875rem',
             lineHeight: '1.8',
             margin: 0,
             paddingLeft: '1.25rem',
@@ -215,27 +203,27 @@ export default async function PilotProtocolPage() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ 
-                    fontSize: '1.125rem', 
-                    fontWeight: '600', 
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     color: 'rgba(226, 232, 240, 0.95)',
                   }}>
                     {step.title}
                   </h3>
                   <StatusBadge status={step.status} size="sm" />
                 </div>
-                <p style={{ 
-                  color: '#374151', 
-                  fontSize: '0.875rem', 
+                <p style={{
+                  color: '#374151',
+                  fontSize: '0.875rem',
                   lineHeight: '1.5',
                   marginBottom: '0.75rem',
                 }}>
                   {step.description}
                 </p>
                 {step.note && (
-                  <p style={{ 
-                    color: '#6b7280', 
-                    fontSize: '0.8125rem', 
+                  <p style={{
+                    color: '#6b7280',
+                    fontSize: '0.8125rem',
                     fontStyle: 'italic',
                     marginBottom: '0.75rem',
                   }}>
@@ -263,7 +251,7 @@ export default async function PilotProtocolPage() {
         ))}
       </div>
 
-      <div style={{ 
+      <div style={{
         marginTop: '3rem',
         padding: '1.5rem',
         backgroundColor: '#fef3c7',
@@ -273,9 +261,9 @@ export default async function PilotProtocolPage() {
         <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#92400e', marginBottom: '0.75rem' }}>
           Important Notes
         </h2>
-        <ul style={{ 
-          color: '#78350f', 
-          fontSize: '0.875rem', 
+        <ul style={{
+          color: '#78350f',
+          fontSize: '0.875rem',
           lineHeight: '1.6',
           margin: 0,
           paddingLeft: '1.5rem',
