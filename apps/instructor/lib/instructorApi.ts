@@ -2468,7 +2468,7 @@ export async function connectCalendar(
   return {
     id: data.connection_id ?? data.id ?? '',
     provider: data.provider ?? 'google',
-    calendar_id: params.calendar_id,
+    calendar_id: params.calendar_id ?? data.calendar_id ?? '',
     expires_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -3258,7 +3258,7 @@ export async function regenerateConversationAiDraft(
  * Marks draft as used (trace only; does not send message).
  * POST /instructor/drafts/:draftId/use
  */
-export async function useDraft(
+export async function markDraftUsed(
   draftId: string,
   params: { edited: boolean; finalText: string }
 ): Promise<void> {

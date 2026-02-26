@@ -199,7 +199,7 @@ export default function TodayPageClient() {
       {/* Lezioni di oggi */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Today's lessons ({todayBookings.length})
+          Today&apos;s lessons ({todayBookings.length})
         </h2>
         {todayBookings.length === 0 ? (
           <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>No lessons today</p>

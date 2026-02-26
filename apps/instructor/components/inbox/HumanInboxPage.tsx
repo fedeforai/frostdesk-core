@@ -20,7 +20,7 @@ import {
   getConversationAiState,
   regenerateConversationAiDraft,
   updateInstructorBooking,
-  useDraft,
+  markDraftUsed,
   ignoreDraft,
   patchConversationAiState,
   type InstructorConversation,
@@ -658,7 +658,7 @@ export default function HumanInboxPage() {
     setComposerText(cleanText);
     composerTextareaRef.current?.focus();
     try {
-      await useDraft(draft.id, { edited: false, finalText: draft.text });
+      await markDraftUsed(draft.id, { edited: false, finalText: draft.text });
       setDraftsByConversationId((prev) => ({
         ...prev,
         [selectedId]: { ...draft, state: 'used', effectiveState: 'used' },
@@ -855,7 +855,7 @@ export default function HumanInboxPage() {
     setSendAsIsLoading(true);
     try {
       await doSend(cleanText);
-      await useDraft(draft.id, { edited: false, finalText: draft.text });
+      await markDraftUsed(draft.id, { edited: false, finalText: draft.text });
       setDraftsByConversationId((prev) => ({
         ...prev,
         [selectedId]: { ...draft, state: 'used', effectiveState: 'used' },

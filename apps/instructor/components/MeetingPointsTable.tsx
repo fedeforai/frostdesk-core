@@ -71,7 +71,7 @@ export default function MeetingPointsTable({ meetingPoints, onEdit, onAdd }: Mee
             {meetingPoints.length === 0 ? (
               <tr>
                 <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
-                  No meeting points yet. Click "Add meeting point" to create one.
+                  No meeting points yet. Click &quot;Add meeting point&quot; to create one.
                 </td>
               </tr>
             ) : (
