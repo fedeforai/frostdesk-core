@@ -107,6 +107,7 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
       base_resort?: unknown;
       working_language?: unknown;
       whatsapp_phone?: unknown;
+      contact_email?: unknown;
       onboarding_payload?: unknown;
     };
   }>('/instructor/onboarding/complete', async (request, reply) => {
@@ -117,6 +118,7 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
       const base_resort = isNonEmptyString(body.base_resort) ? body.base_resort.trim() : '';
       const working_language = isNonEmptyString(body.working_language) ? body.working_language.trim() : '';
       const whatsapp_phone = isNonEmptyString(body.whatsapp_phone) ? body.whatsapp_phone.trim() : '';
+      const contact_email = isNonEmptyString(body.contact_email) ? body.contact_email.trim() : '';
 
       if (!full_name || !base_resort || !working_language || !whatsapp_phone) {
         const normalized = normalizeError({ code: ERROR_CODES.INVALID_PAYLOAD });
@@ -133,7 +135,7 @@ export async function instructorOnboardingRoutes(app: FastifyInstance): Promise<
         full_name,
         base_resort,
         working_language,
-        contact_email: email ?? '',
+        contact_email: contact_email || '',
       });
 
       const profile = await getInstructorProfileByUserId(userId);

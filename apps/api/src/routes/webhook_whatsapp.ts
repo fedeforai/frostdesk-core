@@ -166,16 +166,6 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           }>;
         }>;
       };
-      let body: WhatsAppWebhookPayload;
-      try {
-        body = JSON.parse(rawBody) as WhatsAppWebhookPayload;
-      } catch (parseErr) {
-        request.log.warn({ err: parseErr }, 'WhatsApp webhook body JSON parse failed');
-        return reply.status(400).send({
-          ok: false,
-          error: 'Invalid JSON body',
-        });
-      }
 
       // Extract first message: entry[0].changes[0].value.messages[0]
       if (!body.entry || !Array.isArray(body.entry) || body.entry.length === 0) {
@@ -259,30 +249,8 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       const phoneNumberId = value.metadata?.phone_number_id;
       const displayPhone = value.metadata?.display_phone_number?.trim() ?? '';
 
-      // Resolve instructor from Meta phone_number_id (multi-tenant). Auto-link unknown numbers to default instructor.
-      const defaultInstructorId =
-        process.env.DEFAULT_INSTRUCTOR_ID?.trim() || '00000000-0000-0000-0000-000000000001';
+      // Resolve instructor from webhook metadata (multi-tenant routing). Set in echo path or inbound path below.
       let instructorIdForConversation: string;
-      if (typeof phoneNumberId === 'string' && phoneNumberId) {
-        const resolved = await getInstructorIdByPhoneNumberId(phoneNumberId);
-        if (resolved) {
-          instructorIdForConversation = resolved;
-        } else {
-          // First time we see this phone_number_id: link it to the default instructor so future lookups succeed.
-          try {
-            await connectInstructorWhatsappAccount({
-              instructorId: defaultInstructorId,
-              phoneNumber: displayPhone || 'unknown',
-              phoneNumberId,
-            });
-          } catch (err) {
-            request.log.warn({ err, phoneNumberId, defaultInstructorId }, 'Auto-link phone_number_id to default instructor failed');
-          }
-          instructorIdForConversation = defaultInstructorId;
-        }
-      } else {
-        instructorIdForConversation = defaultInstructorId;
-      }
 
       // Message echo: business replied from WhatsApp app (from = business number). Sync to inbox.
       const businessPhone = value.metadata?.display_phone_number;
@@ -303,11 +271,11 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           return reply.status(200).send({ ok: true });
         }
         const customerIdentifier = normalizePhoneE164(message.to) ?? message.to;
-        const instructorIdForConversation = await resolveInstructorId(
+        instructorIdForConversation = (await resolveInstructorId(
           value.metadata?.phone_number_id,
           value.metadata?.display_phone_number,
           request.log,
-        );
+        )) as string;
         const conversation = await resolveConversationByChannel(
           'whatsapp',
           customerIdentifier,
@@ -387,11 +355,11 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
 
       // Resolve instructor from webhook metadata (multi-tenant routing).
       // Priority: phone_number_id → auto-associate display_phone_number → DEFAULT_INSTRUCTOR_ID.
-      const instructorIdForConversation = await resolveInstructorId(
+      instructorIdForConversation = (await resolveInstructorId(
         value.metadata?.phone_number_id,
         value.metadata?.display_phone_number,
         request.log,
-      );
+      )) as string;
 
       const conversation = await resolveConversationByChannel(
         'whatsapp',
