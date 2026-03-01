@@ -26,8 +26,6 @@ export function runStartupChecks(): CheckResult {
     'DATABASE_URL',
     'SUPABASE_URL',
     'SUPABASE_SERVICE_ROLE_KEY',
-    'META_WHATSAPP_TOKEN',
-    'META_APP_SECRET',
   ];
 
   for (const v of requiredVars) {
@@ -48,6 +46,8 @@ export function runStartupChecks(): CheckResult {
   }
 
   const recommendedVars = [
+    'META_WHATSAPP_TOKEN',
+    'META_APP_SECRET',
     'SENTRY_DSN',
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
