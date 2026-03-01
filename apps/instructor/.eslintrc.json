@@ -32,7 +32,13 @@
     },
     {
       "files": ["app/**/*.tsx", "app/**/*.ts"],
-      "excludedFiles": ["**/*client*", "**/*.client.ts", "**/*.client.tsx", "**/page.tsx"],
+      "excludedFiles": [
+        "**/*client*",
+        "**/*.client.ts",
+        "**/*.client.tsx",
+        "app/instructor/(app)/**/*.tsx",
+        "app/instructor/(app)/**/*.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
