@@ -27,13 +27,13 @@ export default function CalendarConnectionPanel({
       const url = await getCalendarOAuthStartUrl();
       window.location.href = url;
     } catch (err: any) {
-      setError(err.message || 'Impossibile avviare il collegamento');
+      setError(err.message || 'Could not start connection');
       setLoading(false);
     }
   };
 
   const handleDisconnect = async () => {
-    if (!confirm('Vuoi scollegare il calendario?')) {
+    if (!confirm('Do you want to disconnect the calendar?')) {
       return;
     }
 
@@ -44,7 +44,7 @@ export default function CalendarConnectionPanel({
       onConnectionChange(null);
       window.location.reload();
     } catch (err: any) {
-        setError(err.message || 'Scollegamento non riuscito');
+        setError(err.message || 'Disconnect failed');
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function CalendarConnectionPanel({
       onConnectionChange();
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'Sincronizzazione non riuscita');
+      setError(err.message || 'Sync failed');
     } finally {
       setLoading(false);
     }
@@ -108,8 +108,8 @@ export default function CalendarConnectionPanel({
               </div>
             )}
             <div>
-              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Stato:</strong>{' '}
-              <span style={{ color: 'rgba(74, 222, 128, 0.95)', fontWeight: '500' }}>Connesso</span>
+              <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
+              <span style={{ color: 'rgba(74, 222, 128, 0.95)', fontWeight: '500' }}>Connected</span>
             </div>
           </div>
 
@@ -139,9 +139,9 @@ export default function CalendarConnectionPanel({
               onBlur={(e) => {
                 e.currentTarget.style.outline = 'none';
               }}
-              aria-label="Aggiorna calendario"
+              aria-label="Refresh calendar"
             >
-              {loading ? 'Sincronizzazione...' : 'Aggiorna'}
+              {loading ? 'Syncing...' : 'Refresh'}
             </button>
 
             <button
@@ -169,9 +169,9 @@ export default function CalendarConnectionPanel({
               onBlur={(e) => {
                 e.currentTarget.style.outline = 'none';
               }}
-              aria-label="Scollega calendario"
+              aria-label="Disconnect calendar"
             >
-              {loading ? 'Scollegamento...' : 'Scollega'}
+              {loading ? 'Disconnecting...' : 'Disconnect'}
             </button>
           </div>
         </div>
@@ -179,10 +179,10 @@ export default function CalendarConnectionPanel({
         <div>
           <div style={{ marginBottom: '1rem' }}>
             <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>Status:</strong>{' '}
-            <span style={{ color: 'rgba(248, 113, 113, 0.95)', fontWeight: '500' }}>Non connesso</span>
+            <span style={{ color: 'rgba(248, 113, 113, 0.95)', fontWeight: '500' }}>Not connected</span>
           </div>
           <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
-            Collega il tuo Google Calendar per evitare sovrapposizioni con le prenotazioni. Gli slot occupati sul calendario non saranno proposti ai clienti.
+            Connect your Google Calendar to avoid overlaps with bookings. Busy slots on the calendar will not be offered to customers.
           </p>
           <button
             type="button"
@@ -209,9 +209,9 @@ export default function CalendarConnectionPanel({
             onBlur={(e) => {
               e.currentTarget.style.outline = 'none';
             }}
-            aria-label="Collega calendario"
+            aria-label="Connect calendar"
           >
-            {loading ? 'Reindirizzamento...' : 'Collega'}
+            {loading ? 'Redirecting...' : 'Connect'}
           </button>
         </div>
       )}

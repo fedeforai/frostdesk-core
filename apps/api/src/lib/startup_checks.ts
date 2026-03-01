@@ -27,13 +27,18 @@ export function runStartupChecks(): CheckResult {
     'SUPABASE_URL',
     'SUPABASE_SERVICE_ROLE_KEY',
     'META_WHATSAPP_TOKEN',
-    'META_APP_SECRET',
   ];
 
   for (const v of requiredVars) {
     if (!process.env[v]) {
       critical.push(`Missing required env var: ${v}`);
     }
+  }
+
+  const hasWhatsAppAppSecret =
+    !!process.env.META_APP_SECRET || !!process.env.META_WHATSAPP_APP_SECRET;
+  if (!hasWhatsAppAppSecret) {
+    critical.push('Missing required env var: META_APP_SECRET or META_WHATSAPP_APP_SECRET');
   }
 
   const debugFlags: Array<{ name: string; badValue: string }> = [

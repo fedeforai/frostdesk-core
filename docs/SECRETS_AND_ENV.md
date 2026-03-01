@@ -27,11 +27,11 @@
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role key | **Critical** |
 | `META_WHATSAPP_TOKEN` | Meta Developer Console → WhatsApp → API Setup | **Critical** |
 | `META_WHATSAPP_PHONE_NUMBER_ID` | Meta Developer Console → WhatsApp → Phone Numbers | **Critical** |
-| `META_APP_SECRET` | Meta Developer Console → App → Settings → Basic | **Critical** |
+| `META_APP_SECRET` or `META_WHATSAPP_APP_SECRET` | Meta Developer Console → App → Settings → Basic (App Secret) | **Critical** (either one) |
 | `META_VERIFY_TOKEN` | Your chosen string (must match Meta webhook config) | **Critical** |
 | `SENTRY_DSN` | Sentry → Project → Settings → Client Keys | Recommended |
 | `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys | For billing |
-| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks → Signing secret | For billing |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks → Signing secret | For billing (optional when Stripe not used) |
 | `OPENAI_API_KEY` | OpenAI Dashboard → API keys | For AI features |
 | `GOOGLE_CLIENT_ID` | Google Cloud Console → Credentials | For calendar |
 | `GOOGLE_CLIENT_SECRET` | Google Cloud Console → Credentials | For calendar |

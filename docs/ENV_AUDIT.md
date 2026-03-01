@@ -59,7 +59,7 @@
 | **META_VERIFY_TOKEN** | apps/api routes/webhook.ts:65 | Node API | SERVER-ONLY | REQUIRED for WhatsApp webhook GET verification |
 | **META_WHATSAPP_TOKEN** | apps/api integrations/whatsapp_cloud_api.ts:60, whatsapp_outbound.ts:35 | Node API | SERVER-ONLY | REQUIRED for WhatsApp send |
 | **META_WHATSAPP_PHONE_NUMBER_ID** | apps/api integrations/whatsapp_cloud_api.ts:61 | Node API | SERVER-ONLY | REQUIRED for WhatsApp send |
-| **META_WHATSAPP_APP_SECRET** | apps/api routes/webhook_whatsapp.ts | Node API | SERVER-ONLY | REQUIRED for WhatsApp webhook POST signature verification (X-Hub-Signature-256) |
+| **META_WHATSAPP_APP_SECRET** | apps/api routes/webhook_whatsapp.ts, startup_checks.ts | Node API | SERVER-ONLY | REQUIRED (or META_APP_SECRET) for WhatsApp webhook POST signature verification (X-Hub-Signature-256) |
 | **WHATSAPP_SEND_MAX_RPS** | apps/api whatsapp/rate_limiter.ts | Node API | SERVER-ONLY | OPTIONAL (default 80). Max outbound sends per second toward Meta API. |
 | **OUTBOUND_QUEUE_MAX_PENDING** | packages/db outbound_send_jobs_repository.ts | Node API | SERVER-ONLY | OPTIONAL (default 10000). Max pending jobs; above this enqueue returns 503 Queue full. |
 | **AI_EMERGENCY_DISABLE** | packages/db ai_env_kill_switch.ts:22, system_health_repository.ts:53 | Node (db) | SERVER-ONLY | OPTIONAL ('true' = disable AI) |

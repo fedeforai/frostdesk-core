@@ -43,7 +43,7 @@ export default function NotAuthorized() {
         </p>
         <p style={{ fontSize: '0.875rem', marginBottom: '1.5rem' }}>
           <a href="/login" style={{ color: '#2563eb', fontWeight: 600 }}>
-            Accedi come admin →
+            Sign in as admin →
           </a>
         </p>
         <div style={{
