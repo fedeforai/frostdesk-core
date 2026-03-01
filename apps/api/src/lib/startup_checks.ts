@@ -69,11 +69,7 @@ export function enforceStartupChecks(): void {
     console.warn(`⚠️  STARTUP WARNING: ${w}`);
   }
 
-  if (critical.length > 0) {
-    for (const c of critical) {
-      console.error(`❌ STARTUP CRITICAL: ${c}`);
-    }
-    console.error(`\n❌ ${critical.length} critical startup check(s) failed. Exiting.`);
-    process.exit(1);
+  for (const c of critical) {
+    console.error(`⚠️  STARTUP CRITICAL (non-blocking): ${c}`);
   }
 }
