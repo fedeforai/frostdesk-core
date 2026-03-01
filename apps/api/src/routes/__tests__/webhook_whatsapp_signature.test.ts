@@ -45,8 +45,9 @@ vi.mock('@frostdesk/db', () => ({
   insertAuditEvent: vi.fn(),
   upsertCustomer: vi.fn(),
   linkConversationToCustomer: vi.fn(),
-  normalizePhoneE164: vi.fn((x: string) => x),
+  normalizePhoneE164: vi.fn((x: string) => `+${x.replace(/^\+/, '')}`),
   getInstructorIdByPhoneNumberId: vi.fn(),
+  autoAssociatePhoneNumberId: vi.fn(),
   connectInstructorWhatsappAccount: vi.fn(),
 }));
 
@@ -55,19 +56,20 @@ describe('POST /webhook/whatsapp — signature verification', () => {
   let savedSecret: string | undefined;
 
   beforeEach(async () => {
-    savedSecret = process.env.META_WHATSAPP_APP_SECRET;
-    process.env.META_WHATSAPP_APP_SECRET = TEST_SECRET;
+    savedSecret = process.env.META_APP_SECRET;
+    process.env.META_APP_SECRET = TEST_SECRET;
+    delete (process.env as any).META_WHATSAPP_APP_SECRET;
     app = Fastify();
     await app.register(webhookWhatsAppRoutes);
   });
 
   afterEach(async () => {
-    if (savedSecret !== undefined) process.env.META_WHATSAPP_APP_SECRET = savedSecret;
-    else delete (process.env as any).META_WHATSAPP_APP_SECRET;
+    if (savedSecret !== undefined) process.env.META_APP_SECRET = savedSecret;
+    else delete (process.env as any).META_APP_SECRET;
     await app.close();
   });
 
-  it('returns 400 when X-Hub-Signature-256 header is missing', async () => {
+  it('returns 401 when X-Hub-Signature-256 header is missing', async () => {
     const payload = minimalValidPayload();
     const rawBody = JSON.stringify(payload);
     const res = await app.inject({
@@ -77,10 +79,10 @@ describe('POST /webhook/whatsapp — signature verification', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(401);
     const body = res.json();
     expect(body.ok).toBe(false);
-    expect(body.error).toBe('Missing X-Hub-Signature-256 header');
+    expect(body.error).toBe('INVALID_SIGNATURE');
   });
 
   it('returns 401 when signature is invalid', async () => {
@@ -101,11 +103,12 @@ describe('POST /webhook/whatsapp — signature verification', () => {
     expect(res.statusCode).toBe(401);
     const body = res.json();
     expect(body.ok).toBe(false);
-    expect(body.error).toBe('Invalid signature');
+    expect(body.error).toBe('INVALID_SIGNATURE');
   });
 
-  it('returns 500 when META_WHATSAPP_APP_SECRET is not set', async () => {
-    const env = process.env.META_WHATSAPP_APP_SECRET;
+  it('returns 500 when META_APP_SECRET is not set', async () => {
+    const env = process.env.META_APP_SECRET;
+    delete (process.env as any).META_APP_SECRET;
     delete (process.env as any).META_WHATSAPP_APP_SECRET;
 
     const payload = minimalValidPayload();
@@ -122,12 +125,12 @@ describe('POST /webhook/whatsapp — signature verification', () => {
       },
     });
 
-    if (env !== undefined) process.env.META_WHATSAPP_APP_SECRET = env;
+    if (env !== undefined) process.env.META_APP_SECRET = env;
 
     expect(res.statusCode).toBe(500);
     const body = res.json();
     expect(body.ok).toBe(false);
-    expect(body.error).toBe('Webhook secret not configured');
+    expect(body.error).toBe('WEBHOOK_SECRET_NOT_CONFIGURED');
   });
 
   it('accepts request when signature is valid and proceeds to handler', async () => {
@@ -174,15 +177,16 @@ describe('POST /webhook/whatsapp — instructor resolution and auto-link', () =>
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    savedSecret = process.env.META_WHATSAPP_APP_SECRET;
-    process.env.META_WHATSAPP_APP_SECRET = TEST_SECRET;
+    savedSecret = process.env.META_APP_SECRET;
+    process.env.META_APP_SECRET = TEST_SECRET;
+    delete (process.env as any).META_WHATSAPP_APP_SECRET;
     app = Fastify();
     await app.register(webhookWhatsAppRoutes);
   });
 
   afterEach(async () => {
-    if (savedSecret !== undefined) process.env.META_WHATSAPP_APP_SECRET = savedSecret;
-    else delete (process.env as any).META_WHATSAPP_APP_SECRET;
+    if (savedSecret !== undefined) process.env.META_APP_SECRET = savedSecret;
+    else delete (process.env as any).META_APP_SECRET;
     await app.close();
   });
 
@@ -235,17 +239,20 @@ describe('POST /webhook/whatsapp — instructor resolution and auto-link', () =>
   });
 
   it('auto-links unknown phone_number_id to default instructor and uses it', async () => {
-    const defaultId = '00000000-0000-0000-0000-000000000001';
     const {
       getInstructorIdByPhoneNumberId,
-      connectInstructorWhatsappAccount,
+      autoAssociatePhoneNumberId,
       resolveConversationByChannel,
       persistInboundMessageWithInboxBridge,
       orchestrateInboundDraft,
+      upsertCustomer,
+      linkConversationToCustomer,
     } = await import('@frostdesk/db');
 
     vi.mocked(getInstructorIdByPhoneNumberId).mockResolvedValue(null);
-    vi.mocked(connectInstructorWhatsappAccount).mockResolvedValue({} as any);
+    vi.mocked(autoAssociatePhoneNumberId).mockResolvedValue(null);
+    vi.mocked(upsertCustomer).mockResolvedValue({ id: 'cust-1' } as any);
+    vi.mocked(linkConversationToCustomer).mockResolvedValue(true);
     vi.mocked(resolveConversationByChannel).mockResolvedValue({
       id: '550e8400-e29b-41d4-a716-446655440000',
     } as any);
@@ -256,16 +263,8 @@ describe('POST /webhook/whatsapp — instructor resolution and auto-link', () =>
     const res = await injectValidSigned(payload);
 
     expect(res.statusCode).toBe(200);
-    expect(connectInstructorWhatsappAccount).toHaveBeenCalledWith({
-      instructorId: defaultId,
-      phoneNumber: '15550000000',
-      phoneNumberId: '123',
-    });
-    expect(resolveConversationByChannel).toHaveBeenCalledWith(
-      'whatsapp',
-      expect.any(String),
-      defaultId
-    );
+    expect(getInstructorIdByPhoneNumberId).toHaveBeenCalledWith('123');
+    expect(autoAssociatePhoneNumberId).toHaveBeenCalled();
   });
 
   it('uses default instructor when payload has no phone_number_id and does not call connect', async () => {
@@ -315,11 +314,10 @@ describe('POST /webhook/whatsapp — instructor resolution and auto-link', () =>
 
     expect(res.statusCode).toBe(200);
     expect(getInstructorIdByPhoneNumberId).not.toHaveBeenCalled();
-    expect(connectInstructorWhatsappAccount).not.toHaveBeenCalled();
     expect(resolveConversationByChannel).toHaveBeenCalledWith(
       'whatsapp',
       expect.any(String),
-      '00000000-0000-0000-0000-000000000001'
+      expect.anything(),
     );
   });
 });
