@@ -20,7 +20,7 @@ import {
   getConversationAiState,
   regenerateConversationAiDraft,
   updateInstructorBooking,
-  useDraft,
+  markDraftUsed,
   ignoreDraft,
   patchConversationAiState,
   type InstructorConversation,
@@ -655,11 +655,10 @@ export default function HumanInboxPage() {
     const cleanText = draft.text
       .replace(/^Suggested reply for human review\.?\s*/i, '')
       .trim();
-    setComposerText(cleanText);
+      setComposerText(cleanText);
     composerTextareaRef.current?.focus();
     try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      await useDraft(draft.id, { edited: false, finalText: draft.text });
+      await markDraftUsed(draft.id, { edited: false, finalText: draft.text });
       setDraftsByConversationId((prev) => ({
         ...prev,
         [selectedId]: { ...draft, state: 'used', effectiveState: 'used' },
@@ -856,8 +855,7 @@ export default function HumanInboxPage() {
     setSendAsIsLoading(true);
     try {
       await doSend(cleanText);
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      await useDraft(draft.id, { edited: false, finalText: draft.text });
+      await markDraftUsed(draft.id, { edited: false, finalText: draft.text });
       setDraftsByConversationId((prev) => ({
         ...prev,
         [selectedId]: { ...draft, state: 'used', effectiveState: 'used' },
