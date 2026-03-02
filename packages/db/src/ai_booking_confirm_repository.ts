@@ -76,6 +76,8 @@ export async function confirmAIBookingDraftWithAudit(
       confirmed_booking_id: string | null;
       customer_name: string | null;
       customer_phone: string | null;
+      request_source: string | null;
+      guest_name: string | null;
       booking_date: string | null;
       start_time: string | null;
       end_time: string | null;
@@ -93,7 +95,8 @@ export async function confirmAIBookingDraftWithAudit(
     }>>`
       SELECT
         id, instructor_id, conversation_id, status, confirmed_booking_id,
-        customer_name, customer_phone, booking_date, start_time, end_time,
+        customer_name, customer_phone, request_source, guest_name,
+        booking_date, start_time, end_time,
         duration_minutes, party_size, skill_level, lesson_type, sport,
         resort, meeting_point_text, service_id, meeting_point_id,
         notes, raw_extraction
@@ -143,6 +146,9 @@ export async function confirmAIBookingDraftWithAudit(
     const startTimestamp = `${bookingDateStr}T${startTimeStr}`;
     const endTimestamp = `${bookingDateStr}T${endTimeStr}`;
 
+    // Display name: guest when third-party, else customer_name
+    const displayName = draft.guest_name ?? draft.customer_name ?? null;
+
     // ── Step 5: INSERT booking (conversation_id for in-thread context) ────
     const bookingRows = await db<Array<{ id: string }>>`
       INSERT INTO public.bookings (
@@ -151,6 +157,8 @@ export async function confirmAIBookingDraftWithAudit(
         customer_id,
         customer_name,
         phone,
+        request_source,
+        guest_name,
         booking_date,
         start_time,
         end_time,
@@ -165,8 +173,10 @@ export async function confirmAIBookingDraftWithAudit(
         ${input.instructorId}::uuid,
         ${draft.conversation_id}::uuid,
         ${customerId}::uuid,
-        ${draft.customer_name ?? null},
+        ${displayName},
         ${draft.customer_phone ?? null},
+        ${draft.request_source ?? 'direct'},
+        ${draft.guest_name ?? null},
         ${bookingDateStr}::date,
         ${startTimestamp}::timestamptz,
         ${endTimestamp}::timestamptz,

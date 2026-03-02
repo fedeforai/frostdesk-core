@@ -5,8 +5,15 @@
  * Uses deterministic regex/pattern matching (no LLM calls).
  *
  * Returns a completeness check so the orchestrator knows whether to create
- * a structured booking draft or just a text reply.
+ * a structured booking draft or just a text reply. Completeness is aligned
+ * with CONFIRMATION_MINIMAL_FIELDS: draft is only created when the instructor
+ * has the minimal info needed to decide whether to confirm and send the payment link.
  */
+
+import { CONFIRMATION_MINIMAL_FIELD_KEYS } from './booking_confirmation_constants.js';
+
+/** Who is making the booking: direct (customer for self), agency, concierge. */
+export type ExtractedRequestSource = 'direct' | 'agency' | 'concierge' | null;
 
 export interface ExtractedBookingFields {
   /** ISO date string (YYYY-MM-DD) or null */
@@ -27,10 +34,14 @@ export interface ExtractedBookingFields {
   resort: string | null;
   /** Free-text meeting point preference */
   meetingPointText: string | null;
-  /** Customer name extracted from message */
+  /** Customer/booker name extracted from message */
   customerName: string | null;
   /** Sport: ski, snowboard, etc. */
   sport: string | null;
+  /** Request origin: direct | agency | concierge. Null if not detected. */
+  requestSource: ExtractedRequestSource;
+  /** Guest name (lesson participant). Required when requestSource is agency or concierge. */
+  guestName: string | null;
 }
 
 export interface BookingExtractionResult {
@@ -42,13 +53,6 @@ export interface BookingExtractionResult {
   /** Confidence in extraction (0-1) */
   extractionConfidence: number;
 }
-
-// ── Required fields for a "complete" booking request ───────────────────────
-const REQUIRED_FIELDS: (keyof ExtractedBookingFields)[] = [
-  'date',
-  'startTime',
-  'partySize',
-];
 
 // We need either endTime or durationMinutes (at least one)
 function hasTimeRange(f: ExtractedBookingFields): boolean {
@@ -240,6 +244,27 @@ function extractSport(text: string): string | null {
   return null;
 }
 
+/** Detect if the message is from an agency, concierge, or direct customer. */
+function extractRequestSource(text: string): ExtractedRequestSource {
+  const lower = text.toLowerCase();
+  if (/\b(agency|travel agency|agenzia|agenzia di viaggio|booking agency)\b/i.test(lower)) return 'agency';
+  if (/\b(concierge|hotel concierge|reception)\b/i.test(lower)) return 'concierge';
+  return null;
+}
+
+/** Extract guest name (for third-party bookings): "guest name: X", "nome ospite: X", "per X", "for X". */
+function extractGuestName(text: string): string | null {
+  // Explicit labels
+  const withLabel = text.match(
+    /(?:guest\s*name|nome\s*(?:dell['']?)?ospite|nome\s*ospite|per\s+il\s+cliente)\s*[:=]\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s'-]+?)(?:\s*[,.\n]|$)/i,
+  );
+  if (withLabel) return withLabel[1].trim();
+  // "prenotazione per Mario Rossi" / "booking for John Smith"
+  const forMatch = text.match(/(?:prenotazione\s+per|booking\s+for|per conto di|on behalf of)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s'-]+?)(?:\s*[,.\n]|$)/i);
+  if (forMatch) return forMatch[1].trim();
+  return null;
+}
+
 // ── Main extractor ─────────────────────────────────────────────────────────
 
 export function extractBookingFields(messageText: string): BookingExtractionResult {
@@ -265,6 +290,7 @@ export function extractBookingFields(messageText: string): BookingExtractionResu
     endTime = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
   }
 
+  const requestSource = extractRequestSource(messageText);
   const fields: ExtractedBookingFields = {
     date: extractDate(messageText),
     startTime: times.startTime,
@@ -277,14 +303,22 @@ export function extractBookingFields(messageText: string): BookingExtractionResu
     meetingPointText: extractMeetingPoint(messageText),
     customerName: extractCustomerName(messageText),
     sport: extractSport(messageText),
+    requestSource: requestSource ?? 'direct',
+    guestName: extractGuestName(messageText),
   };
 
-  // Completeness check
+  // Completeness: minimal fields for instructor to confirm. For third-party (agency/concierge)
+  // we require guestName instead of customerName.
   const missing: string[] = [];
-  for (const key of REQUIRED_FIELDS) {
-    if (fields[key] === null || fields[key] === undefined) {
+  const isThirdParty = fields.requestSource === 'agency' || fields.requestSource === 'concierge';
+  for (const key of CONFIRMATION_MINIMAL_FIELD_KEYS) {
+    if (key === 'customerName' && isThirdParty) continue; // third-party uses guestName
+    if (fields[key as keyof ExtractedBookingFields] === null || fields[key as keyof ExtractedBookingFields] === undefined) {
       missing.push(key);
     }
+  }
+  if (isThirdParty && !fields.guestName) {
+    missing.push('guestName');
   }
   if (!hasTimeRange(fields)) {
     missing.push('endTime_or_duration');

@@ -271,8 +271,14 @@ export default function BookingDraftsPage() {
                 >
                   <div>
                     <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>
-                      {d.customerName ?? d.customerPhone ?? 'Customer'}
+                      {d.guestName ?? d.customerName ?? d.customerPhone ?? 'Customer'}
                     </div>
+                    {(d.requestSource === 'agency' || d.requestSource === 'concierge') && (
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.85)', marginTop: 2 }}>
+                        Prenotazione da: {d.requestSource === 'agency' ? 'Agenzia' : 'Concierge'}
+                        {d.guestName && ` · Ospite: ${d.guestName}`}
+                      </div>
+                    )}
                     <div style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.8)', marginTop: 2 }}>
                       {d.resort ?? d.sport ?? 'Lesson'} · {d.lessonType ?? ''} · {d.partySize} {d.partySize === 1 ? 'person' : 'people'}
                     </div>
@@ -302,6 +308,12 @@ export default function BookingDraftsPage() {
                   }}>
                     <table style={{ width: '100%', fontSize: '0.8125rem', borderCollapse: 'collapse', marginTop: 14 }}>
                       <tbody>
+                        {(d.requestSource === 'agency' || d.requestSource === 'concierge') && (
+                          <>
+                            <DetailRow label="Request source" value={d.requestSource === 'agency' ? 'Agenzia' : 'Concierge'} />
+                            <DetailRow label="Guest" value={d.guestName ?? '—'} />
+                          </>
+                        )}
                         <DetailRow label="Customer" value={d.customerName ?? '—'} />
                         <DetailRow label="Phone" value={d.customerPhone ?? '—'} />
                         <DetailRow label="Date" value={formatDate(d.bookingDate)} />

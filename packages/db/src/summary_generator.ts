@@ -149,6 +149,9 @@ function buildSummaryPrompt(input: SummaryInput): string {
   parts.push('  "missing_fields": ["time", "level"]');
   parts.push('}');
   parts.push('');
+  parts.push(
+    'Minimum fields for ready_to_propose (instructor can confirm and send payment link): date, time (start + duration or end), party_size, name (customer or guest if third-party). Set current_stage to ready_to_propose only when all of these are collected. Populate missing_fields with whichever of these are still missing.',
+  );
   parts.push('Rules: only verifiable facts. No invented details. No commitments.');
 
   return parts.join('\n');

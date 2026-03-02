@@ -3153,6 +3153,10 @@ export interface ConversationContextPendingDraft {
   party_size: number;
   customer_name: string | null;
   customer_phone: string | null;
+  /** direct | agency | concierge */
+  request_source?: string;
+  /** Guest name when booking is from agency/concierge. */
+  guest_name?: string | null;
   meeting_point_text: string | null;
   service_id: string | null;
   meeting_point_id: string | null;
@@ -3405,6 +3409,8 @@ export interface BookingDraftItem {
   messageId: string | null;
   customerName: string | null;
   customerPhone: string | null;
+  requestSource?: string;
+  guestName?: string | null;
   bookingDate: string;
   startTime: string;
   endTime: string;

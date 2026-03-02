@@ -8,6 +8,10 @@ export interface GenerateAIReplyInput {
   customerContext?: string | null;
   /** Loop C: detected language code for reply language. */
   detectedLanguage?: string | null;
+  /** When set, ask for these before the instructor can confirm and send the payment link. */
+  missingFields?: string[] | null;
+  /** When true, writer may be booking on behalf of a guest (agency/concierge). */
+  isThirdPartyBooking?: boolean | null;
 }
 
 export interface GenerateAIReplyOutput {

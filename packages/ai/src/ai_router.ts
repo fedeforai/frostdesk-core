@@ -64,6 +64,14 @@ export interface AiTaskParams {
    */
   detectedLanguage?: string | null;
   /**
+   * When set (e.g. from booking extraction), instructs the model to ask for these before confirmation.
+   */
+  missingFields?: string[] | null;
+  /**
+   * When true, the writer may be booking on behalf of a guest (agency/concierge).
+   */
+  isThirdPartyBooking?: boolean | null;
+  /**
    * Optional telemetry callback. Called after every AI call (success or error).
    * The callback is fire-and-forget: errors are swallowed.
    * Set by the orchestrator layer to persist to ai_usage_events.
@@ -296,14 +304,18 @@ function runLanguageDetection(
   const frSignals = [
     /\b(voudrais|leçon|réserver|quand|s'il\s+vous\s+plaît|merci|bonjour|disponible|moniteur|cours)\b/,
   ];
+  const esSignals = [
+    /\b(quiero|reservar|lección|clase|cuándo|por\s+favor|gracias|hola|disponible|instructor|esquí)\b/,
+  ];
 
-  const scores: Record<string, number> = { it: 0, en: 0, de: 0, fr: 0 };
+  const scores: Record<string, number> = { it: 0, en: 0, de: 0, fr: 0, es: 0 };
   for (const p of itSignals) if (p.test(text)) scores.it += 1;
   for (const p of enSignals) if (p.test(text)) scores.en += 1;
   for (const p of deSignals) if (p.test(text)) scores.de += 1;
   for (const p of frSignals) if (p.test(text)) scores.fr += 1;
+  for (const p of esSignals) if (p.test(text)) scores.es += 1;
 
-  const total = scores.it + scores.en + scores.de;
+  const total = scores.it + scores.en + scores.de + scores.fr + scores.es;
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const primary = sorted[0];
 
@@ -336,6 +348,8 @@ async function runDraftGeneration(
     // Loop C: customer context + language for improved suggestions
     customerContext: params.customerContext ?? null,
     detectedLanguage: params.detectedLanguage ?? null,
+    missingFields: params.missingFields ?? null,
+    isThirdPartyBooking: params.isThirdPartyBooking ?? null,
   });
 
   return {

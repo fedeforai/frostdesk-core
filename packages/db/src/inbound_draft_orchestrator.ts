@@ -536,6 +536,7 @@ export async function orchestrateInboundDraft(
   // Feature flag: ENABLE_AI_SUMMARY (default ON, set to '0' to disable)
   const summaryEnabled = process.env.ENABLE_AI_SUMMARY !== '0';
   let existingSummaryText: string | null = null;
+  let summaryMissingFields: string[] | null = null;
   let summaryUpdated = false;
   if (summaryEnabled) try {
     const existingSummary = await getConversationSummary(conversationId);
@@ -577,6 +578,7 @@ export async function orchestrateInboundDraft(
       });
 
       if (summaryResult) {
+        summaryMissingFields = summaryResult.missingFields;
         const newVersion = await updateConversationSummary({
           conversationId,
           summaryText: summaryResult.summaryText,
@@ -616,6 +618,8 @@ export async function orchestrateInboundDraft(
   else if (!intentOperative) skipReason = 'intent_non_operative';
   else if (!confidenceOk) skipReason = 'confidence_low';
 
+  let bookingExtractionForPrompt: { missingFields: string[]; requestSource: string } | null = null;
+
   if (gate.allowDraft && intentOperative && confidenceOk) {
     try {
       const instructorId = resolvedInstructorId ?? await getConversationInstructorId(conversationId);
@@ -624,6 +628,10 @@ export async function orchestrateInboundDraft(
       if (classification.intent === 'NEW_BOOKING' || classification.intent === 'RESCHEDULE') {
         try {
           const extraction = extractBookingFields(messageText);
+          bookingExtractionForPrompt = {
+            missingFields: extraction.missingFields,
+            requestSource: extraction.fields.requestSource ?? 'direct',
+          };
           const customerPhone = await getConversationCustomerIdentifier(conversationId);
 
           if (extraction.complete && extraction.fields.date && extraction.fields.startTime && extraction.fields.endTime) {
@@ -633,6 +641,8 @@ export async function orchestrateInboundDraft(
               messageId,
               customerName: extraction.fields.customerName ?? null,
               customerPhone: customerPhone ?? null,
+              requestSource: (extraction.fields.requestSource ?? 'direct') as 'direct' | 'agency' | 'concierge',
+              guestName: extraction.fields.guestName ?? null,
               bookingDate: extraction.fields.date,
               startTime: extraction.fields.startTime,
               endTime: extraction.fields.endTime,
@@ -717,6 +727,13 @@ export async function orchestrateInboundDraft(
           requestId,
           customerContext: enrichedContext.trim() || null,
           detectedLanguage,
+          missingFields: (() => {
+            const missing = bookingExtractionForPrompt?.missingFields ?? summaryMissingFields;
+            return missing?.length ? missing : undefined;
+          })(),
+          isThirdPartyBooking:
+            bookingExtractionForPrompt?.requestSource === 'agency' ||
+            bookingExtractionForPrompt?.requestSource === 'concierge',
           onUsage,
         });
         const draftResult = await withTimeout(draftTask, AI_TIMEOUT.DRAFT);
@@ -749,12 +766,13 @@ export async function orchestrateInboundDraft(
           draftReplyText = '';
         }
 
-        // Apply quality guardrails (only if we have text)
+        // Apply quality guardrails (only if we have text); use detected language so patterns match draft language
+        const guardrailLanguage = detectedLanguage ?? language;
         const qualityCheck = draftReplyText
           ? sanitizeDraftText({
               rawDraftText: draftReplyText,
               intent: classification.intent || null,
-              language,
+              language: guardrailLanguage,
               rescheduleVerified,
             })
           : { safeDraftText: null, violations: [], was_truncated: false, violations_count: 0 };

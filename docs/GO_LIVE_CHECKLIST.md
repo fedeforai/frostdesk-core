@@ -194,6 +194,7 @@ Se dopo aver autorizzato Google vieni reindirizzato a `localhost:3000/instructor
 Se dopo aver collegato WhatsApp l’interfaccia non si aggiorna (es. continua a mostrare “Collega” o lo stato non cambia), o in Inbox tutte le conversazioni restano “Whatsapp waiting” e “Last updated: … ago” non si aggiorna:
 
 - **Per dati vecchi in Inbox (“Last message 10d ago” che non si aggiorna):** vedi audit dedicato [WHATSAPP_INBOX_AUDIT.md](./WHATSAPP_INBOX_AUDIT.md) (webhook Meta, variabili Railway, polling/endpoint).
+- **Setup Inbox WhatsApp per un nuovo istruttore:** checklist step-by-step in [WHATSAPP_INBOX_AUDIT.md § 7](./WHATSAPP_INBOX_AUDIT.md#7-setup-inbox-whatsapp-per-un-nuovo-istruttore-checklist-step-by-step) (Frostdesk + Meta).
 - **INSTRUCTOR_APP_URL (API):** su Railway, per l’API deve essere l’URL reale dell’app Instructor (es. `https://www.frostdesk.ai`). Se è `localhost` o mancante, anche i redirect/redirect dopo azioni possono andare a male.
 - Ricaricare la pagina o cliccare **Refresh** in Inbox; verificare che le chiamate API (es. `conversations`) tornino 200 e con dati aggiornati (DevTools → Network).
 - **Webhook Meta:** in Meta for Developers → App WhatsApp → Configuration → Webhook, l’URL deve essere `https://TUO-DOMINIO-API/webhook/whatsapp` (dominio dell’API Railway). Verifica che il webhook riceva gli eventi (in Meta c’è il log delle chiamate).

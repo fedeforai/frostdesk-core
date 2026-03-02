@@ -23,7 +23,10 @@
     "build:admin": "pnpm --filter @frostdesk/admin build",
     "start:admin": "pnpm --filter @frostdesk/admin start",
     "build:web": "pnpm --filter @frostdesk/web build",
-    "start:web": "pnpm --filter @frostdesk/web start"
+    "start:web": "pnpm --filter @frostdesk/web start",
+    "dev:landing": "pnpm --filter @frostdesk/landing dev",
+    "build:landing": "pnpm --filter @frostdesk/landing build",
+    "start:landing": "pnpm --filter @frostdesk/landing start"
   },
   "engines": {
     "node": ">=20.0.0"

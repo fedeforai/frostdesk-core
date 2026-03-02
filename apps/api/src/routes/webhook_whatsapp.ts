@@ -473,7 +473,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           externalMessageId: normalizedMessage.external_id,
           messageText: normalizedMessage.text,
           channel: normalizedMessage.channel,
-          language: 'it', // TODO: detect from message or payload
+          language: 'it', // Fallback when detection has low confidence; orchestrator detects language from message and suggests in that language
           requestId: request.id ?? null,
         });
 

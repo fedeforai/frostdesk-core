@@ -158,3 +158,53 @@ Se l’endpoint e il polling fossero sbagliati, vedresti comunque dati “vecchi
 ---
 
 Dopo aver verificato webhook URL, variabili Meta e (se necessario) instructor_whatsapp_accounts + DEFAULT_INSTRUCTOR_ID, i nuovi messaggi dovrebbero essere persistiti e l’Inbox aggiornarsi entro pochi secondi (polling 5s). Se il problema persiste, i log Railway per **POST /webhook/whatsapp** e il log delle delivery in Meta sono il passo successivo per capire se le richieste arrivano e come risponde l’API.
+
+---
+
+## 7. Setup Inbox WhatsApp per un nuovo istruttore (checklist step-by-step)
+
+Ogni istruttore deve collegare **il proprio numero WhatsApp** (quello che riceve i messaggi) a Frostdesk. Nessuna variabile d’ambiente per istruttore: tutto è in DB e in Meta. Flusso: **numero che riceve in Meta** = stesso numero collegato in Frostdesk → messaggi in arrivo su quel numero compaiono nell’Inbox di quell’istruttore.
+
+### Lato Frostdesk (istruttore)
+
+1. **Login**  
+   L’istruttore accede all’app Instructor (es. https://www.frostdesk.ai) con le proprie credenziali.
+
+2. **Onboarding (se non completato)**  
+   Nel form di onboarding inserire il **Telefono WhatsApp** in formato E.164 (es. `+393401234567`). Salvare. Questo crea/aggiorna il collegamento numero → istruttore in `instructor_whatsapp_accounts`.
+
+3. **Impostazioni (se onboarding già fatto)**  
+   Andare in **Impostazioni** → sezione **WhatsApp** (o “Collega WhatsApp”). Inserire o aggiornare il **numero WhatsApp** (E.164) che riceverà i messaggi dei clienti. Confermare. L’app chiama **POST /instructor/whatsapp/connect** e aggiorna `instructor_whatsapp_accounts` per quell’istruttore.
+
+4. **Verifica in DB (opzionale)**  
+   In `instructor_whatsapp_accounts` deve esistere una riga con `instructor_id` = UUID dell’istruttore e `phone_number` = numero in E.164. Il campo `phone_number_id` può essere `NULL` fino al primo messaggio ricevuto (il webhook lo completerà).
+
+### Lato Meta (configurazione app / numeri)
+
+5. **Numero che riceve i messaggi**  
+   Il numero che l’istruttore ha inserito in Frostdesk deve essere un numero **WhatsApp Business** che **riceve** messaggi. In Meta for Developers → App (es. Frostdesk) → **WhatsApp** → **API Setup** (o **Configuration**): il numero deve essere aggiunto/registrato come numero che riceve messaggi (test number o numero di produzione collegato allo stesso WhatsApp Business Account).
+
+6. **Webhook e sottoscrizioni (una sola volta per app)**  
+   - **Callback URL**: `https://TUO-DOMINIO-API/webhook/whatsapp` (es. `https://frostdeskapi-production.up.railway.app/webhook/whatsapp`).  
+   - **Verify token**: stesso valore di `META_WHATSAPP_VERIFY_TOKEN` (o `META_VERIFY_TOKEN`) su Railway.  
+   - **Use cases**: evento **`messages`** deve essere **Subscribed**.  
+   (Se già configurato per un altro istruttore, non ripetere.)
+
+7. **Variabili API (Railway, una sola volta)**  
+   Sul servizio API devono essere impostate: `META_APP_SECRET` (o `META_WHATSAPP_APP_SECRET`), `META_WHATSAPP_VERIFY_TOKEN` (o `META_VERIFY_TOKEN`), `META_WHATSAPP_TOKEN`. Opzionale: `META_WHATSAPP_PHONE_NUMBER_ID` (per outbound). Nessuna variabile “per istruttore”.
+
+### Test
+
+8. **Primo messaggio**  
+   Un cliente (o l’istruttore da un altro numero) invia un messaggio **al** numero WhatsApp Business dell’istruttore (quello collegato in Frostdesk). Meta invia il webhook; il backend fa il match per `display_phone_number` (e aggiorna `phone_number_id` se era `NULL`). La conversazione viene creata/aggiornata con quell’`instructor_id`.
+
+9. **Inbox**  
+   L’istruttore apre **Inbox** su Frostdesk e clicca **Refresh** (o aspetta il polling 5s). La conversazione deve comparire con l’ultimo messaggio aggiornato.
+
+### Riepilogo
+
+| Dove | Cosa |
+|------|------|
+| **Frostdesk** | Istruttore collega il numero in Onboarding o Impostazioni → `instructor_whatsapp_accounts` |
+| **Meta** | Il numero deve ricevere messaggi (numero Business); webhook e `messages` già configurati per l’app |
+| **Nessuna variabile per istruttore** | Mapping numero → istruttore solo in DB; API usa le stesse variabili Meta per tutti |

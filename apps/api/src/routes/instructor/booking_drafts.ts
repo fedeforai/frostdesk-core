@@ -72,6 +72,8 @@ export async function instructorBookingDraftsRoutes(app: FastifyInstance): Promi
           messageId: d.message_id,
           customerName: d.customer_name,
           customerPhone: d.customer_phone,
+          requestSource: d.request_source ?? 'direct',
+          guestName: d.guest_name ?? null,
           bookingDate: normalizeDate(d.booking_date),
           startTime: normalizeTime(d.start_time),
           endTime: normalizeTime(d.end_time),

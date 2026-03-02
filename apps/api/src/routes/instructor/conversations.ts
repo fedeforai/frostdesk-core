@@ -245,6 +245,8 @@ export async function instructorConversationsRoutes(
             party_size: pendingDraft.party_size,
             customer_name: pendingDraft.customer_name ?? null,
             customer_phone: pendingDraft.customer_phone ?? null,
+            request_source: pendingDraft.request_source ?? 'direct',
+            guest_name: pendingDraft.guest_name ?? null,
             meeting_point_text: pendingDraft.meeting_point_text ?? null,
             service_id: pendingDraft.service_id ?? null,
             meeting_point_id: pendingDraft.meeting_point_id ?? null,

@@ -1226,31 +1226,44 @@ export default function HumanInboxPage() {
                 {/* Pending booking draft: confirm in thread */}
                 {selectedId &&
                   contextByConversationId[selectedId]?.pending_booking_draft &&
-                  !contextLoading && (
+                  !contextLoading && (() => {
+                    const draft = contextByConversationId[selectedId]!.pending_booking_draft!;
+                    const sourceLabel =
+                      draft.request_source === 'agency'
+                        ? 'Agenzia'
+                        : draft.request_source === 'concierge'
+                          ? 'Concierge'
+                          : 'Diretto';
+                    const displayName = (draft.guest_name ?? draft.customer_name ?? '').trim();
+                    return (
                     <div className={styles.actionsStrip}>
                       <div className={styles.aiSuggestionCard} style={{ marginBottom: 8 }}>
                         <div className={styles.aiSuggestionLabel}>Proposta prenotazione</div>
+                        {(draft.request_source === 'agency' || draft.request_source === 'concierge') && (
+                          <div className={styles.aiSuggestionText} style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                            Prenotazione da: {sourceLabel}
+                            {draft.guest_name && ` · Ospite: ${draft.guest_name}`}
+                          </div>
+                        )}
                         <div className={styles.aiSuggestionText}>
                           {formatBookingDateTime(
-                            `${contextByConversationId[selectedId]!.pending_booking_draft!.booking_date}T${contextByConversationId[selectedId]!.pending_booking_draft!.start_time}`
+                            `${draft.booking_date}T${draft.start_time}`
                           )}
-                          {(contextByConversationId[selectedId]!.pending_booking_draft!.customer_name ?? '').trim() &&
-                            ` · ${contextByConversationId[selectedId]!.pending_booking_draft!.customer_name}`}
+                          {displayName && ` · ${displayName}`}
                         </div>
                         <div className={styles.aiSuggestionActions}>
                           <button
                             type="button"
                             className={`${styles.aiSuggestionBtn} ${styles.aiSuggestionBtnPrimary}`}
-                            onClick={() =>
-                              handleOpenConfirmDraft(contextByConversationId[selectedId]!.pending_booking_draft!)
-                            }
+                            onClick={() => handleOpenConfirmDraft(draft)}
                           >
                             Conferma prenotazione
                           </button>
                         </div>
                       </div>
                     </div>
-                  )}
+                    );
+                  })()}
 
                 {/* Cancel booking confirm modal */}
                 {cancelBookingModal && (
@@ -1455,7 +1468,8 @@ export default function HumanInboxPage() {
                             {formatBookingDateTime(
                               `${confirmDraftModal.draft.booking_date}T${confirmDraftModal.draft.start_time}`
                             )}
-                            {confirmDraftModal.draft.customer_name && ` · ${confirmDraftModal.draft.customer_name}`}
+                            {(confirmDraftModal.draft.guest_name ?? confirmDraftModal.draft.customer_name) &&
+                              ` · ${confirmDraftModal.draft.guest_name ?? confirmDraftModal.draft.customer_name}`}
                             {confirmDraftModal.draft.meeting_point_text && ` · ${confirmDraftModal.draft.meeting_point_text}`}
                           </p>
                         )}

@@ -11,6 +11,9 @@ import { sql } from './client.js';
 
 export type BookingDraftStatus = 'pending_review' | 'confirmed' | 'rejected' | 'expired';
 
+/** Request source: who is making the booking (direct = customer for self). */
+export type RequestSource = 'direct' | 'agency' | 'concierge';
+
 export interface AIBookingDraftRow {
   id: string;
   conversation_id: string;
@@ -18,6 +21,8 @@ export interface AIBookingDraftRow {
   message_id: string | null;
   customer_name: string | null;
   customer_phone: string | null;
+  request_source: RequestSource;
+  guest_name: string | null;
   booking_date: string; // YYYY-MM-DD
   start_time: string;   // HH:MM:SS
   end_time: string;     // HH:MM:SS
@@ -48,6 +53,8 @@ export interface InsertAIBookingDraftParams {
   messageId?: string | null;
   customerName?: string | null;
   customerPhone?: string | null;
+  requestSource?: RequestSource | null;
+  guestName?: string | null;
   bookingDate: string;   // YYYY-MM-DD
   startTime: string;     // HH:MM
   endTime: string;       // HH:MM
@@ -76,6 +83,8 @@ export async function insertAIBookingDraft(
       message_id,
       customer_name,
       customer_phone,
+      request_source,
+      guest_name,
       booking_date,
       start_time,
       end_time,
@@ -98,6 +107,8 @@ export async function insertAIBookingDraft(
       ${params.messageId ?? null}::uuid,
       ${params.customerName ?? null},
       ${params.customerPhone ?? null},
+      ${(params.requestSource ?? 'direct') as RequestSource},
+      ${params.guestName ?? null},
       ${params.bookingDate}::date,
       ${params.startTime}::time,
       ${params.endTime}::time,

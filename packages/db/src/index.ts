@@ -531,7 +531,16 @@ export type {
 
 // Booking field extraction (pure regex, no LLM)
 export { extractBookingFields } from './booking_field_extractor.js';
-export type { ExtractedBookingFields, BookingExtractionResult } from './booking_field_extractor.js';
+export type {
+  ExtractedBookingFields,
+  BookingExtractionResult,
+  ExtractedRequestSource,
+} from './booking_field_extractor.js';
+export {
+  CONFIRMATION_MINIMAL_FIELD_KEYS,
+  CONFIRMATION_FIELD_LABELS,
+  CONFIRMATION_MINIMAL_FIELDS_LIST,
+} from './booking_confirmation_constants.js';
 
 // AI Booking Drafts (structured booking proposals from AI)
 export {
@@ -548,6 +557,7 @@ export type {
   AIBookingDraftRow,
   BookingDraftStatus,
   InsertAIBookingDraftParams,
+  RequestSource,
 } from './ai_booking_draft_repository_v2.js';
 
 // Conversation suggested actions (inbox: when human action needed)

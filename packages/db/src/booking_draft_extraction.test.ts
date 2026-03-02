@@ -10,7 +10,7 @@ import { extractBookingFields } from './booking_field_extractor.js';
 describe('extractBookingFields – booking draft creation conditions', () => {
   it('extracts complete booking from "vorrei prenotare domani alle 10 per 2 persone, 2 ore"', () => {
     const result = extractBookingFields(
-      'Ciao, vorrei prenotare domani alle 10:00 per 2 persone, 2 ore di lezione di sci',
+      'Ciao, mi chiamo Marco. Vorrei prenotare domani alle 10:00 per 2 persone, 2 ore di lezione di sci',
     );
 
     expect(result.complete).toBe(true);
@@ -34,6 +34,18 @@ describe('extractBookingFields – booking draft creation conditions', () => {
     expect(result.fields.partySize).toBe(3);
     expect(result.fields.customerName).toBe('Sara');
     expect(result.fields.skillLevel).toBe('beginner');
+  });
+
+  it('marks as incomplete when customer name is missing', () => {
+    const result = extractBookingFields(
+      'Vorrei prenotare domani alle 10:00 per 2 persone, 2 ore',
+    );
+
+    expect(result.complete).toBe(false);
+    expect(result.missingFields).toContain('customerName');
+    expect(result.fields.date).toBeTruthy();
+    expect(result.fields.startTime).toBe('10:00');
+    expect(result.fields.partySize).toBe(2);
   });
 
   it('marks as incomplete when date is missing', () => {
@@ -72,7 +84,7 @@ describe('extractBookingFields – booking draft creation conditions', () => {
 
   it('extracts resort and meeting point when provided', () => {
     const result = extractBookingFields(
-      'Lesson tomorrow at 09:00 to 11:00 for 2 people in Courmayeur. Meeting point: Chécrouit telecabina.',
+      'My name is John. Lesson tomorrow at 09:00 to 11:00 for 2 people in Courmayeur. Meeting point: Chécrouit telecabina.',
     );
 
     expect(result.complete).toBe(true);
@@ -93,6 +105,29 @@ describe('extractBookingFields – booking draft creation conditions', () => {
     expect(result.fields.startTime).toBe('14:00');
   });
 
+  it('extracts third-party (agency) and guest name', () => {
+    const result = extractBookingFields(
+      'We are a travel agency. Booking for 2026-03-20 from 10:00 to 12:00 for 2 people. Guest name: Mario Rossi. Beginner level.',
+    );
+
+    expect(result.fields.requestSource).toBe('agency');
+    expect(result.fields.guestName).toBe('Mario Rossi');
+    expect(result.complete).toBe(true);
+    expect(result.fields.date).toBe('2026-03-20');
+    expect(result.fields.partySize).toBe(2);
+  });
+
+  it('marks third-party incomplete when guest name is missing', () => {
+    const result = extractBookingFields(
+      'Hotel concierge here. We need a lesson tomorrow at 09:00 for 2 hours, 1 person.',
+    );
+
+    expect(result.fields.requestSource).toBe('concierge');
+    expect(result.fields.guestName).toBeNull();
+    expect(result.complete).toBe(false);
+    expect(result.missingFields).toContain('guestName');
+  });
+
   it('returns extractionConfidence > 0 even for incomplete messages', () => {
     const result = extractBookingFields('I want a ski lesson');
 
@@ -103,7 +138,7 @@ describe('extractBookingFields – booking draft creation conditions', () => {
 
   it('handles European date format', () => {
     const result = extractBookingFields(
-      'Vorrei prenotare il 15/03/2026 alle 10:00 per 2 persone, 2h',
+      'Mi chiamo Anna. Vorrei prenotare il 15/03/2026 alle 10:00 per 2 persone, 2h',
     );
 
     expect(result.complete).toBe(true);
@@ -111,5 +146,6 @@ describe('extractBookingFields – booking draft creation conditions', () => {
     expect(result.fields.startTime).toBe('10:00');
     expect(result.fields.partySize).toBe(2);
     expect(result.fields.durationMinutes).toBe(120);
+    expect(result.fields.customerName).toBe('Anna');
   });
 });
