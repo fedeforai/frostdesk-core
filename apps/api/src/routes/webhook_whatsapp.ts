@@ -135,7 +135,10 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
         const rawBody = request.body as Buffer;
 
         if (!signature || !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
-          request.log.warn({ hasSignature: !!signature }, 'WhatsApp webhook signature verification failed');
+          request.log.warn(
+            { hasSignature: !!signature, bodyLength: Buffer.isBuffer(rawBody) ? rawBody.length : 0 },
+            'WhatsApp webhook signature verification failed (check App Secret matches Meta; if correct, body may be modified by proxy)'
+          );
           return reply.status(401).send({
             ok: false,
             error: 'INVALID_SIGNATURE',
@@ -423,7 +426,7 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
       // Persist message with inbox bridge (idempotent: checks external_id before insert)
       // This function inserts into both inbound_messages and messages tables atomically
       await persistInboundMessageWithInboxBridge({
-        conversationId: conversationId,
+        conversationId,
         channel: normalizedMessage.channel,
         externalMessageId: normalizedMessage.external_id,
         senderIdentity: normalizedMessage.sender_identifier,
@@ -436,6 +439,10 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
           channel: normalizedMessage.channel,
         },
       });
+      request.log.info(
+        { conversationId, messageId: normalizedMessage.external_id, instructorId: instructorIdForConversation },
+        'WhatsApp inbound message persisted'
+      );
 
       // Phase C1: inbound message audit (metadata only, fail-open)
       try {

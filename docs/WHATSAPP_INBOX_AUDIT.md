@@ -74,7 +74,31 @@ In produzione, **senza META_APP_SECRET o META_WHATSAPP_APP_SECRET** le richieste
 
 - **Come verificare che META_APP_SECRET (o META_WHATSAPP_APP_SECRET) sia giusta su Railway:**  
   Il valore deve essere **esattamente** l’**App Secret** dell’app Meta: Meta for Developers → tua App (es. Frostdesk) → **Settings** → **Basic** → **App Secret** (Show → copia). Su Railway imposta una delle due variabili (`META_APP_SECRET` oppure `META_WHATSAPP_APP_SECRET`) con quel valore, **senza spazi prima/dopo** e senza virgolette nel valore.  
-  Se il valore è sbagliato o mancante: in produzione il webhook risponde **500** (secret not configured) o **401** (signature verification failed) e i messaggi non vengono salvati. Controlla i log Railway per `POST /webhook/whatsapp`: messaggi tipo `WEBHOOK_SECRET_NOT_CONFIGURED` o `INVALID_SIGNATURE` indicano che la variabile manca o non coincide con l’App Secret di Meta.
+  Se il valore è sbagliato o mancante: in produzione il webhook risponde **500** (secret not configured) o **401** (signature verification failed) e i messaggi non vengono salvati.   Controlla i log Railway per `POST /webhook/whatsapp`: messaggi tipo `WEBHOOK_SECRET_NOT_CONFIGURED` o `INVALID_SIGNATURE` indicano che la variabile manca o non coincide con l’App Secret di Meta.
+
+---
+
+## 3b. Secret giusto ma continua a non andare
+
+Se **META_APP_SECRET** / **META_WHATSAPP_APP_SECRET** sono corretti ma l’Inbox ancora non si aggiorna, usa i log Railway per capire dove si blocca.
+
+- **Ricevi 401 (INVALID_SIGNATURE)**  
+  La firma non coincide anche se il secret è giusto. Cause possibili:  
+  1. **Body modificato** da proxy o da Railway prima di arrivare all’app (es. parsing/ri-serializzazione JSON che cambia i byte). Nei log ora compare anche `bodyLength`: confrontalo con la dimensione che Meta invia.  
+  2. **Secret con caratteri invisibili** (spazio, newline) copiati da Meta: ri-copia l’App Secret, incolla in un editor di testo, rimuovi spazi e a capo, poi incolla in Railway.  
+  3. **Stai usando il Token invece dell’App Secret**: l’App Secret è in Settings → Basic → App Secret; il Token è in WhatsApp → API Setup. Devono essere diversi.
+
+- **Non ricevi 401, ma l’Inbox non si aggiorna**  
+  Il webhook arriva e la firma è OK. Cosa controllare:  
+  1. **Log “WhatsApp inbound message persisted”**  
+     Se dopo un messaggio di test **non** compare questo messaggio nei log Railway, la richiesta non arriva al punto di persist (es. errore prima: payload non valido, conversation non risolta, ecc.). Cerca nel log eventuali errori subito prima.  
+  2. **Log “WhatsApp inbound message persisted” presente**  
+     Allora il messaggio è stato salvato. Se non lo vedi in Inbox: stai guardando l’**istruttore giusto**? Il webhook usa `phone_number_id` / `display_phone_number` e **DEFAULT_INSTRUCTOR_ID**; le conversazioni compaiono nell’Inbox di quell’istruttore. Verifica che l’istruttore con cui fai login abbia il numero WhatsApp collegato in Impostazioni e che in `instructor_whatsapp_accounts` ci sia la riga con quel numero (o che **DEFAULT_INSTRUCTOR_ID** sia l’UUID di quell’istruttore).  
+  3. **Errore dopo la persist**  
+     Se c’è un’eccezione dopo `persistInboundMessageWithInboxBridge` (es. audit o orchestration), il webhook può restituire 5xx ma il messaggio potrebbe essere già in DB; controlla comunque i log per non perdere altri errori.
+
+- **In Meta le chiamate al webhook risultano “delivered”**  
+  Significa che Meta ha ricevuto 2xx. Se l’Inbox non si aggiorna, il problema è lato nostro (instructor_id, conversazione sbagliata, o frontend che non aggiorna). Usa **Refresh** in Inbox e controlla i log come sopra.
 
 ---
 
