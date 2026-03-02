@@ -150,23 +150,22 @@ export async function getInstructorDashboardData(
     LIMIT 100
   `;
 
-  // 6. Get calendar status
+  // 6. Get calendar status from calendar_connections (same table used by OAuth callback)
   const calendarConnectionResult = await sql<{
-    calendar_id: string | null;
-    updated_at: string | null;
+    status: string;
+    last_sync_at: string | null;
   }[]>`
-    SELECT 
-      calendar_id,
-      updated_at
-    FROM instructor_calendar_connections
-    WHERE instructor_id = ${instructorId}
+    SELECT status, last_sync_at
+    FROM calendar_connections
+    WHERE instructor_id = ${instructorId} AND provider = 'google'
     LIMIT 1
   `;
-  
+
+  const calendarRow = calendarConnectionResult.length > 0 ? calendarConnectionResult[0] : null;
   const calendar: DashboardCalendar = {
-    connected: calendarConnectionResult.length > 0 && calendarConnectionResult[0].calendar_id !== null,
-    calendarId: calendarConnectionResult.length > 0 ? calendarConnectionResult[0].calendar_id : null,
-    lastSyncAt: calendarConnectionResult.length > 0 ? calendarConnectionResult[0].updated_at : null,
+    connected: calendarRow !== null && calendarRow.status === 'connected',
+    calendarId: null,
+    lastSyncAt: calendarRow?.last_sync_at ?? null,
   };
 
   // 7. Get upcoming bookings (scoped to this instructor)
