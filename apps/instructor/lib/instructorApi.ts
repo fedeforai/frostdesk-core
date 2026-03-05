@@ -23,6 +23,8 @@ export interface MarketingFields {
   usp_tags?: string[] | null;
   /** Base resort + other locations where the instructor can give lessons */
   resorts?: { base?: string; operating?: string[] } | null;
+  /** Selected avatar id (1–N) for instructor picker */
+  avatar_id?: number | null;
 }
 
 export interface OperationalFields {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fetchInstructorProfile } from '@/lib/instructorApi';
 import type { InstructorProfile } from '@/lib/instructorApi';
 import ProfileForm from '@/components/ProfileForm';
+import AvatarPicker from '@/components/AvatarPicker';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -100,6 +101,8 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      <AvatarPicker profile={profile} onSaved={setProfile} />
 
       <div style={{
         border: '1px solid rgba(255, 255, 255, 0.1)',

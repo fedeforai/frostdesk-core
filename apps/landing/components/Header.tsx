@@ -10,7 +10,7 @@ export function Header({ lang }: { lang: Lang }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href={`/${lang}`} className="text-xl font-bold text-text-primary">
+        <Link href={`/${lang}`} className="font-heading text-xl font-bold text-text-primary">
           FrostDesk
         </Link>
         <nav className="flex items-center gap-4" aria-label="Main navigation">

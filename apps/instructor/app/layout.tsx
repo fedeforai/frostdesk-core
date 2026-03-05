@@ -1,4 +1,11 @@
+import { Raleway } from 'next/font/google';
 import './globals.css';
+
+const raleway = Raleway({
+  subsets: ['latin'],
+  variable: '--font-raleway',
+  display: 'swap',
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={raleway.variable}>
       <body
         style={{
           margin: 0,

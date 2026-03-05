@@ -151,6 +151,28 @@
   background: rgba(30, 58, 138, 0.16);
 }
 
+/* Hover gradient glow (used by motion wrapper) */
+.navItemWrap {
+  border-radius: 12px;
+  transition: background 0.3s ease;
+}
+.navItemWrap:hover {
+  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.18) 0%, transparent 72%);
+}
+.sectionManage .navItemWrap:hover {
+  background: radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.15) 0%, transparent 72%);
+}
+.sectionAccount .navItemWrap:hover {
+  background: radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 72%);
+}
+.sectionSettings .navItemWrap:hover {
+  background: radial-gradient(circle at 50% 50%, rgba(148, 163, 184, 0.2) 0%, transparent 72%);
+}
+
+.sectionToday {
+  /* uses default .navItemWrap:hover (primary blue) */
+}
+
 .navLabel {
   font-weight: 800;
   font-size: 13px;
@@ -171,7 +193,16 @@
   margin-bottom: 10px;
 }
 
+.brandLogo {
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  color: rgba(226, 232, 240, 0.95);
+}
+
 .brandTop {
+  font-family: var(--font-raleway), Raleway, system-ui, sans-serif;
   font-weight: 950;
   letter-spacing: 0.2px;
   font-size: 16px;
@@ -249,7 +280,7 @@
 }
 
 .railItem:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.08) 100%);
   color: rgba(226, 232, 240, 0.95);
 }
 

@@ -46,7 +46,7 @@ export function WaitlistForm({ lang }: { lang: Lang }) {
   return (
     <section className="px-4 py-16 md:py-20" aria-labelledby="waitlist-heading">
       <div className="mx-auto max-w-xl">
-        <h2 id="waitlist-heading" className="text-2xl font-bold text-text-primary md:text-3xl">
+        <h2 id="waitlist-heading" className="font-heading text-2xl font-bold text-text-primary md:text-3xl">
           {t.waitlist.title}
         </h2>
         <p className="mt-2 text-muted">{t.waitlist.sub}</p>

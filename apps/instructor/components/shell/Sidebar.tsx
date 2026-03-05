@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import styles from './sidebar.module.css';
 import LogoutButton from '@/components/shared/LogoutButton';
@@ -22,12 +23,15 @@ function Section({
   title,
   items,
   onNavigate,
+  sectionClass,
 }: {
   title: string;
   items: NavItem[];
   onNavigate?: () => void;
+  sectionClass?: string;
 }) {
   const pathname = usePathname();
+  const wrapClass = sectionClass ? `${styles.navItemWrap} ${sectionClass}` : styles.navItemWrap;
 
   return (
     <div className={styles.section}>
@@ -35,15 +39,16 @@ function Section({
       <div className={styles.nav}>
         {items.map((it) =>
           isNavLink(it) ? (
-            <Link
-              key={it.href}
-              href={it.href}
-              className={`${styles.navItem} ${isActive(pathname, it.href) ? styles.active : ''}`}
-              onClick={onNavigate}
-            >
-              <div className={styles.navLabel}>{it.label}</div>
-              {it.desc && <div className={styles.navDesc}>{it.desc}</div>}
-            </Link>
+            <div key={it.href} className={wrapClass}>
+              <Link
+                href={it.href}
+                className={`${styles.navItem} ${isActive(pathname, it.href) ? styles.active : ''}`}
+                onClick={onNavigate}
+              >
+                <div className={styles.navLabel}>{it.label}</div>
+                {it.desc && <div className={styles.navDesc}>{it.desc}</div>}
+              </Link>
+            </div>
           ) : (
             <div key="logout" className={styles.navItem}>
               <LogoutButton variant="nav" />
@@ -138,7 +143,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-hidden={!open}>
       <div className={styles.brand}>
-        <div className={styles.brandTop}>FrostDesk</div>
+        <Image
+          src="/frostdesk-logo.svg"
+          alt="Frostdesk"
+          width={40}
+          height={40}
+          className={styles.brandLogo}
+        />
         <div className={styles.brandSub}>Instructor</div>
         <button
           type="button"
@@ -151,10 +162,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       <div className={styles.sidebarScroll}>
-        <Section title="TODAY" items={today} onNavigate={onClose} />
-        <Section title="MANAGE" items={manage} onNavigate={onClose} />
-        <Section title="ACCOUNT" items={account} onNavigate={onClose} />
-        <Section title="SETTINGS" items={settings} onNavigate={onClose} />
+        <Section title="TODAY" items={today} onNavigate={onClose} sectionClass={styles.sectionToday} />
+        <Section title="MANAGE" items={manage} onNavigate={onClose} sectionClass={styles.sectionManage} />
+        <Section title="ACCOUNT" items={account} onNavigate={onClose} sectionClass={styles.sectionAccount} />
+        <Section title="SETTINGS" items={settings} onNavigate={onClose} sectionClass={styles.sectionSettings} />
       </div>
 
     </aside>

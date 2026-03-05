@@ -16,7 +16,7 @@ export function CTABlock({ lang }: { lang: Lang }) {
       className="px-4 py-16 md:py-20"
     >
       <div className="mx-auto max-w-3xl rounded-2xl border border-primary/30 bg-primary/10 p-8 text-center md:p-12">
-        <h2 className="text-2xl font-bold text-text-primary md:text-3xl">
+        <h2 className="font-heading text-2xl font-bold text-text-primary md:text-3xl">
           {t.cta.title}
         </h2>
         <p className="mt-4 text-muted">{t.cta.sub}</p>

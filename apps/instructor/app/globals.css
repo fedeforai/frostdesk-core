@@ -25,3 +25,8 @@ a:hover {
 button {
   font-family: inherit;
 }
+
+.font-heading,
+h1 {
+  font-family: var(--font-raleway), Raleway, system-ui, sans-serif;
+}

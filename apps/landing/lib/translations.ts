@@ -54,6 +54,9 @@ export type Translations = {
     step3: string;
     step3Desc: string;
   };
+  containerScroll: {
+    title: string;
+  };
   valueStack: {
     title: string;
     item1: string;
@@ -141,7 +144,7 @@ const translations: Record<Lang, Translations> = {
       item3: "You lose students when you're slow to reply.",
     },
     solution: {
-      title: "The solution",
+      title: "One platform. Less admin. More students.",
       card1Title: "Smart inbox",
       card1Desc: "One place for messages, AI drafts, and quick replies.",
       card2Title: "Booking & reminders",
@@ -157,6 +160,9 @@ const translations: Record<Lang, Translations> = {
       step2Desc: "We onboard instructors in small batches.",
       step3: "Go live",
       step3Desc: "Connect WhatsApp, calendar, and start saving time.",
+    },
+    containerScroll: {
+      title: "See it in action",
     },
     valueStack: {
       title: "What you get",
@@ -243,7 +249,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Perdi allievi quando rispondi in ritardo.",
     },
     solution: {
-      title: "La soluzione",
+      title: "Una piattaforma. Meno burocrazia. Più allievi.",
       card1Title: "Inbox intelligente",
       card1Desc: "Un unico posto per messaggi, bozze AI e risposte rapide.",
       card2Title: "Prenotazioni e promemoria",
@@ -259,6 +265,9 @@ const translations: Record<Lang, Translations> = {
       step2Desc: "Onboardiamo gli istruttori a piccoli gruppi.",
       step3: "Vai live",
       step3Desc: "Collega WhatsApp, calendario e inizia a risparmiare tempo.",
+    },
+    containerScroll: {
+      title: "Vedilo in azione",
     },
     valueStack: {
       title: "Cosa ottieni",
@@ -345,7 +354,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Vous perdez des élèves quand vous répondez trop tard.",
     },
     solution: {
-      title: "La solution",
+      title: "Une plateforme. Moins d'admin. Plus d'élèves.",
       card1Title: "Boîte de réception intelligente",
       card1Desc: "Un seul endroit pour messages, brouillons IA et réponses rapides.",
       card2Title: "Réservations et rappels",
@@ -361,6 +370,9 @@ const translations: Record<Lang, Translations> = {
       step2Desc: "On embarque les moniteurs par petits lots.",
       step3: "Passez en prod",
       step3Desc: "Connectez WhatsApp, calendrier et gagnez du temps.",
+    },
+    containerScroll: {
+      title: "Voir en action",
     },
     valueStack: {
       title: "Ce que vous obtenez",
@@ -447,7 +459,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Du verlierst Schüler, wenn du zu spät antwortest.",
     },
     solution: {
-      title: "Die Lösung",
+      title: "Eine Plattform. Weniger Verwaltung. Mehr Schüler.",
       card1Title: "Smartes Postfach",
       card1Desc: "Ein Ort für Nachrichten, KI-Entwürfe und schnelle Antworten.",
       card2Title: "Buchung & Erinnerungen",
@@ -463,6 +475,9 @@ const translations: Record<Lang, Translations> = {
       step2Desc: "Wir onboarden Fahrlehrer in kleinen Gruppen.",
       step3: "Live gehen",
       step3Desc: "WhatsApp und Kalender verbinden, Zeit sparen.",
+    },
+    containerScroll: {
+      title: "In Aktion sehen",
     },
     valueStack: {
       title: "Was du bekommst",

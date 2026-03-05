@@ -53,7 +53,7 @@ export function Hero({ lang }: { lang: Lang }) {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center"
         >
-          <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-text-primary md:text-5xl lg:text-6xl">
+          <h1 className="font-heading mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-text-primary md:text-5xl lg:text-6xl">
             {headline}
           </h1>
           <motion.p

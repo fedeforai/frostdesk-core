@@ -10,6 +10,21 @@ import {
 } from '@/lib/instructorApi';
 import CalendarConnectionPanel from '@/components/CalendarConnectionPanel';
 import CalendarEventsTable from '@/components/CalendarEventsTable';
+import EventConstellationCalendar from '@/components/EventConstellationCalendar';
+
+const VIEW_STORAGE_KEY = 'instructor_calendar_view';
+type ViewMode = 'table' | 'constellation';
+
+function getStoredView(): ViewMode {
+  if (typeof window === 'undefined') return 'table';
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (v === 'table' || v === 'constellation') return v;
+  } catch {
+    // ignore
+  }
+  return 'table';
+}
 
 export default function CalendarPage() {
   const router = useRouter();
@@ -19,6 +34,11 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [oauthMessage, setOauthMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+  useEffect(() => {
+    setViewMode(getStoredView());
+  }, []);
 
   useEffect(() => {
     const connected = searchParams.get('connected');
@@ -147,15 +167,71 @@ export default function CalendarPage() {
       />
 
       {connection && (
-        <div style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        }}>
-          <CalendarEventsTable events={events} />
-        </div>
+        <>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }} role="tablist" aria-label="Calendar view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'table'}
+              onClick={() => {
+                setViewMode('table');
+                try {
+                  localStorage.setItem(VIEW_STORAGE_KEY, 'table');
+                } catch {
+                  // ignore
+                }
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.375rem',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                background: viewMode === 'table' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
+                color: 'rgba(226, 232, 240, 0.95)',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Table
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'constellation'}
+              onClick={() => {
+                setViewMode('constellation');
+                try {
+                  localStorage.setItem(VIEW_STORAGE_KEY, 'constellation');
+                } catch {
+                  // ignore
+                }
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.375rem',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                background: viewMode === 'constellation' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
+                color: 'rgba(226, 232, 240, 0.95)',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Constellation
+            </button>
+          </div>
+          <div style={{
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}>
+            {viewMode === 'table' ? (
+              <CalendarEventsTable events={events} />
+            ) : (
+              <EventConstellationCalendar events={events} />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

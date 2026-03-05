@@ -40,7 +40,7 @@ export function DepositBlock({ lang }: { lang: Lang }) {
       aria-labelledby="deposit-heading"
     >
       <div className="mx-auto max-w-2xl rounded-2xl border border-secondary/30 bg-secondary/10 p-8 text-center md:p-10">
-        <h2 id="deposit-heading" className="text-2xl font-bold text-text-primary md:text-3xl">
+        <h2 id="deposit-heading" className="font-heading text-2xl font-bold text-text-primary md:text-3xl">
           {t.deposit.title}
         </h2>
         <p className="mt-4 text-muted">{t.deposit.sub}</p>

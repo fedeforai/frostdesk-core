@@ -16,6 +16,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        heading: ["var(--font-raleway)", "Raleway", "system-ui", "sans-serif"],
       },
     },
   },

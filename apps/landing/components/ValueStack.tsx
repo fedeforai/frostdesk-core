@@ -7,7 +7,7 @@ export function ValueStack({ lang }: { lang: Lang }) {
   return (
     <section className="px-4 py-16 md:py-20">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-3xl font-bold text-text-primary md:text-4xl">
+        <h2 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
           {t.valueStack.title}
         </h2>
         <ul className="mt-8 flex flex-wrap gap-4" role="list">

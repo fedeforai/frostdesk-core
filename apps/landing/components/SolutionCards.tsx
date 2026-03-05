@@ -27,7 +27,7 @@ export function SolutionCards({ lang }: { lang: Lang }) {
   return (
     <section className="px-4 py-16 md:py-20">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-3xl font-bold text-text-primary md:text-4xl">
+        <h2 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
           {t.solution.title}
         </h2>
         <motion.ul
@@ -43,7 +43,7 @@ export function SolutionCards({ lang }: { lang: Lang }) {
               variants={item}
               className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur"
             >
-              <h3 className="text-lg font-semibold text-text-primary">{c.title}</h3>
+              <h3 className="font-heading text-lg font-semibold text-text-primary">{c.title}</h3>
               <p className="mt-2 text-muted">{c.desc}</p>
             </motion.li>
           ))}
