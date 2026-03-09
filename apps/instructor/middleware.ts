@@ -10,6 +10,17 @@ export async function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', path);
 
+  // ── Root: redirect to landing home (/en) ──────────────────────────────────
+  if (path === '/') {
+    return NextResponse.redirect(new URL('/en', req.url));
+  }
+
+  // ── Landing paths (/[lang] and /[lang]/*): public, no auth ────────────────
+  const landingPrefix = /^\/(en|it|fr|de)(\/|$)/;
+  if (landingPrefix.test(path)) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   // ── Supabase client with proper cookie refresh handling ──────────────────
   // `let` so setAll can recreate the response when tokens are refreshed.
   let res = NextResponse.next({

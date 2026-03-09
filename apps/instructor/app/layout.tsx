@@ -1,5 +1,11 @@
-import { Raleway } from 'next/font/google';
+import { Inter, Raleway } from 'next/font/google';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -15,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={raleway.variable}>
+    <html lang="en" className={`${inter.variable} ${raleway.variable}`}>
       <body
         style={{
           margin: 0,
