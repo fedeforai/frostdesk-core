@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getLang, getTranslations } from "@/lib/landing/translations";
 import { Header } from "@/components/landing/Header";
+import { Footer } from "@/components/landing/Footer";
 
 const LANDING_LANGS = ["en", "it", "fr", "de"] as const;
 
@@ -47,6 +48,7 @@ export default async function LangLayout({
     <>
       <Header lang={locale} />
       <main className="min-h-screen">{children}</main>
+      <Footer lang={locale} />
     </>
   );
 }
