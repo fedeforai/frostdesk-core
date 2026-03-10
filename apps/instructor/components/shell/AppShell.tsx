@@ -82,9 +82,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </main>
 
         <footer className={styles.footer}>
-          <Link href="/instructor/privacy" className={styles.footerLink}>
-            Privacy
-          </Link>
+          <Link href="/en/refund" className={styles.footerLink}>Refund</Link>
+          <Link href="/en/privacy" className={styles.footerLink}>Privacy</Link>
+          <Link href="/en/terms" className={styles.footerLink}>Terms</Link>
+          <Link href="/en/cookies" className={styles.footerLink}>Cookies</Link>
+          <Link href="/en/acceptable-use" className={styles.footerLink}>Acceptable Use</Link>
         </footer>
       </div>
     </div>
