@@ -1621,6 +1621,88 @@ export async function approveInstructor(
   return response.json();
 }
 
+// --- Instructor detail & feedback (admin: inbox maestro) ---
+
+export interface AdminInstructorDetail {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  approval_status: string | null;
+  profile_status: string | null;
+  billing_status: string;
+  account_health: string | null;
+  created_at: string;
+  total_bookings: number;
+  confirmed_bookings: number;
+  cancelled_bookings: number;
+  total_conversations: number;
+}
+
+export interface InstructorFeedbackItemAdmin {
+  id: string;
+  instructor_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  admin_notes: string | null;
+}
+
+export async function fetchAdminInstructor(
+  instructorId: string
+): Promise<{ ok: true; instructor: AdminInstructorDetail }> {
+  const response = await fetch(`/api/admin/instructors/${instructorId}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to load instructor');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
+export async function fetchInstructorFeedback(
+  instructorId: string
+): Promise<{ ok: true; items: InstructorFeedbackItemAdmin[] }> {
+  const response = await fetch(`/api/admin/instructors/${instructorId}/feedback`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to load feedback');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
+export async function updateInstructorFeedback(
+  feedbackId: string,
+  patch: { read_at?: string | null; admin_notes?: string | null }
+): Promise<{ ok: true }> {
+  const response = await fetch(`/api/admin/instructor-feedback/${feedbackId}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to update feedback');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
 // --- Instructor WhatsApp (admin: list + verify) ---
 
 export interface InstructorWhatsappAccountItem {

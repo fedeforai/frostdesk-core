@@ -113,6 +113,53 @@ export async function updateInstructorProfile(
   return data.profile;
 }
 
+export interface InstructorFeedbackItem {
+  id: string;
+  body: string;
+  created_at: string;
+}
+
+/**
+ * Submit a feedback message (note per il team). POST /instructor/feedback.
+ */
+export async function postInstructorFeedback(message: string): Promise<{ id: string; created_at: string }> {
+  const response = await fetch('/api/instructor/feedback', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ message: message.trim() }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: '' }));
+    const err = new Error((errorData as { message?: string }).message || 'Failed to send feedback');
+    (err as { status?: number }).status = response.status;
+    throw err;
+  }
+  const data = await response.json() as { ok?: boolean; id?: string; created_at?: string };
+  if (!data.ok || !data.id) throw new Error('Invalid response');
+  return { id: data.id, created_at: data.created_at ?? '' };
+}
+
+/**
+ * List own feedback messages. GET /instructor/feedback.
+ */
+export async function getInstructorFeedback(): Promise<InstructorFeedbackItem[]> {
+  const response = await fetch('/api/instructor/feedback', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: '' }));
+    const err = new Error((errorData as { message?: string }).message || 'Failed to load feedback');
+    (err as { status?: number }).status = response.status;
+    throw err;
+  }
+  const data = await response.json() as { ok?: boolean; items?: InstructorFeedbackItem[] };
+  if (!data.ok || !Array.isArray(data.items)) return [];
+  return data.items;
+}
+
 /** Saves onboarding draft. POST /instructor/onboarding/draft. */
 export async function saveOnboardingDraft(body: {
   full_name?: string | null;

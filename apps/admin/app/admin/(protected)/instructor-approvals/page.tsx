@@ -304,11 +304,16 @@ function AllInstructorsTab() {
                 ) : rows.map((r) => (
                   <tr key={r.id} style={{ transition: 'background 0.1s' }}>
                     <td style={td}>
-                      <div style={{ fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)' }}>{r.display_name ?? r.full_name ?? '—'}</div>
-                      {r.full_name && r.display_name && r.display_name !== r.full_name && (
-                        <div style={{ fontSize: '0.6875rem', color: '#9ca3af' }}>{r.full_name}</div>
-                      )}
-                      <div style={{ fontSize: '0.6875rem', color: '#9ca3af', fontFamily: 'monospace' }}>{truncateId(r.id, 12)}</div>
+                      <Link
+                        href={`/admin/instructors/${r.id}`}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <div style={{ fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)' }}>{r.display_name ?? r.full_name ?? '—'}</div>
+                        {r.full_name && r.display_name && r.display_name !== r.full_name && (
+                          <div style={{ fontSize: '0.6875rem', color: '#9ca3af' }}>{r.full_name}</div>
+                        )}
+                        <div style={{ fontSize: '0.6875rem', color: '#9ca3af', fontFamily: 'monospace' }}>{truncateId(r.id, 12)}</div>
+                      </Link>
                     </td>
                     <td style={td}>{statusBadge(r.approval_status, APPROVAL_COLORS)}</td>
                     <td style={td}>{statusBadge(r.profile_status, { active: { bg: '#d1fae5', fg: '#065f46' }, draft: { bg: '#e0e7ff', fg: '#3730a3' } })}</td>

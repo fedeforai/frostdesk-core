@@ -24,6 +24,7 @@ import { adminAIDraftRoutes } from './admin/ai_draft.js';
 import { adminSendAIDraftRoutes } from './admin/send_ai_draft.js';
 import { adminWhatsAppQueueRoutes } from './admin/whatsapp_queue.js';
 import { adminInstructorApprovalRoutes } from './admin/instructor_approval.js';
+import { adminInstructorFeedbackRoutes } from './admin/instructor_feedback.js';
 import { normalizeError } from '../errors/normalize_error.js';
 import { mapErrorToHttp } from '../errors/error_http_map.js';
 import { ERROR_CODES } from '../errors/error_codes.js';
@@ -428,6 +429,9 @@ export async function adminRoutes(fastify: FastifyInstance) {
 
   // Register admin instructor approval (pending list + approve/reject)
   await adminInstructorApprovalRoutes(fastify);
+
+  // Register admin instructor feedback (inbox maestro + detail)
+  await adminInstructorFeedbackRoutes(fastify);
 
   // Loop B: AI telemetry & cost metrics
   const { adminAiMetricsRoutes } = await import('./admin/ai_metrics.js');

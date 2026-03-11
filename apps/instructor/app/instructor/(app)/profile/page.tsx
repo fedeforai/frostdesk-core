@@ -6,6 +6,13 @@ import { fetchInstructorProfile } from '@/lib/instructorApi';
 import type { InstructorProfile } from '@/lib/instructorApi';
 import ProfileForm from '@/components/ProfileForm';
 import AvatarPicker from '@/components/AvatarPicker';
+import ProfileFeedbackSection from '@/components/ProfileFeedbackSection';
+import type { FeedbackLocale } from '@/components/ProfileFeedbackSection';
+
+function getFeedbackLocale(workingLanguage: string | undefined): FeedbackLocale {
+  if (workingLanguage === 'it' || workingLanguage === 'fr' || workingLanguage === 'de') return workingLanguage;
+  return 'en';
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -113,6 +120,8 @@ export default function ProfilePage() {
       }}>
         <ProfileForm profile={profile} onSaved={setProfile} />
       </div>
+
+      <ProfileFeedbackSection locale={getFeedbackLocale(profile?.working_language)} />
     </div>
   );
 }

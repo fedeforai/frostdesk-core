@@ -128,7 +128,33 @@ export async function listAllInstructorProfiles(
 }
 
 /**
- * Gate-type profile row: id, approval_status, profile_status, onboarding_status (derived from onboarding_completed_at).
+ * Get a single instructor profile with performance metrics by id. Returns null if not found.
+ */
+export async function getAdminInstructorById(
+  instructorId: string
+): Promise<AdminInstructorRow | null> {
+  const rows = await sql<AdminInstructorRow[]>`
+    SELECT
+      ip.id,
+      ip.full_name,
+      COALESCE(ip.display_name, ip.full_name)::text AS display_name,
+      ip.approval_status,
+      COALESCE(ip.profile_status, 'draft')::text AS profile_status,
+      COALESCE(ip.billing_status, 'pilot')::text AS billing_status,
+      ip.account_health,
+      ip.created_at,
+      COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id), 0)::int AS total_bookings,
+      COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'confirmed'), 0)::int AS confirmed_bookings,
+      COALESCE((SELECT COUNT(*) FROM bookings b WHERE b.instructor_id = ip.id AND b.status = 'cancelled'), 0)::int AS cancelled_bookings,
+      COALESCE((SELECT COUNT(*) FROM conversations c WHERE c.instructor_id = ip.id), 0)::int AS total_conversations
+    FROM instructor_profiles ip
+    WHERE ip.id = ${instructorId}::uuid
+    LIMIT 1
+  `;
+  return rows.length > 0 ? rows[0] : null;
+}
+
+/**: id, approval_status, profile_status, onboarding_status (derived from onboarding_completed_at).
  * Used by ensure-profile API and instructor gate redirect logic.
  */
 export interface EnsureInstructorProfileRow {

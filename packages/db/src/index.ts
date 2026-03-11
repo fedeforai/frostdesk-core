@@ -447,6 +447,14 @@ export type {
 export { getInstructorInbox } from './instructor_inbox_repository.js';
 export type { InstructorInboxItem } from './instructor_inbox_repository.js';
 
+// Instructor feedback (inbox to admin: instructor submits, admin reads/annotates)
+export {
+  insertInstructorFeedback,
+  listInstructorFeedbackByInstructorId,
+  updateInstructorFeedback,
+} from './instructor_feedback_repository.js';
+export type { InstructorFeedbackRow } from './instructor_feedback_repository.js';
+
 // Instructor policy document (one row per instructor, versioned, audit on PATCH)
 export {
   getInstructorPolicyDocument,
@@ -518,6 +526,7 @@ export {
   listPendingInstructors,
   setInstructorApprovalStatus,
   listAllInstructorProfiles,
+  getAdminInstructorById,
   ensureInstructorProfile,
 } from './instructor_approval_repository.js';
 export type {
