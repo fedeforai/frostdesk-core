@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${raleway.variable}`}>
       <body
+        className="overflow-x-hidden"
         style={{
           margin: 0,
           fontFamily: 'system-ui, -apple-system, sans-serif',

@@ -30,6 +30,7 @@ export type Translations = {
     subline: string;
     cta: string;
     ctaSecondary: string;
+    ctaHint: string;
   };
   problem: {
     title: string;
@@ -137,6 +138,7 @@ const translations: Record<Lang, Translations> = {
       subline: "AI-powered operations for ski & driving instructors.",
       cta: "Join the waitlist",
       ctaSecondary: "Reserve your spot",
+      ctaHint: "Waitlist: get notified when we launch. Reserve: secure early access now.",
     },
     problem: {
       title: "The problem",
@@ -145,7 +147,7 @@ const translations: Record<Lang, Translations> = {
       item3: "You lose students when you're slow to reply.",
     },
     solution: {
-      title: "One platform. Less admin. More students.",
+      title: "Inbox, bookings, calendar — all in one place.",
       card1Title: "Smart inbox",
       card1Desc: "One place for messages, AI drafts, and quick replies.",
       card2Title: "Booking & reminders",
@@ -242,6 +244,7 @@ const translations: Record<Lang, Translations> = {
       subline: "Operazioni basate su AI per maestri di sci e istruttori di guida.",
       cta: "Iscriviti alla waitlist",
       ctaSecondary: "Prenota il tuo posto",
+      ctaHint: "Waitlist: ricevi notifica al lancio. Prenota: assicurati subito l'accesso anticipato.",
     },
     problem: {
       title: "Il problema",
@@ -250,7 +253,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Perdi allievi quando rispondi in ritardo.",
     },
     solution: {
-      title: "Una piattaforma. Meno burocrazia. Più allievi.",
+      title: "Inbox, prenotazioni e calendario — tutto in un unico posto.",
       card1Title: "Inbox intelligente",
       card1Desc: "Un unico posto per messaggi, bozze AI e risposte rapide.",
       card2Title: "Prenotazioni e promemoria",
@@ -347,6 +350,7 @@ const translations: Record<Lang, Translations> = {
       subline: "Opérations pilotées par l'IA pour moniteurs de ski et d'auto-école.",
       cta: "Rejoindre la liste",
       ctaSecondary: "Réserver ma place",
+      ctaHint: "Liste : soyez notifié au lancement. Réserver : assurez-vous l'accès anticipé.",
     },
     problem: {
       title: "Le problème",
@@ -355,7 +359,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Vous perdez des élèves quand vous répondez trop tard.",
     },
     solution: {
-      title: "Une plateforme. Moins d'admin. Plus d'élèves.",
+      title: "Inbox, réservations et calendrier — tout en un seul endroit.",
       card1Title: "Boîte de réception intelligente",
       card1Desc: "Un seul endroit pour messages, brouillons IA et réponses rapides.",
       card2Title: "Réservations et rappels",
@@ -452,6 +456,7 @@ const translations: Record<Lang, Translations> = {
       subline: "KI-gestützte Abläufe für Ski- und Fahrlehrer.",
       cta: "Zur Warteliste",
       ctaSecondary: "Platz sichern",
+      ctaHint: "Warteliste: Benachrichtigung beim Start. Platz sichern: frühen Zugang jetzt sichern.",
     },
     problem: {
       title: "Das Problem",
@@ -460,7 +465,7 @@ const translations: Record<Lang, Translations> = {
       item3: "Du verlierst Schüler, wenn du zu spät antwortest.",
     },
     solution: {
-      title: "Eine Plattform. Weniger Verwaltung. Mehr Schüler.",
+      title: "Inbox, Buchungen und Kalender — alles an einem Ort.",
       card1Title: "Smartes Postfach",
       card1Desc: "Ein Ort für Nachrichten, KI-Entwürfe und schnelle Antworten.",
       card2Title: "Buchung & Erinnerungen",

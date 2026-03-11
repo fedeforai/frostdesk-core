@@ -68,24 +68,27 @@ export function Hero({ lang }: { lang: Lang }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-4"
+            className="mt-10 flex flex-col items-center gap-4"
           >
-            <Link
-              href={`/${lang}/waitlist`}
-              className="focus-visible:ring-primary inline-flex rounded-lg bg-primary px-6 py-3 text-base font-medium text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
-              aria-label={t.hero.cta}
-              onClick={() => trackEvent("hero_cta_click", { target: "waitlist" })}
-            >
-              {t.hero.cta}
-            </Link>
-            <Link
-              href={`/${lang}#deposit`}
-              className="focus-visible:ring-primary inline-flex rounded-lg border border-primary/50 bg-transparent px-6 py-3 text-base font-medium text-text-primary transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
-              aria-label={t.hero.ctaSecondary}
-              onClick={() => trackEvent("hero_cta_click", { target: "deposit" })}
-            >
-              {t.hero.ctaSecondary}
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href={`/${lang}/waitlist`}
+                className="focus-visible:ring-primary inline-flex rounded-lg bg-primary px-6 py-3 text-base font-medium text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
+                aria-label={t.hero.cta}
+                onClick={() => trackEvent("hero_cta_click", { target: "waitlist" })}
+              >
+                {t.hero.cta}
+              </Link>
+              <Link
+                href={`/${lang}#deposit`}
+                className="focus-visible:ring-primary inline-flex rounded-lg border border-primary/50 bg-transparent px-6 py-3 text-base font-medium text-text-primary transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
+                aria-label={t.hero.ctaSecondary}
+                onClick={() => trackEvent("hero_cta_click", { target: "deposit" })}
+              >
+                {t.hero.ctaSecondary}
+              </Link>
+            </div>
+            <p className="text-center text-sm text-muted max-w-md">{t.hero.ctaHint}</p>
           </motion.div>
         </motion.div>
       </div>

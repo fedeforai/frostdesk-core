@@ -30,7 +30,7 @@ export function ContainerScroll({
 
   return (
     <div
-      className="flex h-[60rem] md:h-[80rem] items-center justify-center relative p-2 md:p-20"
+      className="flex h-[60rem] md:h-[80rem] min-w-0 w-full max-w-full items-center justify-center relative p-4 md:p-12 overflow-x-hidden"
       ref={containerRef}
     >
       <div

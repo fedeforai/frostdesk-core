@@ -47,7 +47,7 @@ export default async function LangLayout({
   return (
     <>
       <Header lang={locale} />
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen overflow-x-hidden">{children}</main>
       <Footer lang={locale} />
     </>
   );
