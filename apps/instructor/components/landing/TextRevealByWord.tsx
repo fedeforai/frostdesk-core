@@ -17,7 +17,7 @@ export function TextRevealByWord({ text, className = "" }: TextRevealByWordProps
   const words = text.split(/\s+/).filter(Boolean);
 
   return (
-    <div ref={targetRef} className={`relative z-0 min-h-[80vh] ${className}`.trim()} aria-hidden>
+    <div ref={targetRef} className={`relative z-0 min-h-[55vh] ${className}`.trim()} aria-hidden>
       <div className="sticky top-0 mx-auto flex min-h-[50%] max-w-4xl items-center justify-center bg-transparent px-4 py-12 md:py-16">
         <p
           className={`flex flex-wrap justify-center gap-x-2 gap-y-1 p-4 text-2xl font-bold md:p-6 md:text-3xl lg:text-4xl ${className}`.trim()}

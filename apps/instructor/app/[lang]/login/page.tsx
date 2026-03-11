@@ -1,20 +1,18 @@
-import { getLang, getTranslations } from "@/lib/landing/translations";
-import { LoginForm } from "@/components/landing/LoginForm";
+import { redirect } from "next/navigation";
 
+/**
+ * Single login: redirect to instructor password login.
+ * Keeps one login flow (no magic link).
+ */
 export default async function LoginPage({
-  params,
+  searchParams,
 }: {
-  params: Promise<{ lang: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { lang } = await params;
-  const locale = getLang(lang);
-  const t = getTranslations(locale);
-
-  return (
-    <div className="mx-auto max-w-md px-4 py-20">
-      <h1 className="text-2xl font-bold text-text-primary">{t.login.title}</h1>
-      <p className="mt-2 text-muted">{t.login.sub}</p>
-      <LoginForm lang={locale} />
-    </div>
-  );
+  const params = await searchParams;
+  const next = params.next;
+  const nextPath = typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
+    ? next
+    : "/instructor/gate";
+  redirect(`/instructor/login?next=${encodeURIComponent(nextPath)}`);
 }

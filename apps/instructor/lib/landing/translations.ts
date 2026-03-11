@@ -100,6 +100,7 @@ export type Translations = {
     sub: string;
     button: string;
     price: string;
+    why: string;
   };
   login: {
     title: string;
@@ -131,14 +132,14 @@ export type Translations = {
 
 const translations: Record<Lang, Translations> = {
   en: {
-    nav: { login: "Log in", waitlist: "Join waitlist", deposit: "Reserve spot", instructorArea: "Instructor area" },
+    nav: { login: "Log in", waitlist: "Join waitlist", deposit: "Reserve early access", instructorArea: "Instructor area" },
     hero: {
       variantA: "Fill your calendar. Eliminate admin. Stay in control.",
       variantB: "Stop losing bookings. Automate your operations.",
       subline: "AI-powered operations for ski & driving instructors.",
       cta: "Join the waitlist",
       ctaSecondary: "Reserve your spot",
-      ctaHint: "Waitlist: get notified when we launch. Reserve: secure early access now.",
+      ctaHint: "Join the waitlist to get notified when we launch. Reserve early access to secure your onboarding slot now.",
     },
     problem: {
       title: "The problem",
@@ -208,6 +209,7 @@ const translations: Record<Lang, Translations> = {
       sub: "Reserve your onboarding slot with a refundable deposit.",
       button: "Reserve My Spot",
       price: "",
+      why: "Guarantees you priority for onboarding when we open in your region.",
     },
     login: {
       title: "Log in",
@@ -237,14 +239,14 @@ const translations: Record<Lang, Translations> = {
     },
   },
   it: {
-    nav: { login: "Accedi", waitlist: "Waitlist", deposit: "Prenota posto", instructorArea: "Area istruttori" },
+    nav: { login: "Accedi", waitlist: "Waitlist", deposit: "Prenota accesso anticipato", instructorArea: "Area istruttori" },
     hero: {
       variantA: "Riempi il calendario. Elimina l'amministrazione. Resta in controllo.",
       variantB: "Basta perdere prenotazioni. Automatizza le tue operazioni.",
       subline: "Operazioni basate su AI per maestri di sci e istruttori di guida.",
       cta: "Iscriviti alla waitlist",
       ctaSecondary: "Prenota il tuo posto",
-      ctaHint: "Waitlist: ricevi notifica al lancio. Prenota: assicurati subito l'accesso anticipato.",
+      ctaHint: "Iscriviti alla waitlist per essere avvisato al lancio. Prenota l'accesso anticipato per assicurarti lo slot di onboarding.",
     },
     problem: {
       title: "Il problema",
@@ -314,6 +316,7 @@ const translations: Record<Lang, Translations> = {
       sub: "Riserva il tuo slot di onboarding con un deposito rimborsabile.",
       button: "Riserva il mio posto",
       price: "",
+      why: "Ti dà priorità per l'onboarding quando apriamo nella tua zona.",
     },
     login: {
       title: "Accedi",
@@ -343,14 +346,14 @@ const translations: Record<Lang, Translations> = {
     },
   },
   fr: {
-    nav: { login: "Connexion", waitlist: "Liste d'attente", deposit: "Réserver", instructorArea: "Espace instructeurs" },
+    nav: { login: "Connexion", waitlist: "Liste d'attente", deposit: "Réserver l'accès anticipé", instructorArea: "Espace instructeurs" },
     hero: {
       variantA: "Remplissez votre calendrier. Éliminez l'admin. Gardez le contrôle.",
       variantB: "Arrêtez de perdre des réservations. Automatisez vos opérations.",
       subline: "Opérations pilotées par l'IA pour moniteurs de ski et d'auto-école.",
       cta: "Rejoindre la liste",
       ctaSecondary: "Réserver ma place",
-      ctaHint: "Liste : soyez notifié au lancement. Réserver : assurez-vous l'accès anticipé.",
+      ctaHint: "Rejoignez la liste pour être notifié au lancement. Réservez l'accès anticipé pour sécuriser votre créneau d'onboarding.",
     },
     problem: {
       title: "Le problème",
@@ -420,6 +423,7 @@ const translations: Record<Lang, Translations> = {
       sub: "Réservez votre créneau d'onboarding avec un dépôt remboursable.",
       button: "Réserver ma place",
       price: "",
+      why: "Vous donne la priorité pour l'onboarding quand nous ouvrons dans votre région.",
     },
     login: {
       title: "Connexion",
@@ -449,14 +453,14 @@ const translations: Record<Lang, Translations> = {
     },
   },
   de: {
-    nav: { login: "Anmelden", waitlist: "Warteliste", deposit: "Platz sichern", instructorArea: "Bereich für Lehrkräfte" },
+    nav: { login: "Anmelden", waitlist: "Warteliste", deposit: "Frühzugang sichern", instructorArea: "Bereich für Lehrkräfte" },
     hero: {
       variantA: "Kalender füllen. Verwaltung reduzieren. Alles unter Kontrolle.",
       variantB: "Keine verlorenen Buchungen mehr. Abläufe automatisieren.",
       subline: "KI-gestützte Abläufe für Ski- und Fahrlehrer.",
       cta: "Zur Warteliste",
       ctaSecondary: "Platz sichern",
-      ctaHint: "Warteliste: Benachrichtigung beim Start. Platz sichern: frühen Zugang jetzt sichern.",
+      ctaHint: "Warteliste: Benachrichtigung beim Start. Frühzugang sichern: Onboarding-Slot jetzt reservieren.",
     },
     problem: {
       title: "Das Problem",
@@ -526,6 +530,7 @@ const translations: Record<Lang, Translations> = {
       sub: "Sichere dir deinen Onboarding-Slot mit einer erstattungsfähigen Anzahlung.",
       button: "Platz sichern",
       price: "",
+      why: "Sichert dir Priorität beim Onboarding, wenn wir in deiner Region starten.",
     },
     login: {
       title: "Anmelden",

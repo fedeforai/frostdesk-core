@@ -47,11 +47,12 @@ export function DepositBlock({ lang }: { lang: Lang }) {
         {t.deposit.price ? (
           <p className="mt-2 text-lg font-semibold text-secondary">{t.deposit.price}</p>
         ) : null}
+        <p className="mt-3 text-sm text-muted">{t.deposit.why}</p>
         <button
           type="button"
           onClick={handleReserve}
           disabled={loading}
-          className="focus-visible:ring-primary mt-6 inline-flex rounded-lg bg-secondary px-6 py-3 font-medium text-background transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-70"
+          className={`focus-visible:ring-primary inline-flex rounded-lg bg-secondary px-6 py-3 font-medium text-background transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-70 ${t.deposit.price ? 'mt-6' : 'mt-4'}`}
           aria-label={t.deposit.button}
         >
           {loading ? "…" : t.deposit.button}

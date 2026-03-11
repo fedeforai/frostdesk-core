@@ -16,7 +16,7 @@ export default async function OnboardingPage({
 
   const session = await getServerSession();
   if (!session?.user?.email) {
-    redirect(`/${locale}/login?next=/${locale}/onboarding`);
+    redirect("/instructor/login?next=/instructor/gate");
   }
 
   const supabase = createServerSupabaseClient();

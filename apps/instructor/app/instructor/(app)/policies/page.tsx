@@ -30,7 +30,7 @@ export default function PoliciesPage() {
 
       // 401 → redirect to login
       if (status === 401) {
-        router.push('/login');
+        router.push('/instructor/login');
         return;
       }
 

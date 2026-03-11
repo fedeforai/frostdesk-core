@@ -22,7 +22,7 @@ export function Header({ lang }: { lang: Lang }) {
             {t.nav.waitlist}
           </Link>
           <Link
-            href={`/${lang}/login`}
+            href="/instructor/login?next=/instructor/gate"
             className="text-muted hover:text-text-primary transition-colors"
             onClick={() => trackEvent("login_click")}
           >

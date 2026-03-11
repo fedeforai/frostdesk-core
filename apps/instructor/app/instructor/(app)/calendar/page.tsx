@@ -75,7 +75,7 @@ export default function CalendarPage() {
     } catch (err: any) {
       const status = err.status || 500;
       if (status === 401) {
-        router.push('/login');
+        router.push('/instructor/login');
         return;
       }
       if (status === 403) {
