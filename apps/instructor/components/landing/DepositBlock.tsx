@@ -44,7 +44,9 @@ export function DepositBlock({ lang }: { lang: Lang }) {
           {t.deposit.title}
         </h2>
         <p className="mt-4 text-muted">{t.deposit.sub}</p>
-        <p className="mt-2 text-lg font-semibold text-secondary">{t.deposit.price}</p>
+        {t.deposit.price ? (
+          <p className="mt-2 text-lg font-semibold text-secondary">{t.deposit.price}</p>
+        ) : null}
         <button
           type="button"
           onClick={handleReserve}

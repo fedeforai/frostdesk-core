@@ -39,9 +39,9 @@ export function Header({ lang }: { lang: Lang }) {
           <Link
             href="/instructor/login"
             className="text-muted text-sm hover:text-text-primary transition-colors"
-            aria-label="Area istruttori"
+            aria-label={t.nav.instructorArea}
           >
-            Area istruttori
+            {t.nav.instructorArea}
           </Link>
           <div className="relative" aria-label="Language selector">
             <select

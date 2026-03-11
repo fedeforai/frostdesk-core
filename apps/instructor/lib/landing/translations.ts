@@ -22,6 +22,7 @@ export type Translations = {
     login: string;
     waitlist: string;
     deposit: string;
+    instructorArea: string;
   };
   hero: {
     variantA: string;
@@ -129,7 +130,7 @@ export type Translations = {
 
 const translations: Record<Lang, Translations> = {
   en: {
-    nav: { login: "Log in", waitlist: "Join waitlist", deposit: "Reserve spot" },
+    nav: { login: "Log in", waitlist: "Join waitlist", deposit: "Reserve spot", instructorArea: "Instructor area" },
     hero: {
       variantA: "Fill your calendar. Eliminate admin. Stay in control.",
       variantB: "Stop losing bookings. Automate your operations.",
@@ -178,7 +179,7 @@ const translations: Record<Lang, Translations> = {
       q2: "Is there a free trial?",
       a2: "Early access is limited. Join the waitlist to be invited.",
       q3: "What does the deposit do?",
-      a3: "A refundable €99 deposit reserves your onboarding slot and prioritizes you.",
+      a3: "A refundable deposit reserves your onboarding slot and prioritizes you.",
     },
     cta: {
       title: "Ready to take back your time?",
@@ -202,9 +203,9 @@ const translations: Record<Lang, Translations> = {
     },
     deposit: {
       title: "Secure Early Access",
-      sub: "Reserve your onboarding slot with a refundable €99 deposit.",
+      sub: "Reserve your onboarding slot with a refundable deposit.",
       button: "Reserve My Spot",
-      price: "€99",
+      price: "",
     },
     login: {
       title: "Log in",
@@ -234,7 +235,7 @@ const translations: Record<Lang, Translations> = {
     },
   },
   it: {
-    nav: { login: "Accedi", waitlist: "Waitlist", deposit: "Prenota posto" },
+    nav: { login: "Accedi", waitlist: "Waitlist", deposit: "Prenota posto", instructorArea: "Area istruttori" },
     hero: {
       variantA: "Riempi il calendario. Elimina l'amministrazione. Resta in controllo.",
       variantB: "Basta perdere prenotazioni. Automatizza le tue operazioni.",
@@ -283,7 +284,7 @@ const translations: Record<Lang, Translations> = {
       q2: "C'è una prova gratuita?",
       a2: "L'accesso anticipato è limitato. Iscriviti alla waitlist per essere invitato.",
       q3: "A cosa serve il deposito?",
-      a3: "Un deposito rimborsabile di €99 riserva il tuo slot di onboarding e ti dà priorità.",
+      a3: "Un deposito rimborsabile riserva il tuo slot di onboarding e ti dà priorità.",
     },
     cta: {
       title: "Pronto a riprenderti il tempo?",
@@ -307,9 +308,9 @@ const translations: Record<Lang, Translations> = {
     },
     deposit: {
       title: "Accesso anticipato garantito",
-      sub: "Riserva il tuo slot di onboarding con un deposito rimborsabile di €99.",
+      sub: "Riserva il tuo slot di onboarding con un deposito rimborsabile.",
       button: "Riserva il mio posto",
-      price: "€99",
+      price: "",
     },
     login: {
       title: "Accedi",
@@ -339,7 +340,7 @@ const translations: Record<Lang, Translations> = {
     },
   },
   fr: {
-    nav: { login: "Connexion", waitlist: "Liste d'attente", deposit: "Réserver" },
+    nav: { login: "Connexion", waitlist: "Liste d'attente", deposit: "Réserver", instructorArea: "Espace instructeurs" },
     hero: {
       variantA: "Remplissez votre calendrier. Éliminez l'admin. Gardez le contrôle.",
       variantB: "Arrêtez de perdre des réservations. Automatisez vos opérations.",
@@ -388,7 +389,7 @@ const translations: Record<Lang, Translations> = {
       q2: "Y a-t-il un essai gratuit ?",
       a2: "L'accès anticipé est limité. Rejoignez la liste pour être invité.",
       q3: "À quoi sert le dépôt ?",
-      a3: "Un dépôt remboursable de 99 € réserve votre créneau d'onboarding et vous priorise.",
+      a3: "Un dépôt remboursable réserve votre créneau d'onboarding et vous priorise.",
     },
     cta: {
       title: "Prêt à reprendre le contrôle de votre temps ?",
@@ -412,9 +413,9 @@ const translations: Record<Lang, Translations> = {
     },
     deposit: {
       title: "Accès anticipé sécurisé",
-      sub: "Réservez votre créneau d'onboarding avec un dépôt remboursable de 99 €.",
+      sub: "Réservez votre créneau d'onboarding avec un dépôt remboursable.",
       button: "Réserver ma place",
-      price: "99 €",
+      price: "",
     },
     login: {
       title: "Connexion",
@@ -444,7 +445,7 @@ const translations: Record<Lang, Translations> = {
     },
   },
   de: {
-    nav: { login: "Anmelden", waitlist: "Warteliste", deposit: "Platz sichern" },
+    nav: { login: "Anmelden", waitlist: "Warteliste", deposit: "Platz sichern", instructorArea: "Bereich für Lehrkräfte" },
     hero: {
       variantA: "Kalender füllen. Verwaltung reduzieren. Alles unter Kontrolle.",
       variantB: "Keine verlorenen Buchungen mehr. Abläufe automatisieren.",
@@ -493,7 +494,7 @@ const translations: Record<Lang, Translations> = {
       q2: "Gibt es eine kostenlose Testversion?",
       a2: "Frühzugang ist begrenzt. Melde dich auf der Warteliste an.",
       q3: "Wofür ist die Anzahlung?",
-      a3: "Eine erstattungsfähige Anzahlung von 99 € sichert deinen Onboarding-Slot.",
+      a3: "Eine erstattungsfähige Anzahlung sichert deinen Onboarding-Slot.",
     },
     cta: {
       title: "Bereit, deine Zeit zurückzugewinnen?",
@@ -517,9 +518,9 @@ const translations: Record<Lang, Translations> = {
     },
     deposit: {
       title: "Frühzugang sichern",
-      sub: "Sichere dir deinen Onboarding-Slot mit einer erstattungsfähigen Anzahlung von 99 €.",
+      sub: "Sichere dir deinen Onboarding-Slot mit einer erstattungsfähigen Anzahlung.",
       button: "Platz sichern",
-      price: "99 €",
+      price: "",
     },
     login: {
       title: "Anmelden",
