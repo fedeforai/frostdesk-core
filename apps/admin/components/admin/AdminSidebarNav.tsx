@@ -10,16 +10,31 @@ interface AdminSidebarNavProps {
   items: NavItem[];
   collapsed: boolean;
   onToggleCollapse?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function AdminSidebarNav({ items, collapsed, onToggleCollapse }: AdminSidebarNavProps) {
+export default function AdminSidebarNav({ items, collapsed, onToggleCollapse, mobileOpen, onMobileClose }: AdminSidebarNavProps) {
   const pathname = usePathname();
 
   const menuItems = items.filter((i) => i.section === 'menu');
   const sistemaItems = items.filter((i) => i.section === 'sistema');
 
   return (
-    <aside className={`${s.sidebar} ${collapsed ? s.sidebarCollapsed : ''}`} aria-label="Navigation">
+    <aside
+      className={`${s.sidebar} ${collapsed ? s.sidebarCollapsed : ''} ${mobileOpen ? s.sidebarMobileOpen : ''}`}
+      aria-label="Navigation"
+    >
+      {onMobileClose && (
+        <button
+          type="button"
+          className={s.mobileCloseBtn}
+          onClick={onMobileClose}
+          aria-label="Close menu"
+        >
+          ×
+        </button>
+      )}
       {/* Logo */}
       <div className={s.logo}>
         <div className={s.logoIcon} aria-hidden>F</div>
@@ -38,6 +53,7 @@ export default function AdminSidebarNav({ items, collapsed, onToggleCollapse }: 
               href={item.href}
               className={`${s.navLink} ${isActive ? s.navLinkActive : ''}`}
               title={collapsed ? item.label : undefined}
+              onClick={onMobileClose}
             >
               <span className={s.navIcon}>
                 <AdminSidebarIcon name={item.icon} />
@@ -62,6 +78,7 @@ export default function AdminSidebarNav({ items, collapsed, onToggleCollapse }: 
                   href={item.href}
                   className={`${s.navLink} ${isActive ? s.navLinkActive : ''}`}
                   title={collapsed ? item.label : undefined}
+                  onClick={onMobileClose}
                 >
                   <span className={s.navIcon}>
                     <AdminSidebarIcon name={item.icon} />

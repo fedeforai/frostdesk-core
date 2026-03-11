@@ -23,10 +23,14 @@ export default function AdminSidebar({
   role,
   collapsed,
   onToggleCollapse,
+  mobileOpen,
+  onMobileClose,
 }: {
   role?: string | null;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }) {
   const visibleItems = navItems.filter((item) => {
     if (!role) return false;
@@ -37,6 +41,8 @@ export default function AdminSidebar({
       items={visibleItems}
       collapsed={collapsed ?? false}
       onToggleCollapse={onToggleCollapse}
+      mobileOpen={mobileOpen ?? false}
+      onMobileClose={onMobileClose}
     />
   );
 }

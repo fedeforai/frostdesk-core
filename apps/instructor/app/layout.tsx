@@ -1,5 +1,11 @@
+import type { Viewport } from 'next';
 import { Inter, Raleway } from 'next/font/google';
 import './globals.css';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 const inter = Inter({
   subsets: ['latin'],
