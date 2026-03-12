@@ -106,6 +106,16 @@
   color: rgba(226, 232, 240, 0.95);
 }
 
+.kpiValueSkeleton {
+  color: rgba(148, 163, 184, 0.6);
+  animation: kpiPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes kpiPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .kpiLabel {
   margin-top: 6px;
   font-size: 12px;

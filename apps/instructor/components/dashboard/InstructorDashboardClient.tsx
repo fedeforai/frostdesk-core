@@ -41,13 +41,13 @@ export default function InstructorDashboardClient() {
     { value: 0, label: t.draftsIgnored },
     { value: '0%', label: t.draftUsageRate },
   ]);
+  const [kpiSummaryLoaded, setKpiSummaryLoaded] = useState(false);
   const [kpiPollingBlocked, setKpiPollingBlocked] = useState(false);
   const [funnel, setFunnel] = useState<FunnelKpiResponse | null>(null);
 
   const loadKpiSummary = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true;
-    try {
-      const res = await getKpiSummary('7d');
+    const applyDrafts = (res: { ok: boolean; drafts?: { generated: number; used: number; ignored: number; usageRate: number } }) => {
       if (res.ok && res.drafts) {
         const usageRate = res.drafts.generated > 0
           ? Math.round(res.drafts.usageRate * 100)
@@ -58,11 +58,24 @@ export default function InstructorDashboardClient() {
           { value: res.drafts.ignored, label: t.draftsIgnored },
           { value: `${usageRate}%`, label: t.draftUsageRate },
         ]);
+        setKpiSummaryLoaded(true);
       }
+    };
+    try {
+      const res = await getKpiSummary('7d');
+      applyDrafts(res);
     } catch (e: unknown) {
       const err = e as { status?: number };
       if (err?.status === 401 || err?.status === 403) {
         setKpiPollingBlocked(true);
+      } else if (err?.status === 503 && !silent) {
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const res2 = await getKpiSummary('7d');
+          applyDrafts(res2);
+        } catch {
+          /* leave tiles as is */
+        }
       }
     }
   }, [t]);
@@ -177,6 +190,7 @@ export default function InstructorDashboardClient() {
       empty={empty}
       onRetry={() => void loadConversations()}
       kpiTiles={kpiTiles}
+      draftKpisLoaded={kpiSummaryLoaded}
       funnel={funnel}
       funnelPrimaryHref="/instructor/bookings/new"
     />

@@ -8,6 +8,7 @@ export default function AutomationCard({
   onToggle,
   disabled = false,
   kpis,
+  kpisLoaded = false,
   integrations,
 }: {
   automationOn: boolean;
@@ -15,6 +16,8 @@ export default function AutomationCard({
   /** When true, the Turn ON/OFF button is disabled (e.g. while loading AI status). */
   disabled?: boolean;
   kpis: Array<{ value: number | string; label: string }>;
+  /** When false, KPI cells show a loading state (skeleton) instead of values. */
+  kpisLoaded?: boolean;
   integrations: Array<{ name: string; status: string }>;
 }) {
   const { locale } = useAppLocale();
@@ -48,10 +51,16 @@ export default function AutomationCard({
         </button>
       </div>
 
-      <div className={styles.kpis}>
+      <div className={styles.kpis} role="region" aria-label={t.draftKpisLoading}>
         {kpis.map((s) => (
           <div key={s.label} className={styles.kpi}>
-            <div className={styles.kpiValue}>{s.value}</div>
+            {kpisLoaded ? (
+              <div className={styles.kpiValue}>{s.value}</div>
+            ) : (
+              <div className={`${styles.kpiValue} ${styles.kpiValueSkeleton}`} aria-hidden>
+                …
+              </div>
+            )}
             <div className={styles.kpiLabel}>{s.label}</div>
           </div>
         ))}

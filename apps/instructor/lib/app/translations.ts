@@ -176,6 +176,7 @@ export type AppTranslations = {
     draftsUsed: string;
     draftsIgnored: string;
     draftUsageRate: string;
+    draftKpisLoading: string;
     automationOn: string;
     automationOff: string;
     automationPauseHint: string;
@@ -385,6 +386,7 @@ const en: AppTranslations = {
     draftsUsed: 'Drafts used',
     draftsIgnored: 'Drafts ignored',
     draftUsageRate: 'Draft usage rate',
+    draftKpisLoading: 'Loading draft KPIs…',
     automationOn: 'Automation is ON',
     automationOff: 'Automation is OFF',
     automationPauseHint: 'AI is handling requests. Click the button below to pause.',
@@ -594,6 +596,7 @@ const it: AppTranslations = {
     draftsUsed: 'Bozze usate',
     draftsIgnored: 'Bozze ignorate',
     draftUsageRate: 'Tasso uso bozze',
+    draftKpisLoading: 'Caricamento KPI bozze…',
     automationOn: 'Automazione attiva',
     automationOff: 'Automazione sospesa',
     automationPauseHint: 'L\'AI gestisce le richieste. Clicca il pulsante sotto per sospendere.',

@@ -40,6 +40,8 @@ export type HomeDashboardProps = {
   onRetry?: () => void;
   /** Draft KPI from GET /instructor/kpis/summary (L1 polling in parent). When omitted, shows zeros. */
   kpiTiles?: Array<{ value: number | string; label: string }>;
+  /** True after the first successful KPI summary load; when false, AutomationCard shows loading state for draft KPIs. */
+  draftKpisLoaded?: boolean;
   /** Funnel KPI from GET /instructor/kpis/funnel. When omitted or null, FunnelCard shows empty message. */
   funnel?: FunnelKpiResponse | null;
   /** Primary action href for FunnelCard (e.g. /instructor/bookings/new). When set, primary button becomes a Link. */
@@ -54,6 +56,7 @@ export default function HomeDashboard({
   empty = false,
   onRetry,
   kpiTiles: kpiTilesProp,
+  draftKpisLoaded = false,
   funnel = null,
   funnelPrimaryHref,
 }: HomeDashboardProps = {}) {
@@ -249,6 +252,7 @@ export default function HomeDashboard({
           onToggle={handleAutomationToggle}
           disabled={automationLoading || automationActing}
           kpis={kpiTiles}
+          kpisLoaded={draftKpisLoaded}
           integrations={integrations}
         />
       </section>
