@@ -5,7 +5,7 @@
  */
 
 import type { FastifyInstance } from 'fastify';
-import { getInstructorProfileByUserId, getInstructorDashboardData } from '@frostdesk/db';
+import { getInstructorProfileByUserId, getInstructorDashboardData, getCalendarConnection } from '@frostdesk/db';
 import { getUserIdFromJwt } from '../../lib/auth_instructor.js';
 import { normalizeError } from '../../errors/normalize_error.js';
 import { mapErrorToHttp } from '../../errors/error_http_map.js';
@@ -17,7 +17,10 @@ const ROUTE_TIMEOUT_MS = 15_000;
 const FAST_PATH_MS = 8_000;
 const DASHBOARD_DATA_TIMEOUT_MS = 10_000;
 
-function minimalDashboardPayload(profile: { id: string; full_name?: string | null; working_language?: string | null; base_resort?: string | null }) {
+function minimalDashboardPayload(
+  profile: { id: string; full_name?: string | null; working_language?: string | null; base_resort?: string | null },
+  calendar?: { connected: boolean; lastSyncAt: string | null }
+) {
   return {
     instructor: {
       id: profile.id,
@@ -30,7 +33,11 @@ function minimalDashboardPayload(profile: { id: string; full_name?: string | nul
     meetingPoints: [],
     policies: [],
     availability: [],
-    calendar: { connected: false, calendarId: null, lastSyncAt: null },
+    calendar: {
+      connected: calendar?.connected ?? false,
+      calendarId: null,
+      lastSyncAt: calendar?.lastSyncAt ?? null,
+    },
     upcomingBookings: [],
     _fastPath: true,
   };
@@ -65,7 +72,11 @@ export async function instructorDashboardRoutes(app: FastifyInstance): Promise<v
 
           if (elapsedMs(routeStart) > FAST_PATH_MS) {
             logTiming(ROUTE, 'fastPath_skip_heavy', routeStart, { reason: 'elapsed_before_data' });
-            return reply.send(minimalDashboardPayload(profile));
+            const connection = await getCalendarConnection(profile.id, 'google');
+            const calendar = connection
+              ? { connected: connection.status === 'connected', lastSyncAt: connection.last_sync_at }
+              : { connected: false, lastSyncAt: null };
+            return reply.send(minimalDashboardPayload(profile, calendar));
           }
 
           const t2 = now();
@@ -79,7 +90,11 @@ export async function instructorDashboardRoutes(app: FastifyInstance): Promise<v
           } catch (err) {
             if (err instanceof Error && err.message.includes('timed out')) {
               logTiming(ROUTE, 'getInstructorDashboardData_timeout', t2);
-              return reply.send(minimalDashboardPayload(profile));
+              const connection = await getCalendarConnection(profile.id, 'google');
+              const calendar = connection
+                ? { connected: connection.status === 'connected', lastSyncAt: connection.last_sync_at }
+                : { connected: false, lastSyncAt: null };
+              return reply.send(minimalDashboardPayload(profile, calendar));
             }
             throw err;
           }
