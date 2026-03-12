@@ -25,16 +25,85 @@ jobs:
       - name: Enable corepack
         run: corepack enable && corepack prepare pnpm@10.29.3 --activate
 
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Restore pnpm store cache
+        id: restore-pnpm
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Save pnpm store cache
+        uses: actions/cache/save@v4
+        if: steps.restore-pnpm.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Paths filter
+        id: paths
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web: 'apps/web/**'
+            instructor: 'apps/instructor/**'
+            deps:
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+
+      - name: Audit dependencies (fail on high/critical)
+        if: steps.paths.outputs.deps == 'true'
+        run: pnpm audit --audit-level=high
+
+      - name: Restore db/ai build cache
+        id: restore-db-ai
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/db/dist
+            packages/ai/dist
+          key: build-db-ai-${{ runner.os }}-${{ hashFiles('packages/db/src/**', 'packages/ai/src/**') }}
+
       - name: Build packages (ai + db)
+        if: steps.restore-db-ai.outputs.cache-hit != 'true'
         run: |
           pnpm --filter @frostdesk/ai build
           pnpm --filter @frostdesk/db build
 
+      - name: Save db/ai build cache
+        if: steps.restore-db-ai.outputs.cache-hit != 'true' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            packages/db/dist
+            packages/ai/dist
+          key: build-db-ai-${{ runner.os }}-${{ hashFiles('packages/db/src/**', 'packages/ai/src/**') }}
+
       - name: Lint (admin)
         run: pnpm --filter @frostdesk/admin lint
+
+      - name: Lint (instructor)
+        if: steps.paths.outputs.instructor == 'true'
+        run: pnpm --filter @frostdesk/instructor lint
+        continue-on-error: true
+
+      - name: Admin routes forbidden-pattern check
+        run: |
+          if rg -q "request\.query\.userId|request\.headers\[.x-user-id|x-user-id|getUserId\s*\(" \
+            apps/api/src/routes/admin.ts apps/api/src/routes/admin/ \
+            --glob '!*.test.ts' --glob '!*.spec.ts' --type-add 'ts:*.ts' -t ts 2>/dev/null; then
+            echo "FAIL: Forbidden pattern found in admin routes (see docs/SECURITY_ADMIN_ROUTE_COVERAGE_AUDIT.md)"
+            exit 1
+          fi
+          echo "PASS: No forbidden patterns in admin routes"
 
       - name: Test (db)
         run: pnpm --filter @frostdesk/db test
@@ -46,4 +115,5 @@ jobs:
         run: pnpm --filter @frostdesk/api build
 
       - name: Build Web
+        if: steps.paths.outputs.web == 'true'
         run: pnpm --filter @frostdesk/web build

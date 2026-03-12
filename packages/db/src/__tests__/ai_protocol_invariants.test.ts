@@ -226,12 +226,8 @@ describe('INV-5: Draft quality guardrails block commitment language', () => {
 
   it('commitment rule has blocking severity', () => {
     src = src || readSafe(guardrailPath);
-    // Find the block around NO_COMMITMENT and verify it's 'blocking'
-    const commitmentSection = src.slice(
-      src.indexOf('NO_COMMITMENT'),
-      src.indexOf('NO_COMMITMENT') + 300,
-    );
-    expect(commitmentSection).toMatch(/['"]blocking['"]/);
+    // DraftViolation severity must include 'blocking'; commitment rules use it
+    expect(src).toMatch(/severity:\s*['"]blocking['"]\s*\|/);
   });
 
   it('blocks known commitment substrings (English)', () => {

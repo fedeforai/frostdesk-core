@@ -3,15 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  fetchComprehensiveDashboard,
   updateFeatureFlag,
   type ComprehensiveDashboardData,
 } from '@/lib/adminApi';
+import { useAdminDashboard } from './AdminDashboardContext';
 import ReportArchive from './ReportArchive';
 import s from './dashboard.module.css';
-
-// ── Auto-refresh interval (ms) ──────────────────────────────────────────
-const REFRESH_INTERVAL = 60_000;
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -210,26 +207,15 @@ function CardRow({ label, value, color }: { label: string; value: string | numbe
 // ── Main Component ─────────────────────────────────────────────────────
 
 export default function ComprehensiveDashboard() {
-  const [data, setData] = useState<ComprehensiveDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const dashboard = useAdminDashboard();
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const result = await fetchComprehensiveDashboard();
-      if (result) setData(result);
-      else setError(true);
-    } catch { setError(true); }
-    finally { setLoading(false); }
-  }, []);
+  const data = dashboard?.data ?? null;
+  const loading = dashboard?.loading ?? true;
+  const error = dashboard?.error ?? false;
+  const load = useCallback(() => { dashboard?.refresh(); }, [dashboard]);
 
-  useEffect(() => { load(); }, [load]);
-
-  // Close export dropdown on outside click
   useEffect(() => {
     if (!exportOpen) return;
     const handler = (e: MouseEvent) => {
@@ -238,14 +224,6 @@ export default function ComprehensiveDashboard() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [exportOpen]);
-
-  // Auto-refresh (silent, no loading spinner)
-  useEffect(() => {
-    const id = setInterval(() => {
-      fetchComprehensiveDashboard().then((r) => { if (r) setData(r); }).catch(() => {});
-    }, REFRESH_INTERVAL);
-    return () => clearInterval(id);
-  }, []);
 
   // ── Loading / Error states ──────────────────────────────────────────
 

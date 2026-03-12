@@ -12,6 +12,16 @@ Checklist operativa per mettere online **API**, **Instructor App** e **Admin App
 
 ---
 
+## Variabili e comportamento in produzione
+
+In **produzione** (API e app su Railway/Vercel) è obbligatorio:
+
+- **`NODE_ENV=production`** per API e app. Senza, l’API può trattare utenti non in `admin_users` come admin (bypass solo dev) e la verifica della firma del webhook WhatsApp può essere disattivata.
+- **Non impostare mai** `SKIP_WHATSAPP_SIGNATURE_VERIFY` in prod: anche se il codice forza la verifica quando `NODE_ENV=production`, in prod quella variabile non deve essere presente per evitare equivoci.
+- Per il controllo che tutte le route admin usino JWT e nessun identity da client: vedi [SECURITY_ADMIN_ROUTE_COVERAGE_AUDIT.md](./SECURITY_ADMIN_ROUTE_COVERAGE_AUDIT.md).
+
+---
+
 ## Prerequisiti deploy (multi-tenant WhatsApp)
 
 **Modello:** Ogni maestro ha il **proprio numero WhatsApp** registrato nel suo profilo (onboarding o Impostazioni). Quel numero funziona **solo per lui**: le conversazioni in arrivo su quel numero vengono associate a quell’istruttore e compaiono nella sua Inbox. Non c’è un numero condiviso: un numero = un istruttore.

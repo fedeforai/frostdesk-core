@@ -120,6 +120,7 @@ describe('instructor_profile_definitive_domain', () => {
         internal_notes: null,
         account_health: 'ok',
         fraud_flag: false,
+        billing_status: 'pilot',
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
       };

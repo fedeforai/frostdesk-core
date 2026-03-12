@@ -118,8 +118,10 @@ export async function webhookWhatsAppRoutes(fastify: FastifyInstance) {
     try {
       // ── Signature verification ──────────────────────────────────────────
       const appSecret = process.env.META_APP_SECRET || process.env.META_WHATSAPP_APP_SECRET;
-      const skipVerify = process.env.NODE_ENV !== 'production'
+      // In production, never skip verification (guard against misconfigured env).
+      let skipVerify = process.env.NODE_ENV !== 'production'
         && process.env.SKIP_WHATSAPP_SIGNATURE_VERIFY === '1';
+      if (process.env.NODE_ENV === 'production') skipVerify = false;
 
       if (!skipVerify) {
         if (!appSecret) {

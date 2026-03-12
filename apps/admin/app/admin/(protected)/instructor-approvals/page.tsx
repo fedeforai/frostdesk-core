@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   fetchPendingInstructors,
   approveInstructor,
@@ -198,6 +199,7 @@ function PendingTab() {
 // ── All Instructors Tab (new) ────────────────────────────────────────────
 
 function AllInstructorsTab() {
+  const router = useRouter();
   const [rows, setRows] = useState<AdminInstructorRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -302,8 +304,20 @@ function AllInstructorsTab() {
                 {rows.length === 0 ? (
                   <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No instructors found</td></tr>
                 ) : rows.map((r) => (
-                  <tr key={r.id} style={{ transition: 'background 0.1s' }}>
-                    <td style={td}>
+                  <tr
+                    key={r.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(`/admin/instructors/${r.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/admin/instructors/${r.id}`);
+                      }
+                    }}
+                    style={{ transition: 'background 0.1s', cursor: 'pointer' }}
+                  >
+                    <td style={td} onClick={(e) => e.stopPropagation()}>
                       <Link
                         href={`/admin/instructors/${r.id}`}
                         style={{ textDecoration: 'none', color: 'inherit' }}

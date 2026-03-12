@@ -451,9 +451,13 @@ export type { InstructorInboxItem } from './instructor_inbox_repository.js';
 export {
   insertInstructorFeedback,
   listInstructorFeedbackByInstructorId,
+  listAllInstructorFeedbackForAdmin,
   updateInstructorFeedback,
 } from './instructor_feedback_repository.js';
-export type { InstructorFeedbackRow } from './instructor_feedback_repository.js';
+export type {
+  InstructorFeedbackRow,
+  InstructorFeedbackForAdminRow,
+} from './instructor_feedback_repository.js';
 
 // Instructor policy document (one row per instructor, versioned, audit on PATCH)
 export {

@@ -82,13 +82,13 @@ These produce `dist/` output consumed by `apps/api`. Rebuild after changing `pac
 
 ### Running tests
 
-- **API**: `pnpm --filter @frostdesk/api test` (vitest). 12 failures in `bookings.test.ts` are pre-existing (402 PILOT_ONLY gating).
-- **DB**: `pnpm --filter @frostdesk/db test` (vitest). Some pre-existing failures.
-- Root `pnpm test` is a placeholder (`echo 'Add test scripts'`).
+- **Root**: `pnpm test` runs DB then API tests (vitest).
+- **API**: `pnpm --filter @frostdesk/api test`
+- **DB**: `pnpm --filter @frostdesk/db test`
 
 ### Environment variables
 
-The API loads `.env` from several candidate paths (see `apps/api/src/loadEnv.ts`). A root-level `.env` file is the simplest approach. Key required vars:
+The API loads `.env` from several candidate paths (see `apps/api/src/loadEnv.ts`). Missing required vars at startup can cause immediate throw or unclear errors; see `docs/ENV_AUDIT.md` for the full list. Key required vars:
 
 - `DATABASE_URL` — required at import time by `packages/db/src/client.ts` (throws if absent)
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY` — required for Supabase client

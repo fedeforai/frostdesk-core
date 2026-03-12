@@ -17,9 +17,20 @@ const mockTransitionBookingState = vi.fn();
 const mockUpdateBookingDetails = vi.fn();
 const mockGetCustomerById = vi.fn();
 const mockCreateBooking = vi.fn();
+const mockValidateAvailability = vi.fn();
+const mockInsertAuditEvent = vi.fn();
+const mockSyncBookingUpdateToCalendar = vi.fn();
 
 vi.mock('../../lib/auth_instructor.js', () => ({
   getUserIdFromJwt: (...args: unknown[]) => mockGetUserIdFromJwt(...args),
+}));
+
+vi.mock('../../lib/pilot_instructor.js', () => ({
+  isPilotInstructor: () => true,
+}));
+
+vi.mock('../../lib/billing_gate.js', () => ({
+  checkBillingGate: () => null,
 }));
 
 vi.mock('@frostdesk/db', async (importOriginal) => {
@@ -35,6 +46,9 @@ vi.mock('@frostdesk/db', async (importOriginal) => {
     updateBookingState: (...args: unknown[]) => mockUpdateBookingState(...args),
     recordBookingAudit: (...args: unknown[]) => mockRecordBookingAudit(...args),
     transitionBookingState: (...args: unknown[]) => mockTransitionBookingState(...args),
+    validateAvailability: (...args: unknown[]) => mockValidateAvailability(...args),
+    insertAuditEvent: (...args: unknown[]) => mockInsertAuditEvent(...args),
+    syncBookingUpdateToCalendar: (...args: unknown[]) => mockSyncBookingUpdateToCalendar(...args),
   };
 });
 
@@ -51,6 +65,8 @@ function mockAuthAndProfile(profileId: string = INSTRUCTOR_ID) {
   mockGetUserIdFromJwt.mockResolvedValue('user-id');
   mockGetInstructorProfileDefinitiveByUserId.mockResolvedValue(null);
   mockGetInstructorProfileByUserId.mockResolvedValue({ id: profileId });
+  mockInsertAuditEvent.mockResolvedValue(undefined);
+  mockSyncBookingUpdateToCalendar.mockResolvedValue({ calendarSynced: false, calendarError: null });
 }
 
 function mockBooking(overrides: { status: string; instructor_id?: string } = { status: 'draft' }) {
@@ -382,10 +398,10 @@ describe('PATCH /instructor/bookings/:id', () => {
       created_at: new Date().toISOString(),
     };
     mockGetBookingByIdWithExpiryCheck.mockResolvedValue(current);
-    const updatedDetails = { ...current, notes: 'Updated' };
+    const updatedDetails = { ...current, notes: 'Updated', status: 'modified' as const };
     mockUpdateBookingDetails.mockResolvedValue(updatedDetails);
     mockTransitionBookingState.mockReturnValue('modified');
-    mockUpdateBookingState.mockResolvedValue({ ...updatedDetails, status: 'modified' });
+    mockUpdateBookingState.mockResolvedValue(updatedDetails);
     mockRecordBookingAudit.mockResolvedValue(undefined);
     const app = buildApp();
 
@@ -590,7 +606,9 @@ describe('POST /instructor/bookings (create)', () => {
       display_name: 'Jane Doe',
       phone_number: '+39123456',
     });
+    mockValidateAvailability.mockResolvedValue(undefined);
     mockCreateBooking.mockResolvedValue({ id: 'new-booking-id' });
+    mockInsertAuditEvent.mockResolvedValue(undefined);
     const app = buildApp();
     const res = await app.inject({
       method: 'POST',

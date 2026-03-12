@@ -1,62 +1,70 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchAIQuota } from '@/lib/adminApi';
+import { useAdminDashboard } from '@/components/admin/AdminDashboardContext';
+import type { QuotaForPanel } from '@/components/admin/AdminDashboardContext';
 import ErrorState from '@/components/admin/ErrorState';
 
 interface AIQuotaPanelProps {
   className?: string;
+  /** When provided, no fetch and no interval; display only. Otherwise uses dashboard context or single fetch. */
+  quota?: QuotaForPanel | null;
 }
 
-export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
-  const [quota, setQuota] = useState<{
-    channel: string;
-    period: string;
-    max_allowed: number;
-    used: number;
-  } | null>(null);
+export default function AIQuotaPanel({ className, quota: propsQuota }: AIQuotaPanelProps) {
+  const dashboard = useAdminDashboard();
+  const [localQuota, setLocalQuota] = useState<QuotaForPanel | null>(null);
   const [error, setError] = useState<{ status: number; message?: string } | null>(null);
 
-  useEffect(() => {
+  const fromContext = dashboard?.quotaForPanel;
+  const quota = propsQuota ?? fromContext ?? localQuota;
+
+  const load = useCallback(() => {
     fetchAIQuota()
       .then((data) => {
-        if (data.ok) {
-          setQuota(data.quota);
+        if (data.ok && data.quota) {
+          setLocalQuota(data.quota);
         } else {
           setError({ status: 500, message: 'Failed to fetch AI quota' });
         }
       })
-      .catch((err: any) => {
-        setError({ 
-          status: err.status || 500, 
-          message: err.message || 'Failed to fetch AI quota' 
+      .catch((err: unknown) => {
+        setError({
+          status: (err as { status?: number })?.status || 500,
+          message: (err as Error)?.message || 'Failed to fetch AI quota',
         });
       });
   }, []);
 
-  if (error) {
+  useEffect(() => {
+    if (propsQuota !== undefined || fromContext !== undefined) return;
+    load();
+  }, [load, propsQuota, fromContext]);
+
+  if (error && !quota) {
     return <ErrorState status={error.status} message={error.message} />;
   }
 
   if (!quota) {
     return (
-      <div style={{ 
-        border: '1px solid rgba(255, 255, 255, 0.1)', 
-        borderRadius: '0.5rem', 
+      <div style={{
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '0.5rem',
         padding: '1.5rem',
         backgroundColor: '#ffffff',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '1rem',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           paddingBottom: '0.75rem',
         }}>
-          <h2 style={{ 
-            fontSize: '1.25rem', 
+          <h2 style={{
+            fontSize: '1.25rem',
             fontWeight: '600',
             color: 'rgba(226, 232, 240, 0.95)',
           }}>
@@ -77,30 +85,30 @@ export default function AIQuotaPanel({ className }: AIQuotaPanelProps) {
     );
   }
 
-  const percentage = quota.max_allowed > 0 
-    ? Math.round((quota.used / quota.max_allowed) * 100) 
+  const percentage = quota.max_allowed > 0
+    ? Math.round((quota.used / quota.max_allowed) * 100)
     : 0;
   const isExceeded = quota.used >= quota.max_allowed;
   const status = isExceeded ? 'EXCEEDED' : 'OK';
 
   return (
-    <div style={{ 
-      border: '1px solid rgba(255, 255, 255, 0.1)', 
-      borderRadius: '0.5rem', 
+    <div style={{
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '0.5rem',
       padding: '1.5rem',
       backgroundColor: '#ffffff',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '1rem',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         paddingBottom: '0.75rem',
       }}>
-        <h2 style={{ 
-          fontSize: '1.25rem', 
+        <h2 style={{
+          fontSize: '1.25rem',
           fontWeight: '600',
           color: 'rgba(226, 232, 240, 0.95)',
         }}>

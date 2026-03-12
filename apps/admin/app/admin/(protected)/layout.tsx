@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { getUserRole } from '@/lib/getUserRole';
 import AdminShell from '@/components/admin/AdminShell';
+import { AdminDashboardProvider } from '@/components/admin/AdminDashboardContext';
 import '../../admin-tokens.css';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,9 @@ export default async function AdminProtectedLayout({
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0b1220' }}>
-      <AdminShell role={role}>{children}</AdminShell>
+      <AdminShell role={role}>
+        <AdminDashboardProvider>{children}</AdminDashboardProvider>
+      </AdminShell>
     </div>
   );
 }

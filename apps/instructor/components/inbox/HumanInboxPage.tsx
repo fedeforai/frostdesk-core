@@ -608,10 +608,10 @@ export default function HumanInboxPage() {
     }
   }
 
-  // Live polling: selected conversation messages every 2s (list is updated by usePolling + mergeConversations above)
+  // Live polling: selected conversation messages every 3s (list is updated by usePolling + mergeConversations above)
   useLivePolling({
     enabled: !authBlocked && Boolean(selectedId),
-    intervalMs: 2000,
+    intervalMs: 3000,
     onTick: async () => {
       if (!selectedId) return;
       await loadMessages(selectedId, { silent: true, force: true });

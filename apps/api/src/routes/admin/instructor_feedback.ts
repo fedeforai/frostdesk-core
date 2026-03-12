@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   getAdminInstructorById,
   listInstructorFeedbackByInstructorId,
+  listAllInstructorFeedbackForAdmin,
   updateInstructorFeedback,
 } from '@frostdesk/db';
 import { requireAdminUser } from '../../lib/auth_instructor.js';
@@ -10,6 +11,31 @@ import { mapErrorToHttp } from '../../errors/error_http_map.js';
 import { ERROR_CODES } from '../../errors/error_codes.js';
 
 export async function adminInstructorFeedbackRoutes(app: FastifyInstance): Promise<void> {
+  // List all feedback (must be before /admin/instructors/:id so "feedback" is not matched as :id)
+  app.get<{ Querystring: { limit?: string; offset?: string } }>(
+    '/admin/instructors/feedback',
+    async (request, reply) => {
+      try {
+        await requireAdminUser(request);
+        const limit = Math.min(
+          Math.max(1, parseInt(String(request.query?.limit || '50'), 10) || 50),
+          200,
+        );
+        const offset = Math.max(0, parseInt(String(request.query?.offset || '0'), 10) || 0);
+        const items = await listAllInstructorFeedbackForAdmin({ limit, offset });
+        return reply.send({ ok: true, items });
+      } catch (error) {
+        const normalized = normalizeError(error);
+        const httpStatus = mapErrorToHttp(normalized.error);
+        return reply.status(httpStatus).send({
+          ok: false,
+          error: normalized.error,
+          ...(normalized.message ? { message: normalized.message } : {}),
+        });
+      }
+    },
+  );
+
   app.get<{ Params: { id: string } }>('/admin/instructors/:id', async (request, reply) => {
     try {
       await requireAdminUser(request);

@@ -49,6 +49,44 @@ export async function listInstructorFeedbackByInstructorId(
   return rows;
 }
 
+export interface InstructorFeedbackForAdminRow {
+  id: string;
+  instructor_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  admin_notes: string | null;
+  instructor_name: string | null;
+}
+
+/**
+ * List all instructor feedback for admin (all instructors), newest first.
+ * Joins instructor_profiles for display name. Supports limit/offset.
+ */
+export async function listAllInstructorFeedbackForAdmin(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<InstructorFeedbackForAdminRow[]> {
+  const limit = Math.min(Math.max(1, params?.limit ?? 50), 200);
+  const offset = Math.max(0, params?.offset ?? 0);
+  const rows = await sql<InstructorFeedbackForAdminRow[]>`
+    SELECT
+      f.id,
+      f.instructor_id,
+      f.body,
+      f.created_at,
+      f.read_at,
+      f.admin_notes,
+      COALESCE(ip.display_name, ip.full_name)::text AS instructor_name
+    FROM instructor_feedback f
+    LEFT JOIN instructor_profiles ip ON ip.id = f.instructor_id
+    ORDER BY f.created_at DESC
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `;
+  return rows;
+}
+
 /**
  * Update read_at and/or admin_notes for a feedback row. Returns true if a row was updated.
  */

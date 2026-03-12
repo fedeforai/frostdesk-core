@@ -223,7 +223,8 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
     // ── Today KPIs ─────────────────────────────
     safe(
       sql<Array<{ count: string }>>`
-        SELECT COUNT(*)::int AS count FROM conversations WHERE DATE(created_at) = CURRENT_DATE
+        SELECT COUNT(*)::int AS count FROM conversations
+        WHERE created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
@@ -232,34 +233,39 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
         SELECT
           COUNT(*) FILTER (WHERE direction = 'inbound')::int AS inbound,
           COUNT(*) FILTER (WHERE direction = 'outbound')::int AS outbound
-        FROM messages WHERE DATE(created_at) = CURRENT_DATE
+        FROM messages
+        WHERE created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       [{ inbound: '0', outbound: '0' }],
     ),
     safe(
       sql<Array<{ count: string }>>`
-        SELECT COUNT(*)::int AS count FROM bookings WHERE DATE(created_at) = CURRENT_DATE
+        SELECT COUNT(*)::int AS count FROM bookings
+        WHERE created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM bookings
-        WHERE status = 'cancelled' AND DATE(updated_at) = CURRENT_DATE
+        WHERE status = 'cancelled'
+          AND updated_at >= CURRENT_DATE AND updated_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM audit_log
-        WHERE action = 'customer_note_added' AND DATE(created_at) = CURRENT_DATE
+        WHERE action = 'customer_note_added'
+          AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM booking_audit
-        WHERE actor = 'human' AND DATE(created_at) = CURRENT_DATE
+        WHERE actor = 'human'
+          AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
@@ -268,7 +274,8 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM message_metadata
-        WHERE key = 'ai_draft' AND DATE(created_at) = CURRENT_DATE
+        WHERE key = 'ai_draft'
+          AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
@@ -276,7 +283,8 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM messages
         WHERE direction = 'outbound' AND sender_identity = 'human'
-          AND raw_payload::text LIKE '%draft_metadata%' AND DATE(created_at) = CURRENT_DATE
+          AND raw_payload::text LIKE '%draft_metadata%'
+          AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
@@ -293,21 +301,24 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM message_metadata
-        WHERE key = 'ai_draft_error' AND DATE(created_at) = CURRENT_DATE
+        WHERE key = 'ai_draft_error'
+          AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(DISTINCT c.id)::int AS count FROM conversations c
-        WHERE DATE(c.created_at) = CURRENT_DATE AND c.status = 'requires_human'
+        WHERE created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
+          AND c.status = 'requires_human'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(DISTINCT c.id)::int AS count FROM conversations c
-        WHERE DATE(c.created_at) = CURRENT_DATE AND c.status = 'open'
+        WHERE created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'
+          AND c.status = 'open'
       `,
       ZERO,
     ),
@@ -436,14 +447,14 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(DISTINCT c.id)::int AS count FROM conversations c
-        WHERE DATE(c.created_at) = CURRENT_DATE - 1 AND c.status = 'open'
+        WHERE c.created_at >= CURRENT_DATE - 1 AND c.created_at < CURRENT_DATE AND c.status = 'open'
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(DISTINCT c.id)::int AS count FROM conversations c
-        WHERE DATE(c.created_at) = CURRENT_DATE - 1 AND c.status = 'requires_human'
+        WHERE c.created_at >= CURRENT_DATE - 1 AND c.created_at < CURRENT_DATE AND c.status = 'requires_human'
       `,
       ZERO,
     ),
@@ -452,21 +463,23 @@ export async function getComprehensiveDashboard(): Promise<ComprehensiveDashboar
         SELECT
           COUNT(*) FILTER (WHERE key = 'ai_draft')::int AS gen,
           0::int AS sent
-        FROM message_metadata WHERE DATE(created_at) = CURRENT_DATE - 1
+        FROM message_metadata
+        WHERE created_at >= CURRENT_DATE - 1 AND created_at < CURRENT_DATE
       `,
       [{ gen: '0', sent: '0' }],
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM message_metadata
-        WHERE key = 'ai_draft_error' AND DATE(created_at) = CURRENT_DATE - 1
+        WHERE key = 'ai_draft_error'
+          AND created_at >= CURRENT_DATE - 1 AND created_at < CURRENT_DATE
       `,
       ZERO,
     ),
     safe(
       sql<Array<{ count: string }>>`
         SELECT COUNT(*)::int AS count FROM bookings
-        WHERE DATE(created_at) = CURRENT_DATE - 1
+        WHERE created_at >= CURRENT_DATE - 1 AND created_at < CURRENT_DATE
       `,
       ZERO,
     ),

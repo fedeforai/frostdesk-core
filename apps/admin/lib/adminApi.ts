@@ -1683,6 +1683,45 @@ export async function fetchInstructorFeedback(
   return response.json();
 }
 
+/** List item for all instructor feedback (admin list page). */
+export interface InstructorFeedbackListItem {
+  id: string;
+  instructor_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  admin_notes: string | null;
+  instructor_name: string | null;
+}
+
+export interface FetchAllInstructorFeedbackResponse {
+  ok: true;
+  items: InstructorFeedbackListItem[];
+}
+
+export async function fetchAllInstructorFeedback(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<FetchAllInstructorFeedbackResponse> {
+  const qp = new URLSearchParams();
+  if (params?.limit != null) qp.set('limit', String(params.limit));
+  if (params?.offset != null) qp.set('offset', String(params.offset));
+  const qs = qp.toString();
+  const response = await fetch(`/api/admin/instructors/feedback${qs ? `?${qs}` : ''}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const { message } = parseAdminErrorBody(errorData, 'Failed to load feedback');
+    const err = new Error(message);
+    (err as any).status = response.status;
+    throw err;
+  }
+  return response.json();
+}
+
 export async function updateInstructorFeedback(
   feedbackId: string,
   patch: { read_at?: string | null; admin_notes?: string | null }

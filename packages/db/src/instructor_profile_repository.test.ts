@@ -14,28 +14,28 @@ describe('instructor_profile_repository (resolveDisplayNameForInsert)', () => {
   };
 
   describe('resolveDisplayNameForInsert', () => {
-    it('returns full_name when display_name is omitted', () => {
-      expect(resolveDisplayNameForInsert(baseParams)).toBe('Mario Rossi');
+    it('returns null when display_name is omitted (no full_name fallback to avoid display_name index collisions)', () => {
+      expect(resolveDisplayNameForInsert(baseParams)).toBeNull();
     });
 
-    it('returns full_name when display_name is undefined', () => {
-      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: undefined })).toBe('Mario Rossi');
+    it('returns null when display_name is undefined', () => {
+      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: undefined })).toBeNull();
     });
 
-    it('returns "" when display_name omitted and full_name is empty', () => {
-      expect(resolveDisplayNameForInsert({ ...baseParams, full_name: '' })).toBe('');
+    it('returns null when display_name omitted and full_name is empty', () => {
+      expect(resolveDisplayNameForInsert({ ...baseParams, full_name: '' })).toBeNull();
     });
 
     it('returns display_name when provided', () => {
       expect(resolveDisplayNameForInsert({ ...baseParams, display_name: 'Mario R.' })).toBe('Mario R.');
     });
 
-    it('returns display_name when explicitly empty string', () => {
-      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: '' })).toBe('');
+    it('returns null when display_name is explicitly empty string (treated as absent)', () => {
+      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: '' })).toBeNull();
     });
 
-    it('returns full_name when display_name is null (draft-friendly fallback)', () => {
-      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: null })).toBe('Mario Rossi');
+    it('returns null when display_name is null', () => {
+      expect(resolveDisplayNameForInsert({ ...baseParams, display_name: null })).toBeNull();
     });
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { fetchSystemHealth, type SystemHealthSnapshot } from '@/lib/adminApi';
+import { useAdminDashboard } from '@/components/admin/AdminDashboardContext';
+import type { SystemHealthSnapshot } from '@/lib/adminApi';
 import SystemHealthPanel from '@/components/admin/SystemHealthPanel';
 
 const FALLBACK_SNAPSHOT: SystemHealthSnapshot = {
@@ -23,32 +23,18 @@ const FALLBACK_SNAPSHOT: SystemHealthSnapshot = {
   },
 };
 
-export default function SystemHealthClient() {
-  const [snapshot, setSnapshot] = useState<SystemHealthSnapshot>(FALLBACK_SNAPSHOT);
-  const [isLive, setIsLive] = useState(false);
-  const [loading, setLoading] = useState(true);
+interface SystemHealthClientProps {
+  /** When provided, no fetch and no interval; display only. */
+  snapshot?: SystemHealthSnapshot | null;
+  isLive?: boolean;
+}
 
-  const load = useCallback(async () => {
-    try {
-      const data = await fetchSystemHealth();
-      if (data?.ok && data.snapshot) {
-        setSnapshot(data.snapshot);
-        setIsLive(true);
-      } else {
-        setSnapshot(FALLBACK_SNAPSHOT);
-        setIsLive(false);
-      }
-    } catch {
-      setSnapshot(FALLBACK_SNAPSHOT);
-      setIsLive(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+export default function SystemHealthClient({ snapshot: propsSnapshot, isLive: propsIsLive }: SystemHealthClientProps = {}) {
+  const dashboard = useAdminDashboard();
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const snapshot = propsSnapshot ?? dashboard?.systemHealthSnapshot ?? FALLBACK_SNAPSHOT;
+  const isLive = propsIsLive ?? (dashboard?.data != null);
+  const loading = !propsSnapshot && (dashboard?.loading === true) && !dashboard?.data;
 
   if (loading) {
     return (
@@ -60,22 +46,24 @@ export default function SystemHealthClient() {
 
   return (
     <>
-      <div style={{ marginBottom: '1rem' }}>
-        <button
-          type="button"
-          onClick={() => { setLoading(true); load(); }}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: 8,
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-          }}
-        >
-          Aggiorna
-        </button>
-      </div>
+      {dashboard && (
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => { dashboard?.refresh(); }}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: 8,
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(255, 255, 255, 0.05)',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            Aggiorna
+          </button>
+        </div>
+      )}
       <SystemHealthPanel snapshot={snapshot} isLive={isLive} />
     </>
   );
