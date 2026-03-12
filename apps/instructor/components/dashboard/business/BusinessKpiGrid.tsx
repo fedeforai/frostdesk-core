@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import type { KpiWindow, BusinessKpiResponse } from '@/lib/instructorApi';
 import { getBusinessKpi } from '@/lib/instructorApi';
 import styles from './business.module.css';
@@ -39,6 +41,8 @@ function KpiCard({
 export default function BusinessKpiGrid({ window }: { window: KpiWindow }) {
   const [data, setData] = useState<BusinessKpiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
 
   useEffect(() => {
     let cancelled = false;
@@ -67,12 +71,12 @@ export default function BusinessKpiGrid({ window }: { window: KpiWindow }) {
 
   return (
     <div className={styles.kpiGrid}>
-      <KpiCard value={formatCurrency(revenue)} label="Revenue" loading={loading} />
-      <KpiCard value={String(paidBookings)} label="Paid bookings" loading={loading} />
-      <KpiCard value={formatCurrency(avgValue)} label="Avg booking value" loading={loading} />
-      <KpiCard value={String(completedLessons)} label="Completed lessons" loading={loading} />
-      <KpiCard value={`${completionRate}%`} label="Completion rate" loading={loading} />
-      <KpiCard value={`${repeatRate}%`} label="Repeat customer rate" loading={loading} />
+      <KpiCard value={formatCurrency(revenue)} label={t.revenue} loading={loading} />
+      <KpiCard value={String(paidBookings)} label={t.paidBookings} loading={loading} />
+      <KpiCard value={formatCurrency(avgValue)} label={t.avgBookingValue} loading={loading} />
+      <KpiCard value={String(completedLessons)} label={t.completedLessons} loading={loading} />
+      <KpiCard value={`${completionRate}%`} label={t.completionRate} loading={loading} />
+      <KpiCard value={`${repeatRate}%`} label={t.repeatCustomerRate} loading={loading} />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { fetchInstructorBookings, getBookingDraftCount } from '@/lib/instructorApi';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import styles from './dashboard.module.css';
 
 type TodayBooking = {
@@ -40,6 +42,10 @@ function isPaid(status: string | null | undefined): boolean {
 }
 
 export default function TodayPageClient() {
+  const { locale } = useAppLocale();
+  const tFull = getAppTranslations(locale);
+  const t = tFull.today;
+  const common = tFull.common;
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
   const [draftCount, setDraftCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -58,7 +64,7 @@ export default function TodayPageClient() {
       setTodayBookings(items as TodayBooking[]);
       setDraftCount(count);
     } catch (e) {
-      setError({ message: e instanceof Error ? e.message : 'Failed to load' });
+      setError({ message: e instanceof Error ? e.message : t.failedToLoad });
       setTodayBookings([]);
       setDraftCount(0);
     } finally {
@@ -83,8 +89,8 @@ export default function TodayPageClient() {
   if (loading) {
     return (
       <div className={styles.wrap}>
-        <h1 className={styles.pageTitle}>Today</h1>
-        <p className={styles.pageSub}>Loading…</p>
+        <h1 className={styles.pageTitle}>{t.title}</h1>
+        <p className={styles.pageSub}>{t.loading}</p>
       </div>
     );
   }
@@ -92,7 +98,7 @@ export default function TodayPageClient() {
   if (error) {
     return (
       <div className={styles.wrap}>
-        <h1 className={styles.pageTitle}>Today</h1>
+        <h1 className={styles.pageTitle}>{t.title}</h1>
         <p className={styles.pageSub} style={{ color: '#f87171' }}>
           {error.message}
         </p>
@@ -110,7 +116,7 @@ export default function TodayPageClient() {
             cursor: 'pointer',
           }}
         >
-          Retry
+          {common.retry}
         </button>
       </div>
     );
@@ -123,13 +129,13 @@ export default function TodayPageClient() {
 
   return (
     <div className={styles.wrap}>
-      <h1 className={styles.pageTitle}>Today</h1>
-      <p className={styles.pageSub}>Daily control view</p>
+      <h1 className={styles.pageTitle}>{t.title}</h1>
+      <p className={styles.pageSub}>{t.dailyView}</p>
 
       {/* Prossima lezione */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Prossima lezione
+          {t.nextLesson}
         </h2>
         {nextBooking ? (
           <div
@@ -152,7 +158,7 @@ export default function TodayPageClient() {
               <div style={{ fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)', marginTop: 4 }}>
                 {nextBooking.status}
                 {nextBooking.payment_status && nextBooking.payment_status !== 'paid' && (
-                  <span style={{ marginLeft: 8, color: '#fbbf24' }}>· Non pagata</span>
+                  <span style={{ marginLeft: 8, color: '#fbbf24' }}>· {t.unpaid}</span>
                 )}
               </div>
             </div>
@@ -170,7 +176,7 @@ export default function TodayPageClient() {
                   textDecoration: 'none',
                 }}
               >
-                Apri prenotazione
+                {t.openBooking}
               </Link>
               {nextBooking.conversation_id && (
                 <Link
@@ -186,23 +192,23 @@ export default function TodayPageClient() {
                     textDecoration: 'none',
                   }}
                 >
-                  Inbox
+                  {t.inbox}
                 </Link>
               )}
             </div>
           </div>
         ) : (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>No lessons today</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>{t.noLessonsToday}</p>
         )}
       </section>
 
       {/* Lezioni di oggi */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Today&apos;s lessons ({todayBookings.length})
+          {t.todaysLessons} ({todayBookings.length})
         </h2>
         {todayBookings.length === 0 ? (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>No lessons today</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>{t.noLessonsToday}</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {sorted.slice(0, 5).map((b) => (
@@ -219,14 +225,14 @@ export default function TodayPageClient() {
                 <span style={{ color: 'rgba(226,232,240,0.9)', fontSize: 14 }}>
                   {formatTime(b.start_time)} {customerLabel(b)}
                   {!isPaid(b.payment_status) && (
-                    <span style={{ marginLeft: 6, color: '#fbbf24', fontSize: 12 }}>Non pagata</span>
+                    <span style={{ marginLeft: 6, color: '#fbbf24', fontSize: 12 }}>{t.unpaid}</span>
                   )}
                 </span>
                 <Link
                   href={`/instructor/bookings/${b.id}`}
                   style={{ fontSize: 13, color: 'rgba(148,163,184,0.95)', textDecoration: 'none' }}
                 >
-                  Apri
+                  {t.open}
                 </Link>
               </li>
             ))}
@@ -243,17 +249,17 @@ export default function TodayPageClient() {
             fontWeight: 600,
           }}
         >
-          Vedi tutte le lezioni di oggi →
+          {t.seeAllLessons}
         </Link>
       </section>
 
       {/* Non pagate */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Non pagate ({unpaidCount})
+          {t.unpaidCount} ({unpaidCount})
         </h2>
         {unpaidCount === 0 ? (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>Nessuna prenotazione non pagata</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>{t.noUnpaid}</p>
         ) : (
           <Link
             href={unpaidHref}
@@ -269,7 +275,7 @@ export default function TodayPageClient() {
               textDecoration: 'none',
             }}
           >
-            Vedi prenotazioni non pagate →
+            {t.seeUnpaid}
           </Link>
         )}
       </section>
@@ -277,10 +283,10 @@ export default function TodayPageClient() {
       {/* Proposte */}
       <section className={styles.section}>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(226,232,240,0.9)', marginBottom: 10 }}>
-          Proposte da confermare ({draftCount})
+          {t.proposalsCount} ({draftCount})
         </h2>
         {draftCount === 0 ? (
-          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>Nessuna proposta in attesa</p>
+          <p style={{ color: 'rgba(148,163,184,0.9)', fontSize: 14 }}>{t.noProposals}</p>
         ) : (
           <Link
             href={proposalsHref}
@@ -296,7 +302,7 @@ export default function TodayPageClient() {
               textDecoration: 'none',
             }}
           >
-            Vedi proposte →
+            {t.seeProposals}
           </Link>
         )}
       </section>

@@ -1,5 +1,7 @@
 import base from './card.module.css';
 import styles from './AutomationCard.module.css';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 
 export default function AutomationCard({
   automationOn,
@@ -15,20 +17,23 @@ export default function AutomationCard({
   kpis: Array<{ value: number | string; label: string }>;
   integrations: Array<{ name: string; status: string }>;
 }) {
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
+
   return (
     <div className={`${base.card} ${styles.wrap}`}>
       <div className={styles.header}>
         <div className={`${styles.badge} ${automationOn ? styles.badgeOn : styles.badgeOff}`}>
-          {automationOn ? 'ON' : 'OFF'}
+          {automationOn ? t.on : t.off}
         </div>
         <div className={styles.center}>
           <div className={styles.stateLabel} role="status" aria-live="polite">
-            {automationOn ? 'Automation is ON' : 'Automation is OFF'}
+            {automationOn ? t.automationOn : t.automationOff}
           </div>
           <div className={styles.desc}>
             {automationOn
-              ? 'AI is handling requests. Click the button below to pause.'
-              : 'Automation is paused. Click the button below to resume.'}
+              ? t.automationPauseHint
+              : t.automationResumeHint}
           </div>
         </div>
         <button
@@ -37,9 +42,9 @@ export default function AutomationCard({
           onClick={onToggle}
           disabled={disabled}
           aria-busy={disabled}
-          aria-label={automationOn ? 'Pause automation' : 'Resume automation'}
+          aria-label={automationOn ? t.pauseAutomation : t.resumeAutomation}
         >
-          {automationOn ? 'Turn OFF' : 'Turn ON'}
+          {automationOn ? t.turnOff : t.turnOn}
         </button>
       </div>
 

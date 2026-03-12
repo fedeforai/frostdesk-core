@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 
 type LogoutButtonProps = { variant?: 'default' | 'nav' };
 
@@ -10,6 +12,8 @@ export default function LogoutButton({ variant = 'default' }: LogoutButtonProps)
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowser(), []);
   const [loading, setLoading] = useState(false);
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).common;
 
   const onLogout = async () => {
     if (!supabase) return;
@@ -56,7 +60,7 @@ export default function LogoutButton({ variant = 'default' }: LogoutButtonProps)
             }
       }
     >
-      {loading ? 'Signing out…' : isNav ? 'Logout' : 'Sign out'}
+      {loading ? t.signingOut : isNav ? t.logout : t.signOut}
     </button>
   );
 }

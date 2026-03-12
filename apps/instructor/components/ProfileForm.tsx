@@ -10,6 +10,8 @@ import type {
   LanguageCode,
 } from '@/lib/instructorApi';
 import { updateInstructorProfile } from '@/lib/instructorApi';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 
 const LANGUAGE_OPTIONS: LanguageCode[] = [
   'en', 'it', 'fr', 'de', 'es', 'pt', 'nl', 'sv', 'no', 'da', 'pl', 'ru', 'ar', 'zh',
@@ -75,6 +77,8 @@ interface ProfileFormProps {
 type TabId = 'identity' | 'marketing' | 'operations';
 
 export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale);
   const [activeTab, setActiveTab] = useState<TabId>('identity');
 
   const [fullName, setFullName] = useState('');
@@ -150,7 +154,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
     e.preventDefault();
     const wl = workingLanguage || undefined;
     if (!fullName.trim() || !baseResort.trim() || !wl || !contactEmail.trim()) {
-      setBanner({ type: 'error', message: 'All identity fields are required' });
+      setBanner({ type: 'error', message: t.profile.allIdentityRequired });
       return;
     }
     setSavingTab('identity');
@@ -261,9 +265,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
   );
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'marketing', label: 'Marketing' },
-    { id: 'operations', label: 'Operations' },
+    { id: 'identity', label: t.profile.tabIdentity },
+    { id: 'marketing', label: t.profile.tabMarketing },
+    { id: 'operations', label: t.profile.tabOperations },
   ];
 
   return (
@@ -312,7 +316,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
       {activeTab === 'identity' && (
         <form onSubmit={handleSaveIdentity}>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="full_name" style={labelStyle}>Full Name *</label>
+            <label htmlFor="full_name" style={labelStyle}>{t.profile.fullName}</label>
             <input
               type="text"
               id="full_name"
@@ -327,21 +331,21 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="display_name" style={labelStyle}>Display name</label>
+            <label htmlFor="display_name" style={labelStyle}>{t.profile.displayName}</label>
             <input
               type="text"
               id="display_name"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={savingTab === 'identity'}
-              placeholder="Optional; defaults to full name"
+              placeholder={t.profile.displayNamePlaceholder}
               style={inputStyle}
               onFocus={focusOutline}
               onBlur={blurOutline}
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="slug" style={labelStyle}>Slug</label>
+            <label htmlFor="slug" style={labelStyle}>{t.profile.slug}</label>
             <input
               type="text"
               id="slug"
@@ -354,11 +358,11 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               style={{ ...inputStyle, cursor: 'not-allowed', backgroundColor: 'rgba(255, 255, 255, 0.04)', color: 'rgba(148, 163, 184, 0.9)' }}
             />
             <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem' }}>
-              Read-only (managed by the system)
+              {t.profile.slugReadOnly}
             </p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="base_resort" style={labelStyle}>Base Resort *</label>
+            <label htmlFor="base_resort" style={labelStyle}>{t.profile.baseResort}</label>
             <input
               type="text"
               id="base_resort"
@@ -370,13 +374,13 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               onFocus={focusOutline}
               onBlur={blurOutline}
               aria-required
-              placeholder="Es. Cervinia, Zermatt"
+              placeholder={t.profile.baseResortPlaceholder}
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <span style={labelStyle}>Other locations where you can give lessons</span>
+            <span style={labelStyle}>{t.profile.otherLocations}</span>
             <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.5rem' }}>
-              Add other locations (in addition to Base Resort) where you offer lessons.
+              {t.profile.otherLocationsHint}
             </p>
             {otherLocations.map((value, i) => (
               <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
@@ -389,7 +393,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                     setOtherLocations(next);
                   }}
                   disabled={savingTab === 'identity'}
-                  placeholder="Location name"
+                  placeholder={t.profile.locationPlaceholder}
                   style={{ ...inputStyle, flex: 1 }}
                   onFocus={focusOutline}
                   onBlur={blurOutline}
@@ -407,9 +411,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                     cursor: savingTab === 'identity' ? 'not-allowed' : 'pointer',
                     fontSize: '0.875rem',
                   }}
-                  aria-label="Remove location"
+                  aria-label={t.profile.removeLocation}
                 >
-                  Rimuovi
+                  {t.profile.removeLocation}
                 </button>
               </div>
             ))}
@@ -428,11 +432,11 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 fontSize: '0.875rem',
               }}
             >
-              + Add location
+              {t.profile.addLocation}
             </button>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="working_language" style={labelStyle}>Working Language *</label>
+            <label htmlFor="working_language" style={labelStyle}>{t.profile.workingLanguage}</label>
             <select
               id="working_language"
               value={workingLanguage}
@@ -444,14 +448,14 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               onBlur={blurOutline}
               aria-required
             >
-              <option value="">Select language</option>
+              <option value="">{t.profile.selectLanguage}</option>
               {LANGUAGE_OPTIONS.map((code) => (
                 <option key={code} value={code}>{code.toUpperCase()}</option>
               ))}
             </select>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <span style={labelStyle}>Additional languages</span>
+            <span style={labelStyle}>{t.profile.additionalLanguages}</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem', marginTop: '0.25rem' }}>
               {LANGUAGE_OPTIONS.map((code) => (
                 <label key={code} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer', fontSize: '0.875rem' }}>
@@ -467,7 +471,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             </div>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="timezone" style={labelStyle}>Timezone</label>
+            <label htmlFor="timezone" style={labelStyle}>{t.profile.timezone}</label>
             <select
               id="timezone"
               value={timezone}
@@ -477,11 +481,11 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
               onFocus={focusOutline}
               onBlur={blurOutline}
             >
-              <option value="">Select timezone</option>
+              <option value="">{t.profile.selectTimezone}</option>
               {TIMEZONE_SHORTLIST.map((tz) => (
                 <option key={tz} value={tz}>{tz}</option>
               ))}
-              <option value="other">Other (IANA)</option>
+              <option value="other">{t.profile.timezoneOther}</option>
             </select>
             {timezone === 'other' && (
               <input
@@ -497,7 +501,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             )}
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="contact_email" style={labelStyle}>Contact Email *</label>
+            <label htmlFor="contact_email" style={labelStyle}>{t.profile.contactEmail}</label>
             <input
               type="email"
               id="contact_email"
@@ -527,7 +531,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             }}
             aria-label="Save identity"
           >
-            {savingTab === 'identity' ? 'Saving...' : 'Save Identity'}
+            {savingTab === 'identity' ? t.profile.saving : t.profile.saveIdentity}
           </button>
         </form>
       )}
@@ -536,7 +540,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
         <form onSubmit={handleSaveMarketing}>
           <div style={{ marginBottom: '1rem' }}>
             <label htmlFor="short_bio" style={labelStyle}>
-              Short bio (max {SHORT_BIO_MAX})
+              {t.profile.shortBio} {SHORT_BIO_MAX} {t.profile.shortBioMax}
             </label>
             <textarea
               id="short_bio"
@@ -552,7 +556,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{shortBio.length}/{SHORT_BIO_MAX}</span>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="extended_bio" style={labelStyle}>Extended bio</label>
+            <label htmlFor="extended_bio" style={labelStyle}>{t.profile.extendedBio}</label>
             <textarea
               id="extended_bio"
               value={extendedBio}
@@ -565,7 +569,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="teaching_philosophy" style={labelStyle}>Teaching philosophy</label>
+            <label htmlFor="teaching_philosophy" style={labelStyle}>{t.profile.teachingPhilosophy}</label>
             <textarea
               id="teaching_philosophy"
               value={teachingPhilosophy}
@@ -578,7 +582,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <span style={labelStyle}>Target audience</span>
+            <span style={labelStyle}>{t.profile.targetAudience}</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem', marginTop: '0.25rem' }}>
               {TARGET_AUDIENCE_OPTIONS.map((opt) => (
                 <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer', fontSize: '0.875rem' }}>
@@ -594,7 +598,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             </div>
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="usp_add" style={labelStyle}>USP tags</label>
+            <label htmlFor="usp_add" style={labelStyle}>{t.profile.uspTags}</label>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input
                 type="text"
@@ -602,7 +606,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 value={uspInput}
                 onChange={(e) => setUspInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addUspTag(); } }}
-                placeholder="Add tag"
+                placeholder={t.profile.addTag}
                 disabled={savingTab === 'marketing'}
                 style={{ ...inputStyle, flex: 1 }}
                 onFocus={focusOutline}
@@ -623,7 +627,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                   fontWeight: 500,
                 }}
               >
-                Add
+                {t.common.add}
               </button>
             </div>
             {uspSuggestionsFiltered.length > 0 && (
@@ -702,7 +706,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             }}
             aria-label="Save marketing"
           >
-            {savingTab === 'marketing' ? 'Saving...' : 'Save Marketing'}
+            {savingTab === 'marketing' ? t.profile.saving : t.profile.saveMarketing}
           </button>
         </form>
       )}
@@ -710,7 +714,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
       {activeTab === 'operations' && (
         <form onSubmit={handleSaveOperations}>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="max_students_private" style={labelStyle}>Max students (private)</label>
+            <label htmlFor="max_students_private" style={labelStyle}>{t.profile.maxStudentsPrivate}</label>
             <input
               type="number"
               id="max_students_private"
@@ -724,7 +728,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="max_students_group" style={labelStyle}>Max students (group)</label>
+            <label htmlFor="max_students_group" style={labelStyle}>{t.profile.maxStudentsGroup}</label>
             <input
               type="number"
               id="max_students_group"
@@ -738,7 +742,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="min_booking_duration_minutes" style={labelStyle}>Min booking duration (minutes)</label>
+            <label htmlFor="min_booking_duration_minutes" style={labelStyle}>{t.profile.minBookingDuration}</label>
             <input
               type="number"
               id="min_booking_duration_minutes"
@@ -759,11 +763,11 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 onChange={(e) => setSameDayBookingAllowed(e.target.checked)}
                 disabled={savingTab === 'operations'}
               />
-              Same-day booking allowed
+              {t.profile.sameDayBookingAllowed}
             </label>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="advance_booking_hours" style={labelStyle}>Advance booking (hours)</label>
+            <label htmlFor="advance_booking_hours" style={labelStyle}>{t.profile.advanceBookingHours}</label>
             <input
               type="number"
               id="advance_booking_hours"
@@ -777,7 +781,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="travel_buffer_minutes" style={labelStyle}>Travel buffer (minutes)</label>
+            <label htmlFor="travel_buffer_minutes" style={labelStyle}>{t.profile.travelBufferMinutes}</label>
             <input
               type="number"
               id="travel_buffer_minutes"
@@ -806,7 +810,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             }}
             aria-label="Save operations"
           >
-            {savingTab === 'operations' ? 'Saving...' : 'Save Operations'}
+            {savingTab === 'operations' ? t.profile.saving : t.profile.saveOperations}
           </button>
         </form>
       )}

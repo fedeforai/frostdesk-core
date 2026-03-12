@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import base from './card.module.css';
 import styles from './ConversationCard.module.css';
 
@@ -17,6 +19,8 @@ export default function ConversationCard({
   conversation: Conversation;
 }) {
   const router = useRouter();
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
 
   const openInInbox = () => {
     if (conversation.conversationId) {
@@ -29,15 +33,15 @@ export default function ConversationCard({
   return (
     <div className={base.card}>
       <div className={styles.headerRow}>
-        <h3 className={base.cardTitle}>Conversation</h3>
+        <h3 className={base.cardTitle}>{t.conversation}</h3>
 
         <button
           type="button"
           className={styles.openBtn}
           onClick={openInInbox}
-          aria-label={`Open ${conversation.leadName} in Inbox`}
+          aria-label={`${t.openInInbox} ${conversation.leadName}`}
         >
-          Open in Inbox
+          {t.openInInbox}
         </button>
       </div>
 
@@ -47,7 +51,7 @@ export default function ConversationCard({
 
       {conversation.lastMessage && (
         <>
-          <div className={styles.label}>Last message</div>
+          <div className={styles.label}>{t.lastMessage}</div>
           <div className={styles.snippet}>{conversation.lastMessage}</div>
         </>
       )}

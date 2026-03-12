@@ -7,15 +7,13 @@ import type { InstructorProfile } from '@/lib/instructorApi';
 import ProfileForm from '@/components/ProfileForm';
 import AvatarPicker from '@/components/AvatarPicker';
 import ProfileFeedbackSection from '@/components/ProfileFeedbackSection';
-import type { FeedbackLocale } from '@/components/ProfileFeedbackSection';
-
-function getFeedbackLocale(workingLanguage: string | undefined): FeedbackLocale {
-  if (workingLanguage === 'it' || workingLanguage === 'fr' || workingLanguage === 'de') return workingLanguage;
-  return 'en';
-}
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale);
   const [profile, setProfile] = useState<InstructorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
@@ -45,7 +43,7 @@ export default function ProfilePage() {
   if (loading && !profile && !errorStatus) {
     return (
       <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-        <p style={{ color: 'rgba(148, 163, 184, 0.9)' }}>Loading profile…</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.9)' }}>{t.profile.loading}</p>
       </div>
     );
   }
@@ -60,12 +58,12 @@ export default function ProfilePage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
-        Profile
+        {t.profile.title}
       </h1>
 
       {isEmptyProfile && (
         <p style={{ color: 'rgba(148, 163, 184, 0.9)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
-          Configure your profile by filling in the fields below.
+          {t.profile.configureHint}
         </p>
       )}
 
@@ -85,8 +83,8 @@ export default function ProfilePage() {
         }}>
           <span>
             {errorStatus === 403
-              ? 'Not authorized. You do not have permission to access this page.'
-              : "Couldn't load profile. Check your connection and retry."}
+              ? t.profile.notAuthorized
+              : t.profile.loadError}
           </span>
           {errorStatus !== 403 && (
             <button
@@ -103,7 +101,7 @@ export default function ProfilePage() {
                 fontSize: '0.8125rem',
               }}
             >
-              Retry
+              {t.profile.retry}
             </button>
           )}
         </div>
@@ -121,7 +119,7 @@ export default function ProfilePage() {
         <ProfileForm profile={profile} onSaved={setProfile} />
       </div>
 
-      <ProfileFeedbackSection locale={getFeedbackLocale(profile?.working_language)} />
+      <ProfileFeedbackSection locale={locale === 'it' ? 'it' : 'en'} />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import type { KpiWindow, RevenueKpiResponse } from '@/lib/instructorApi';
 import { getRevenueKpi } from '@/lib/instructorApi';
 import styles from './business.module.css';
@@ -67,6 +69,8 @@ function formatCurrency(cents: number): string {
 export default function RevenueTrendCard({ window }: { window: KpiWindow }) {
   const [data, setData] = useState<RevenueKpiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +94,7 @@ export default function RevenueTrendCard({ window }: { window: KpiWindow }) {
 
   return (
     <div className={styles.trendCard}>
-      <h4 className={styles.trendTitle}>Revenue trend</h4>
+      <h4 className={styles.trendTitle}>{t.revenueTrend}</h4>
       {loading ? (
         <div className={styles.kpiSkeleton} style={{ width: '100%', height: 48 }} />
       ) : (

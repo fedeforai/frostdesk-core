@@ -6,6 +6,8 @@ import StatusPill from '@/components/shared/StatusPill';
 import { useApiHealth } from '@/components/shared/useApiHealth';
 import { useToast } from '@/components/shell/ToastContext';
 import { fetchInstructorDashboardViaApi, getAIFeatureStatus, setAIFeatureStatus } from '@/lib/instructorApi';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import AutomationCard from './cards/AutomationCard';
 import HotLeadsCard from './cards/HotLeadsCard';
 import ConversationCard from './cards/ConversationCard';
@@ -20,12 +22,14 @@ import styles from './dashboard.module.css';
 /** Same-origin proxy: Next fetches 3001 server-side; browser never hits 3001 (CORS). */
 const HEALTH_URL = '/api/health';
 
-const DEFAULT_KPI_TILES: Array<{ value: number | string; label: string }> = [
-  { value: 0, label: 'Drafts generated' },
-  { value: 0, label: 'Drafts used' },
-  { value: 0, label: 'Drafts ignored' },
-  { value: '0%', label: 'Draft usage rate' },
-];
+function buildDefaultKpiTiles(t: import('@/lib/app/translations').AppTranslations['dashboard']): Array<{ value: number | string; label: string }> {
+  return [
+    { value: 0, label: t.draftsGenerated },
+    { value: 0, label: t.draftsUsed },
+    { value: 0, label: t.draftsIgnored },
+    { value: '0%', label: t.draftUsageRate },
+  ];
+}
 
 export type HomeDashboardProps = {
   leads?: Lead[];
@@ -49,17 +53,20 @@ export default function HomeDashboard({
   error = null,
   empty = false,
   onRetry,
-  kpiTiles: kpiTilesProp = DEFAULT_KPI_TILES,
+  kpiTiles: kpiTilesProp,
   funnel = null,
   funnelPrimaryHref,
 }: HomeDashboardProps = {}) {
   const health = useApiHealth(HEALTH_URL);
   const onToast = useToast();
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
+  const common = getAppTranslations(locale).common;
   const [automationOn, setAutomationOn] = useState(false);
   const [automationLoading, setAutomationLoading] = useState(true);
   const [automationActing, setAutomationActing] = useState(false);
   const [calendarConnected, setCalendarConnected] = useState<boolean | null>(null);
-  const kpiTiles = kpiTilesProp;
+  const kpiTiles = (kpiTilesProp?.length ?? 0) > 0 ? kpiTilesProp! : buildDefaultKpiTiles(t);
 
   const AI_STATUS_TIMEOUT_MS = 10_000;
 
@@ -88,10 +95,10 @@ export default function HomeDashboard({
     setAutomationActing(true);
     try {
       await setAIFeatureStatus(next);
-      onToast?.(next ? 'Automation is ON' : 'Automation is OFF');
+      onToast?.(next ? t.automationIsOn : t.automationIsOff);
     } catch (e) {
       setAutomationOn(prev);
-      const msg = e instanceof Error ? e.message : 'Failed to update';
+      const msg = e instanceof Error ? e.message : t.failedToUpdate;
       onToast?.(msg, true);
     } finally {
       setAutomationActing(false);
@@ -123,26 +130,26 @@ export default function HomeDashboard({
   }, [loadDashboardCalendar]);
 
   const frostDeskStatus =
-    health.status === 'ok' ? 'Connected' : health.status === 'error' ? 'Disconnected' : 'Checking…';
+    health.status === 'ok' ? t.connected : health.status === 'error' ? t.disconnected : t.checking;
   const googleCalendarStatus =
     health.status === 'error'
-      ? 'Unavailable'
+      ? t.unavailable
       : calendarConnected === null
-        ? 'Checking…'
+        ? t.checking
         : calendarConnected
-          ? 'Connected'
-          : 'Not connected';
+          ? t.connected
+          : t.notConnected;
   const integrations = [
-    { name: 'FrostDesk switch', status: frostDeskStatus },
-    { name: 'Google Calendar', status: googleCalendarStatus },
+    { name: t.frostDeskSwitch, status: frostDeskStatus },
+    { name: t.googleCalendar, status: googleCalendarStatus },
   ];
 
   const pillLabel =
     health.status === 'ok'
-      ? 'API connected'
+      ? t.apiConnected
       : health.status === 'error'
-        ? 'API disconnected'
-        : 'Checking…';
+        ? t.apiDisconnected
+        : t.checking;
   const pillTone =
     health.status === 'ok'
       ? 'success'
@@ -152,8 +159,8 @@ export default function HomeDashboard({
 
   return (
     <div className={styles.wrap}>
-      <h1 className={styles.pageTitle}>Dashboard</h1>
-      <p className={styles.pageSub}>Overview and automations</p>
+      <h1 className={styles.pageTitle}>{t.title}</h1>
+      <p className={styles.pageSub}>{t.sub}</p>
 
       <div style={{ marginBottom: 16 }}>
         <ConnectionStatusBadges
@@ -164,17 +171,17 @@ export default function HomeDashboard({
 
       <div className={styles.topbar}>
         <div className={styles.title}>
-          Automation switch
+          {t.automationSwitch}
           {!automationLoading && (
             <span style={{ fontWeight: 600, marginLeft: 8, color: automationOn ? 'rgba(74, 222, 128, 0.95)' : 'rgba(148, 163, 184, 0.9)' }}>
-              · {automationOn ? 'ON' : 'OFF'}
+              · {automationOn ? t.on : t.off}
             </span>
           )}
         </div>
         <div className={styles.right}>
           {health.status === 'error' && (
             <span style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.9)', marginRight: '0.75rem' }}>
-              Start API to connect
+              {t.startApiToConnect}
             </span>
           )}
           <StatusPill label={pillLabel} tone={pillTone} />
@@ -197,7 +204,7 @@ export default function HomeDashboard({
           >
             <span style={{ color: 'rgba(252, 165, 165, 0.95)', fontSize: '14px' }}>
               {error.status === 401 || /UNAUTHORIZED|No session/i.test(error.message)
-                ? 'Session expired or not authenticated. '
+                ? t.sessionExpired
                 : error.message}
             </span>
             {error.status === 401 || /UNAUTHORIZED|No session/i.test(error.message) ? (
@@ -213,7 +220,7 @@ export default function HomeDashboard({
                   textDecoration: 'none',
                 }}
               >
-                Login
+                {common.login}
               </Link>
             ) : onRetry ? (
               <button
@@ -229,7 +236,7 @@ export default function HomeDashboard({
                   cursor: 'pointer',
                 }}
               >
-                Retry
+                {common.retry}
               </button>
             ) : null}
           </div>
@@ -250,22 +257,22 @@ export default function HomeDashboard({
         <div className={styles.threeCol}>
           {error ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)', gridColumn: '1 / -1' }}>
-              Retry above to load conversations.
+              {t.retryAbove}
             </div>
           ) : loading ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
-              Loading live data…
+              {t.loadingLiveData}
             </div>
           ) : empty ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
-              No conversations yet
+              {t.noConversations}
             </div>
           ) : (
             <HotLeadsCard leads={leads} />
           )}
           {!error && loading ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
-              Loading…
+              {t.loading}
             </div>
           ) : (
             <ConversationCard
@@ -273,17 +280,17 @@ export default function HomeDashboard({
                 conversation ?? {
                   leadName: '—',
                   meta: '—',
-                  lastMessage: 'Select a conversation in Inbox',
+                  lastMessage: t.selectConversation,
                 }
               }
             />
           )}
           <FunnelCard
             funnel={funnel}
-            emptyMessage="Not enough data"
-            primaryLabel="Create test booking"
+            emptyMessage={t.notEnoughData}
+            primaryLabel={t.createTestBooking}
             primaryHref={funnelPrimaryHref}
-            secondaryLabel="Open Inbox"
+            secondaryLabel={t.openInbox}
             secondaryHref="/instructor/inbox"
           />
         </div>

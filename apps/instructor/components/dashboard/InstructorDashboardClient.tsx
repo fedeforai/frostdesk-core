@@ -12,6 +12,8 @@ import {
   type FunnelKpiResponse,
 } from '@/lib/instructorApi';
 import { usePolling } from '@/lib/usePolling';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 import HomeDashboard from './HomeDashboard';
 import type { Lead } from './cards/HotLeadsCard';
 import type { Conversation } from './cards/ConversationCard';
@@ -26,16 +28,18 @@ function formatLastActivity(iso: string): string {
 }
 
 export default function InstructorDashboardClient() {
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).dashboard;
   const [conversations, setConversations] = useState<InstructorConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ status?: number; message: string } | null>(null);
   const [authBlocked, setAuthBlocked] = useState(false);
   const [lastMessageByConvId, setLastMessageByConvId] = useState<Record<string, string>>({});
   const [kpiTiles, setKpiTiles] = useState<Array<{ value: number | string; label: string }>>([
-    { value: 0, label: 'Drafts generated' },
-    { value: 0, label: 'Drafts used' },
-    { value: 0, label: 'Drafts ignored' },
-    { value: '0%', label: 'Draft usage rate' },
+    { value: 0, label: t.draftsGenerated },
+    { value: 0, label: t.draftsUsed },
+    { value: 0, label: t.draftsIgnored },
+    { value: '0%', label: t.draftUsageRate },
   ]);
   const [kpiPollingBlocked, setKpiPollingBlocked] = useState(false);
   const [funnel, setFunnel] = useState<FunnelKpiResponse | null>(null);
@@ -49,10 +53,10 @@ export default function InstructorDashboardClient() {
           ? Math.round(res.drafts.usageRate * 100)
           : 0;
         setKpiTiles([
-          { value: res.drafts.generated, label: 'Drafts generated' },
-          { value: res.drafts.used, label: 'Drafts used' },
-          { value: res.drafts.ignored, label: 'Drafts ignored' },
-          { value: `${usageRate}%`, label: 'Draft usage rate' },
+          { value: res.drafts.generated, label: t.draftsGenerated },
+          { value: res.drafts.used, label: t.draftsUsed },
+          { value: res.drafts.ignored, label: t.draftsIgnored },
+          { value: `${usageRate}%`, label: t.draftUsageRate },
         ]);
       }
     } catch (e: unknown) {
@@ -61,7 +65,7 @@ export default function InstructorDashboardClient() {
         setKpiPollingBlocked(true);
       }
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadKpiSummary();

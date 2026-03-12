@@ -1,6 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { requireInstructorAccess } from '@/lib/access/requireInstructorAccess';
+import { AppLocaleProvider } from '@/lib/app/AppLocaleContext';
 import AppShell from '@/components/shell/AppShell';
 
 export const dynamic = 'force-dynamic';
@@ -21,5 +22,9 @@ export default async function InstructorAppLayout({
     redirect('/instructor/login?next=/instructor/gate');
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppLocaleProvider>
+      <AppShell>{children}</AppShell>
+    </AppLocaleProvider>
+  );
 }

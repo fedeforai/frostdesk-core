@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getAIFeatureStatus, setAIWhatsAppEnabled } from '@/lib/instructorApi';
+import { useAppLocale } from '@/lib/app/AppLocaleContext';
+import { getAppTranslations } from '@/lib/app/translations';
 
 export interface AiWhatsAppToggleProps {
   onSuccessToast?: (message: string) => void;
@@ -19,6 +21,9 @@ export function AiWhatsAppToggle({
   const [enabled, setEnabled] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
+  const { locale } = useAppLocale();
+  const t = getAppTranslations(locale).aiWhatsApp;
+  const common = getAppTranslations(locale).dashboard;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,10 +50,10 @@ export function AiWhatsAppToggle({
     try {
       const result = await setAIWhatsAppEnabled(next);
       setEnabled(result.enabled);
-      onSuccessToast?.(result.enabled ? 'AI WhatsApp is ON' : 'AI WhatsApp is OFF');
+      onSuccessToast?.(result.enabled ? t.toastOn : t.toastOff);
     } catch (e) {
       setEnabled(prev);
-      const msg = e instanceof Error ? e.message : 'Failed to update';
+      const msg = e instanceof Error ? e.message : common.failedToUpdate;
       onErrorToast?.(msg);
     } finally {
       setActing(false);
@@ -59,7 +64,7 @@ export function AiWhatsAppToggle({
     return (
       <div className={className} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: compact ? 12 : 13, color: 'rgba(148, 163, 184, 0.9)' }}>
-          AI WhatsApp
+          {t.label}
         </span>
         <span style={{ fontSize: 11, color: 'rgba(148, 163, 184, 0.6)' }}>…</span>
       </div>
@@ -67,9 +72,7 @@ export function AiWhatsAppToggle({
   }
 
   const disabled = acting;
-  const title = enabled
-    ? 'AI WhatsApp is ON. Click to turn off.'
-    : 'AI WhatsApp is OFF. Click to turn on.';
+  const title = enabled ? t.titleOn : t.titleOff;
 
   return (
     <div
@@ -80,7 +83,7 @@ export function AiWhatsAppToggle({
         gap: compact ? 6 : 8,
       }}
       role="group"
-      aria-label="AI WhatsApp automation"
+      aria-label={t.ariaLabel}
     >
       <span
         style={{
@@ -88,7 +91,7 @@ export function AiWhatsAppToggle({
           color: disabled ? 'rgba(148, 163, 184, 0.6)' : 'rgba(226, 232, 240, 0.95)',
         }}
       >
-        AI WhatsApp
+        {t.label}
       </span>
       <button
         type="button"
@@ -131,7 +134,7 @@ export function AiWhatsAppToggle({
           }}
           aria-hidden
         >
-          {enabled ? 'ON' : 'OFF'}
+          {enabled ? t.on : t.off}
         </span>
       )}
     </div>
