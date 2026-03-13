@@ -86,10 +86,10 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
           style={{
             marginBottom: '1rem',
             padding: '0.75rem',
-            backgroundColor: '#fee2e2',
-            color: '#991b1b',
+            backgroundColor: 'rgba(185, 28, 28, 0.2)',
+            color: '#fca5a5',
             borderRadius: '0.375rem',
-            border: '1px solid #fca5a5',
+            border: '1px solid rgba(248, 113, 113, 0.5)',
           }}
         >
           {error}
@@ -104,7 +104,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
             marginBottom: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(148, 163, 184, 0.92)',
           }}
         >
           Day of week *
@@ -118,11 +118,12 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
           style={{
             width: '100%',
             padding: '0.5rem',
-            border: '1px solid #d1d5db',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '0.375rem',
             fontSize: '1rem',
             outline: 'none',
-            backgroundColor: 'white',
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            color: 'rgba(226, 232, 240, 0.95)',
           }}
           onFocus={(e) => {
             e.currentTarget.style.outline = '2px solid #3b82f6';
@@ -150,7 +151,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(148, 163, 184, 0.92)',
             }}
           >
             Location (optional)
@@ -163,11 +164,12 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
-              backgroundColor: 'white',
+              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              color: 'rgba(226, 232, 240, 0.95)',
             }}
             aria-label="Meeting point for this window"
           >
@@ -178,7 +180,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
               </option>
             ))}
           </select>
-          <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+          <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.75)' }}>
             If set, this window is only for that location; otherwise it applies to all.
           </p>
         </div>
@@ -193,7 +195,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(148, 163, 184, 0.92)',
             }}
           >
             Start time *
@@ -208,10 +210,12 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
+              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              color: 'rgba(226, 232, 240, 0.95)',
             }}
             onFocus={(e) => {
               e.currentTarget.style.outline = '2px solid #3b82f6';
@@ -231,7 +235,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
               marginBottom: '0.5rem',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
+              color: 'rgba(148, 163, 184, 0.92)',
             }}
           >
             End time *
@@ -246,10 +250,12 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
             style={{
               width: '100%',
               padding: '0.5rem',
-              border: '1px solid #d1d5db',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '0.375rem',
               fontSize: '1rem',
               outline: 'none',
+              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              color: 'rgba(226, 232, 240, 0.95)',
             }}
             onFocus={(e) => {
               e.currentTarget.style.outline = '2px solid #3b82f6';
@@ -271,7 +277,7 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
             gap: '0.5rem',
             fontSize: '0.875rem',
             fontWeight: '500',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
             cursor: 'pointer',
           }}
         >
@@ -297,9 +303,9 @@ export default function AvailabilityForm({ availability, meetingPoints = [], onC
           disabled={loading}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
-            border: '1px solid #d1d5db',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(226, 232, 240, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '0.375rem',
             cursor: loading ? 'not-allowed' : 'pointer',
             fontSize: '1rem',

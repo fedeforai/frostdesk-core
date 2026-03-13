@@ -28,10 +28,10 @@ const STATUS_CONFIG: Record<
   ConversationBookingStatus,
   { label: string; bg: string; color: string }
 > = {
-  draft: { label: 'Draft (not sent)', bg: '#f3f4f6', color: '#6b7280' },
-  pending: { label: 'Pending confirmation', bg: '#fef3c7', color: '#92400e' },
-  confirmed: { label: 'Confirmed', bg: '#d1fae5', color: '#065f46' },
-  cancelled: { label: 'Cancelled', bg: '#fee2e2', color: '#991b1b' },
+  draft: { label: 'Draft (not sent)', bg: 'rgba(255, 255, 255, 0.1)', color: 'rgba(148, 163, 184, 0.9)' },
+  pending: { label: 'Pending confirmation', bg: 'rgba(251, 191, 36, 0.2)', color: 'rgba(251, 191, 36, 0.95)' },
+  confirmed: { label: 'Confirmed', bg: 'rgba(34, 197, 94, 0.2)', color: 'rgba(74, 222, 128, 0.95)' },
+  cancelled: { label: 'Cancelled', bg: 'rgba(239, 68, 68, 0.2)', color: 'rgba(248, 113, 113, 0.95)' },
 };
 
 /** STEP 5.1 — Descriptive copy for booking state (UI only). No copy for null or unknown. */
@@ -99,11 +99,11 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
         style={{
           marginBottom: '0.75rem',
           padding: '0.5rem 0.75rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.375rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           fontSize: '0.8125rem',
-          color: '#6b7280',
+          color: 'rgba(148, 163, 184, 0.9)',
         }}
       >
         Loading booking…
@@ -117,11 +117,11 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
         style={{
           marginBottom: '0.75rem',
           padding: '0.5rem 0.75rem',
-          border: '1px solid #fecaca',
+          border: '1px solid rgba(248, 113, 113, 0.5)',
           borderRadius: '0.375rem',
-          backgroundColor: '#fef2f2',
+          backgroundColor: 'rgba(185, 28, 28, 0.2)',
           fontSize: '0.8125rem',
-          color: '#991b1b',
+          color: '#fca5a5',
         }}
       >
         Unable to load booking details.
@@ -135,11 +135,11 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
         style={{
           marginBottom: '0.75rem',
           padding: '0.5rem 0.75rem',
-          border: '1px solid #e5e7eb',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '0.375rem',
-          backgroundColor: '#f9fafb',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           fontSize: '0.8125rem',
-          color: '#6b7280',
+          color: 'rgba(148, 163, 184, 0.9)',
         }}
       >
         No booking created yet.
@@ -155,14 +155,14 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
       style={{
         marginBottom: '0.75rem',
         padding: '0.75rem',
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.375rem',
-        backgroundColor: '#fafafa',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         fontSize: '0.8125rem',
       }}
       aria-label="Booking overview"
     >
-      <h3 style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#374151', fontSize: '0.75rem', margin: 0 }}>
+      <h3 style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'rgba(226, 232, 240, 0.95)', fontSize: '0.75rem', margin: 0 }}>
         Booking overview
       </h3>
       <div
@@ -173,43 +173,43 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
           fontSize: '0.75rem',
           fontWeight: 600,
           borderRadius: '0.25rem',
-          backgroundColor: booking.status === 'confirmed' ? '#f0fdf4' : statusConf.bg,
+          backgroundColor: booking.status === 'confirmed' ? 'rgba(34, 197, 94, 0.15)' : statusConf.bg,
           color: statusConf.color,
           marginBottom: '0.25rem',
           ...(booking.status === 'confirmed'
-            ? { borderLeft: '3px solid #16a34a' }
+            ? { borderLeft: '3px solid rgba(74, 222, 128, 0.95)' }
             : {}),
         }}
       >
         {booking.status === 'confirmed' ? (
           <>
-            <span style={{ color: '#16a34a' }}>✓</span> {statusConf.label}
+            <span style={{ color: 'rgba(74, 222, 128, 0.95)' }}>✓</span> {statusConf.label}
           </>
         ) : (
           statusConf.label
         )}
       </div>
       {getBookingStateCopy(booking.status) && (
-        <p style={{ margin: 0, marginBottom: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+        <p style={{ margin: 0, marginBottom: '0.5rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)' }}>
           {getBookingStateCopy(booking.status)}
         </p>
       )}
       {(booking.status === 'pending' || booking.status === 'draft') && (
         <div style={{ marginTop: '0.25rem', marginBottom: '0.5rem' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(148, 163, 184, 0.9)' }}>
             Reserved
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem', lineHeight: 1.4 }}>
             This lesson is reserved, not finalized yet. You can confirm when ready; payment completion will finalize the booking.
           </div>
         </div>
       )}
       {booking.status === 'confirmed' && (
         <div style={{ marginTop: '0.25rem', marginBottom: '0.5rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', lineHeight: 1.4 }}>
             Confirmed — pending payment
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem', lineHeight: 1.4 }}>
             Payment completion will finalize the booking.
           </div>
         </div>
@@ -217,47 +217,47 @@ export function BookingOverviewPanel({ conversationId }: { conversationId: strin
       {booking.status === 'confirmed' && (
         <>
           <div style={{ marginTop: '0.75rem' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)' }}>
               What happens next
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#374151' }}>
+            <div style={{ fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.85)' }}>
               You can now collect payment and add this booking to your calendar.
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem' }}>
               Payment and calendar sync are handled manually for now.
             </div>
           </div>
           <div style={{ marginTop: '0.75rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(148, 163, 184, 0.9)' }}>
               Payment
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem', lineHeight: 1.4 }}>
               Payment is handled outside FrostDesk for now. You can collect payment directly and mark it as completed later.
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.25rem', lineHeight: 1.4 }}>
               <div style={{ fontWeight: 600 }}>Payment status</div>
               <div style={{ marginTop: '0.25rem' }}>Not collected yet</div>
               <div style={{ marginTop: '0.25rem' }}>Payment status is shown here when available.</div>
             </div>
           </div>
-          <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.4 }}>
+          <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', lineHeight: 1.4 }}>
             This lesson has been confirmed by the instructor. Payment completion will finalize the booking.
           </div>
-          <div style={{ fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4, marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.6875rem', color: 'rgba(148, 163, 184, 0.75)', lineHeight: 1.4, marginTop: '0.5rem' }}>
             May be available with a subscription.
           </div>
         </>
       )}
-      <div style={{ fontSize: '0.75rem', color: '#374151' }}>
+      <div style={{ fontSize: '0.75rem', color: 'rgba(226, 232, 240, 0.85)' }}>
         <div>Dates: {empty(booking.date)}</div>
         <div>Duration: {empty(booking.duration)}</div>
         <div>Participants: {empty(booking.participants)}</div>
         <div>Level: {empty(booking.level)}</div>
       </div>
-      <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: '#6b7280' }}>
+      <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
         Last updated: {new Date(booking.updated_at).toLocaleDateString()}
       </p>
-      <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: '#9ca3af', lineHeight: 1.4 }}>
+      <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.6875rem', color: 'rgba(148, 163, 184, 0.75)', lineHeight: 1.4 }}>
         Available during pilot access
       </p>
       <div className="mt-3 text-sm">

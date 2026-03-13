@@ -58,16 +58,16 @@ function isValidE164(value: string): boolean {
 }
 
 const sectionStyle = {
-  border: '1px solid #e5e7eb',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '0.5rem',
   padding: '1.5rem',
-  backgroundColor: '#ffffff',
+  backgroundColor: 'rgba(255, 255, 255, 0.05)',
   boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
   marginBottom: '1.5rem',
 } as const;
 
-const titleStyle = { fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '0.75rem' } as const;
-const textStyle = { color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem', lineHeight: 1.5 } as const;
+const titleStyle = { fontSize: '1.125rem', fontWeight: 600, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.75rem' } as const;
+const textStyle = { color: 'rgba(148, 163, 184, 0.9)', fontSize: '0.875rem', marginBottom: '0.5rem', lineHeight: 1.5 } as const;
 const listStyle = { ...textStyle, marginLeft: '1.25rem', paddingLeft: '0.25rem' } as const;
 
 export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'it' | 'en' }) {
@@ -125,7 +125,7 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
       </h2>
 
       <div style={{ marginBottom: '1rem' }}>
-        <p style={{ ...textStyle, fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
+        <p style={{ ...textStyle, fontWeight: 500, color: 'rgba(226, 232, 240, 0.95)', marginBottom: '0.25rem' }}>
           {copy.guideTitle}
         </p>
         <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
@@ -142,12 +142,12 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
       ) : account && !showChangeForm ? (
         <div>
           <p style={{ ...textStyle, marginBottom: '0.25rem' }}>
-            <strong style={{ color: '#111827' }}>{copy.connectedNumber}:</strong>{' '}
-            <span style={{ color: '#374151' }}>{account.phone_number}</span>
+            <strong style={{ color: 'rgba(226, 232, 240, 0.95)' }}>{copy.connectedNumber}:</strong>{' '}
+            <span style={{ color: 'rgba(226, 232, 240, 0.85)' }}>{account.phone_number}</span>
           </p>
           <p style={textStyle}>{copy.inboxInfo}</p>
           {account.status === 'pending' && (
-            <p style={{ ...textStyle, color: '#b45309', marginBottom: '0.75rem' }}>{copy.pending}</p>
+            <p style={{ ...textStyle, color: 'rgba(251, 191, 36, 0.95)', marginBottom: '0.75rem' }}>{copy.pending}</p>
           )}
           <button
             type="button"
@@ -156,9 +156,9 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
               padding: '0.5rem 1rem',
               fontSize: '0.875rem',
               fontWeight: 500,
-              color: '#3b82f6',
-              background: 'none',
-              border: '1px solid #93c5fd',
+              color: 'rgba(165, 180, 252, 1)',
+              background: 'rgba(99, 102, 241, 0.2)',
+              border: '1px solid rgba(99, 102, 241, 0.4)',
               borderRadius: '0.375rem',
               cursor: 'pointer',
             }}
@@ -187,9 +187,10 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
               style={{
                 padding: '0.5rem 0.75rem',
                 fontSize: '0.875rem',
-                border: '1px solid #d1d5db',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '0.375rem',
-                color: '#111827',
+                color: 'rgba(226, 232, 240, 0.95)',
+                backgroundColor: 'rgba(15, 23, 42, 0.8)',
                 minWidth: '12rem',
               }}
               aria-label={locale === 'it' ? 'Numero WhatsApp' : 'WhatsApp number'}
@@ -224,9 +225,9 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
                   padding: '0.5rem 1rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#6b7280',
-                  background: 'none',
-                  border: '1px solid #d1d5db',
+                  color: 'rgba(226, 232, 240, 0.95)',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: '0.375rem',
                   cursor: 'pointer',
                 }}
@@ -236,7 +237,7 @@ export default function WhatsAppSettingsSection({ locale = 'en' }: { locale?: 'i
             )}
           </div>
           {error && (
-            <p style={{ fontSize: '0.8125rem', color: '#dc2626', marginTop: '0.25rem', marginBottom: 0 }}>
+            <p style={{ fontSize: '0.8125rem', color: '#fca5a5', marginTop: '0.25rem', marginBottom: 0 }}>
               {error}
             </p>
           )}

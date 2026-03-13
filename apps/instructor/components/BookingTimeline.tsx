@@ -53,13 +53,13 @@ function getBookingStateCopy(state: string | null): string {
 function bulletColor(state: string): string {
   switch (state) {
     case 'confirmed':
-      return '#16a34a'; // green
+      return 'rgba(74, 222, 128, 0.95)'; // green
     case 'pending':
-      return '#d97706'; // amber
+      return 'rgba(251, 191, 36, 0.95)'; // amber
     case 'cancelled':
-      return '#dc2626'; // red
+      return 'rgba(248, 113, 113, 0.95)'; // red
     default:
-      return '#374151'; // gray
+      return 'rgba(148, 163, 184, 0.9)'; // gray
   }
 }
 
@@ -148,7 +148,7 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
 
   if (loading) {
     return (
-      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+      <div style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
         Loading booking history…
       </div>
     );
@@ -156,7 +156,7 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
 
   if (error) {
     return (
-      <div style={{ fontSize: '0.875rem', color: '#991b1b' }}>
+      <div style={{ fontSize: '0.875rem', color: '#fca5a5' }}>
         {error}
       </div>
     );
@@ -164,7 +164,7 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
 
   if (rows.length === 0) {
     return (
-      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+      <div style={{ fontSize: '0.875rem', color: 'rgba(148, 163, 184, 0.9)' }}>
         No booking history yet.
       </div>
     );
@@ -172,10 +172,10 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+      <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.25rem', color: 'rgba(226, 232, 240, 0.95)' }}>
         Booking history
       </h3>
-      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.75rem' }}>
         Read-only · Audit trail
       </p>
 
@@ -189,17 +189,17 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
               style={{
                 fontSize: '0.75rem',
                 fontWeight: 600,
-                color: '#374151',
+                color: 'rgba(226, 232, 240, 0.95)',
                 marginBottom: '0.25rem',
               }}
             >
               {latest.new_state === 'confirmed' && (
-                <span style={{ color: '#16a34a', marginRight: '0.25rem' }}>✓</span>
+                <span style={{ color: 'rgba(74, 222, 128, 0.95)', marginRight: '0.25rem' }}>✓</span>
               )}
               Booking {index + 1} · {finalState}
             </div>
             {getBookingStateCopy(latest.new_state) && (
-              <p style={{ margin: 0, marginBottom: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
+              <p style={{ margin: 0, marginBottom: '0.25rem', fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                 {getBookingStateCopy(latest.new_state)}
               </p>
             )}
@@ -228,10 +228,10 @@ export default function BookingTimeline({ conversationId }: BookingTimelineProps
                     >
                       ●
                     </div>
-                    <div style={{ fontSize: '0.8125rem', color: '#374151' }}>
+                    <div style={{ fontSize: '0.8125rem', color: 'rgba(226, 232, 240, 0.85)' }}>
                       <div>{formatTimestamp(row.created_at)}</div>
                       <div>{label}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)' }}>
                         Actor: {row.actor === 'human' ? 'Human' : row.actor}
                       </div>
                     </div>

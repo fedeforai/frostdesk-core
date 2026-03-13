@@ -45,9 +45,9 @@ export default function DecisionTransparencyNote({
         position: 'relative',
         marginBottom: '1rem',
         padding: '0.75rem 1rem',
-        border: '1px solid #e5e7eb',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '0.375rem',
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         fontSize: '0.8125rem',
       }}
       aria-label="Why you're seeing this"
@@ -62,7 +62,7 @@ export default function DecisionTransparencyNote({
           top: '0.5rem',
           right: '0.5rem',
           fontSize: '0.75rem',
-          color: '#9ca3af',
+          color: 'rgba(148, 163, 184, 0.75)',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
@@ -70,19 +70,19 @@ export default function DecisionTransparencyNote({
           lineHeight: 1,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#6b7280';
+          e.currentTarget.style.color = 'rgba(148, 163, 184, 0.95)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#9ca3af';
+          e.currentTarget.style.color = 'rgba(148, 163, 184, 0.75)';
         }}
       >
         ×
       </button>
-      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', marginBottom: '0.25rem' }}>
+      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(148, 163, 184, 0.9)', marginBottom: '0.25rem' }}>
         Why you&apos;re seeing this
       </div>
-      <div style={{ color: '#374151', lineHeight: 1.4 }}>{copy}</div>
-      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', lineHeight: 1.4 }}>
+      <div style={{ color: 'rgba(226, 232, 240, 0.95)', lineHeight: 1.4 }}>{copy}</div>
+      <div style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.9)', marginTop: '0.5rem', lineHeight: 1.4 }}>
         You&apos;re always in control. Suggested replies are optional.
       </div>
     </div>

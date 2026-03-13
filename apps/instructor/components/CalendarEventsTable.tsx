@@ -29,7 +29,7 @@ export default function CalendarEventsTable({ events }: CalendarEventsTableProps
 
   return (
     <div>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1rem' }}>
         Calendar Events
       </h2>
 
@@ -37,20 +37,20 @@ export default function CalendarEventsTable({ events }: CalendarEventsTableProps
         <table
           role="table"
           aria-label="Calendar events list"
-          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}
+          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.1)' }}
         >
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb' }}>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Start
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 End
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Title
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 All day
               </th>
             </tr>
@@ -58,7 +58,7 @@ export default function CalendarEventsTable({ events }: CalendarEventsTableProps
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
                   No calendar events found.
                 </td>
               </tr>
@@ -68,25 +68,26 @@ export default function CalendarEventsTable({ events }: CalendarEventsTableProps
                   key={event.id}
                   role="row"
                   style={{
-                    borderBottom: '1px solid #e5e7eb',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(226, 232, 240, 0.95)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {event.is_all_day ? formatDate(event.start_at) : formatDateTime(event.start_at)}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {event.is_all_day ? formatDate(event.end_at) : formatDateTime(event.end_at)}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {event.title || '(No title)'}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {event.is_all_day ? 'Yes' : 'No'}
                   </td>
                 </tr>

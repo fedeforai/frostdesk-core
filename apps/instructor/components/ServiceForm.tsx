@@ -22,7 +22,7 @@ const defaultParticipants = (lessonType: LessonType): { min: number; max: number
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: '0.75rem',
   fontWeight: 600,
-  color: '#6b7280',
+  color: 'rgba(148, 163, 184, 0.75)',
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
   marginBottom: '0.75rem',
@@ -33,15 +33,17 @@ const labelStyle: React.CSSProperties = {
   marginBottom: '0.5rem',
   fontSize: '0.875rem',
   fontWeight: 500,
-  color: '#374151',
+  color: 'rgba(148, 163, 184, 0.92)',
 };
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem 0.75rem',
-  border: '1px solid #d1d5db',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
   borderRadius: '0.375rem',
   fontSize: '1rem',
   outline: 'none',
+  backgroundColor: 'rgba(15, 23, 42, 0.8)',
+  color: 'rgba(226, 232, 240, 0.95)',
 };
 
 interface ServiceFormProps {
@@ -166,7 +168,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '560px' }}>
       {error && (
-        <div role="alert" aria-live="polite" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: '0.375rem', border: '1px solid #fecaca' }}>
+        <div role="alert" aria-live="polite" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(185, 28, 28, 0.2)', color: '#fca5a5', borderRadius: '0.375rem', border: '1px solid rgba(248, 113, 113, 0.5)' }}>
           {error}
         </div>
       )}
@@ -216,7 +218,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
         <label style={labelStyle}>Lesson type *</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {LESSON_TYPES.map((opt) => (
-            <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+            <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', color: 'rgba(226, 232, 240, 0.95)' }}>
               <input
                 type="radio"
                 name="lesson_type"
@@ -226,7 +228,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
                 disabled={loading}
               />
               <span style={{ fontWeight: 500 }}>{opt.label}</span>
-              <span style={{ fontSize: '0.8125rem', color: '#6b7280' }}>— {opt.description}</span>
+              <span style={{ fontSize: '0.8125rem', color: 'rgba(148, 163, 184, 0.75)' }}>— {opt.description}</span>
             </label>
           ))}
         </div>
@@ -244,9 +246,10 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
               disabled={loading}
               style={{
                 padding: '0.35rem 0.75rem',
-                border: durationMinutes === String(m) ? '2px solid #2563eb' : '1px solid #d1d5db',
+                border: durationMinutes === String(m) ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '0.375rem',
-                background: durationMinutes === String(m) ? '#eff6ff' : '#fff',
+                background: durationMinutes === String(m) ? 'rgba(59, 130, 246, 0.3)' : 'rgba(15, 23, 42, 0.8)',
+                color: 'rgba(226, 232, 240, 0.95)',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '0.875rem',
               }}
@@ -344,7 +347,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
           rows={2}
           style={{ ...inputStyle, resize: 'vertical' }}
         />
-        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{shortDescription.length}/200</span>
+        <span style={{ fontSize: '0.75rem', color: 'rgba(148, 163, 184, 0.75)' }}>{shortDescription.length}/200</span>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label htmlFor="notes" style={labelStyle}>Internal notes (for you only)</label>
@@ -373,7 +376,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'rgba(226, 232, 240, 0.95)' }}>
               <input
                 type="checkbox"
                 checked={isActive}
@@ -391,7 +394,7 @@ export default function ServiceForm({ service, onCancel, onSuccess }: ServiceFor
           type="button"
           onClick={onCancel}
           disabled={loading}
-          style={{ padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '0.375rem', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem' }}
+          style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'rgba(226, 232, 240, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '0.375rem', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem' }}
           aria-label="Cancel"
         >
           Cancel

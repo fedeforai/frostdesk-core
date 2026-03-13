@@ -29,11 +29,11 @@ export default function SuggestedReplyBox({ suggestions, onSend }: SuggestedRepl
             width: '100%',
             marginBottom: '0.5rem',
             padding: '0.75rem 1rem',
-            border: '1px solid #e5e7eb',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '0.375rem',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
             fontSize: '0.875rem',
-            color: '#374151',
+            color: 'rgba(226, 232, 240, 0.95)',
             cursor: 'pointer',
             textAlign: 'left',
           }}
@@ -49,7 +49,7 @@ export default function SuggestedReplyBox({ suggestions, onSend }: SuggestedRepl
                 bottom: '0.5rem',
                 right: '0.5rem',
                 fontSize: '0.75rem',
-                color: '#6b7280',
+                color: 'rgba(148, 163, 184, 0.9)',
                 background: 'transparent',
                 pointerEvents: 'none',
               }}

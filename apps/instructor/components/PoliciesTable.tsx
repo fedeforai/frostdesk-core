@@ -24,7 +24,7 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)' }}>
           Policies
         </h2>
         <button
@@ -58,26 +58,26 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
         <table
           role="table"
           aria-label="Policies list"
-          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}
+          style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid rgba(255, 255, 255, 0.1)' }}
         >
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb' }}>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+            <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Policy Type
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Version
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Active
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Valid From
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Valid To
               </th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: '600', fontSize: '0.875rem', color: '#374151' }}>
+              <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '600', fontSize: '0.875rem', color: 'rgba(226, 232, 240, 0.95)' }}>
                 Edit
               </th>
             </tr>
@@ -85,7 +85,7 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
           <tbody>
             {policies.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'rgba(148, 163, 184, 0.9)' }}>
                   No policies yet. Click &quot;Add policy&quot; to create one.
                 </td>
               </tr>
@@ -95,28 +95,29 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
                   key={policy.id}
                   role="row"
                   style={{
-                    borderBottom: '1px solid #e5e7eb',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                     cursor: 'pointer',
+                    color: 'rgba(226, 232, 240, 0.95)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {policyTypeLabels[policy.policy_type] || policy.policy_type}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     v{policy.version}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {policy.is_active ? (
                       <span style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#dbeafe',
-                        color: '#1e40af',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        color: 'rgba(147, 197, 253, 1)',
                         borderRadius: '0.25rem',
                         fontSize: '0.75rem',
                         fontWeight: '500',
@@ -127,21 +128,21 @@ export default function PoliciesTable({ policies, onEdit, onAdd }: PoliciesTable
                       '—'
                     )}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {policy.valid_from ? new Date(policy.valid_from).toLocaleDateString() : '—'}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     {policy.valid_to ? new Date(policy.valid_to).toLocaleDateString() : '—'}
                   </td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                     <button
                       type="button"
                       onClick={() => onEdit(policy)}
                       style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#f3f4f6',
-                        color: '#374151',
-                        border: '1px solid #d1d5db',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        color: 'rgba(226, 232, 240, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '0.375rem',
                         cursor: 'pointer',
                         fontSize: '0.875rem',
