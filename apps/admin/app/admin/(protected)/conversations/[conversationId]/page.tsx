@@ -8,11 +8,12 @@ import Breadcrumbs from '@/components/admin/Breadcrumbs';
 export default async function ConversationDetailPage({
   params,
 }: {
-  params: { conversationId: string };
+  params: Promise<{ conversationId: string }>;
 }) {
+  const { conversationId } = await params;
   const [data, conversation] = await Promise.all([
-    fetchConversationTimeline(params.conversationId),
-    fetchConversationById(params.conversationId),
+    fetchConversationTimeline(conversationId),
+    fetchConversationById(conversationId),
   ]);
 
   // ai_enabled not in schema; treat as disabled
@@ -51,7 +52,7 @@ export default async function ConversationDetailPage({
       <Breadcrumbs
         items={[
           { label: 'Conversations', href: '/admin/conversations' },
-          { label: params.conversationId },
+          { label: conversationId },
         ]}
       />
 
@@ -63,7 +64,7 @@ export default async function ConversationDetailPage({
         {/* AI lifecycle toggle hidden (ai_enabled not in schema) */}
         {/* <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
           <ConversationAIModeToggle
-            conversationId={params.conversationId}
+            conversationId={conversationId}
             enabled={aiEnabled}
           />
           <ConversationAIPausedBadge visible={showAIPausedBadge} />
@@ -76,7 +77,7 @@ export default async function ConversationDetailPage({
         <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
           Send Message
         </h2>
-        <ConversationSendBox conversationId={params.conversationId} />
+        <ConversationSendBox conversationId={conversationId} />
       </div>
     </div>
   );

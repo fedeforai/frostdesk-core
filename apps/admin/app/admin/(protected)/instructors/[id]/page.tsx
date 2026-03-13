@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   fetchAdminInstructor,
@@ -112,11 +113,8 @@ function truncateId(id: string, max = 8): string {
   return id.length <= max ? id : id.slice(0, max) + '…';
 }
 
-export default function AdminInstructorDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function AdminInstructorDetailPage() {
+  const params = useParams<{ id: string }>();
   const id = params.id;
   const [locale, setLocale] = useState<AdminFeedbackLocale>('en');
   const [instructor, setInstructor] = useState<AdminInstructorDetail | null>(null);

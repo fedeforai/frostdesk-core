@@ -5,11 +5,11 @@ import { notFound } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { conversationId: string };
+  params: Promise<{ conversationId: string }>;
 }
 
 export default async function InstructorConversationPage({ params }: PageProps) {
-  const conversationId = params.conversationId;
+  const { conversationId } = await params;
   let items: Awaited<ReturnType<typeof fetchInstructorInboxServer>> = [];
   try {
     items = await fetchInstructorInboxServer();
