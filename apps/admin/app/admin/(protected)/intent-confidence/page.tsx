@@ -4,14 +4,14 @@ import ErrorState from '@/components/admin/ErrorState';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 
 interface IntentConfidencePageProps {
-  searchParams: {
+  searchParams: Promise<{
     from?: string;
     to?: string;
-  };
+  }>;
 }
 
 export default async function IntentConfidencePage({ searchParams }: IntentConfidencePageProps) {
-  const { from, to } = searchParams;
+  const { from, to } = await searchParams;
 
   try {
     const data = await fetchIntentConfidence({ from, to });

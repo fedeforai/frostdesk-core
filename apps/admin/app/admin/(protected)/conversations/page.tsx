@@ -4,19 +4,20 @@ import ErrorState from '@/components/admin/ErrorState';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 
 interface ConversationsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     limit?: string;
     offset?: string;
     instructorId?: string;
     status?: string;
-  };
+  }>;
 }
 
 export default async function ConversationsPage({ searchParams }: ConversationsPageProps) {
-  const limit = searchParams.limit ? Number(searchParams.limit) : 50;
-  const offset = searchParams.offset ? Number(searchParams.offset) : 0;
-  const instructorId = searchParams.instructorId;
-  const status = searchParams.status;
+  const params = await searchParams;
+  const limit = params.limit ? Number(params.limit) : 50;
+  const offset = params.offset ? Number(params.offset) : 0;
+  const instructorId = params.instructorId;
+  const status = params.status;
 
   try {
     const data = await fetchAdminConversations({

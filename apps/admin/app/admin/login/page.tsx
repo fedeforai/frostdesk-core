@@ -21,14 +21,15 @@ function safeNextPath(raw: string | null | undefined): string {
   }
 }
 
-type PageProps = { searchParams?: { next?: string } };
+type PageProps = { searchParams: Promise<{ next?: string }> };
 
 /**
  * Public admin login page. Only redirects if session exists AND API confirms admin.
  * Otherwise shows form (avoids redirect loop when user is Supabase-logged but not in admin_users).
  */
 export default async function AdminLoginPage({ searchParams }: PageProps) {
-  const nextPath = safeNextPath(searchParams?.next);
+  const params = await searchParams;
+  const nextPath = safeNextPath(params?.next);
 
   const session = await getServerSession();
   if (session?.access_token) {

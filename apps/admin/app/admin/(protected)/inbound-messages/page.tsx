@@ -4,15 +4,16 @@ import ErrorState from '@/components/admin/ErrorState';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 
 interface InboundMessagesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     conversationId?: string;
     limit?: string;
-  };
+  }>;
 }
 
 export default async function InboundMessagesPage({ searchParams }: InboundMessagesPageProps) {
-  const conversationId = searchParams.conversationId;
-  const limit = searchParams.limit ? Number(searchParams.limit) : undefined;
+  const params = await searchParams;
+  const conversationId = params.conversationId;
+  const limit = params.limit ? Number(params.limit) : undefined;
 
   try {
     const data = await fetchInboundMessages({ conversationId, limit });
