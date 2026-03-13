@@ -1,44 +1,42 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   fetchCalendarConnection,
   fetchCalendarEvents,
+  fetchInstructorBookings,
+  fetchAvailabilityOverrides,
   type CalendarEvent,
   type InstructorCalendarConnection,
+  type AvailabilityOverrideItem,
 } from '@/lib/instructorApi';
 import CalendarConnectionPanel from '@/components/CalendarConnectionPanel';
-import CalendarEventsTable from '@/components/CalendarEventsTable';
-import EventConstellationCalendar from '@/components/EventConstellationCalendar';
+import MonthCalendarView, { type CalendarItem } from '@/components/MonthCalendarView';
 
-const VIEW_STORAGE_KEY = 'instructor_calendar_view';
-type ViewMode = 'table' | 'constellation';
-
-function getStoredView(): ViewMode {
-  if (typeof window === 'undefined') return 'table';
-  try {
-    const v = localStorage.getItem(VIEW_STORAGE_KEY);
-    if (v === 'table' || v === 'constellation') return v;
-  } catch {
-    // ignore
-  }
-  return 'table';
+function getMonthDateRange(year: number, month: number): { from: string; to: string } {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  return {
+    from: firstDay.toISOString().split('T')[0],
+    to: lastDay.toISOString().split('T')[0],
+  };
 }
 
 export default function CalendarPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [connection, setConnection] = useState<InstructorCalendarConnection | null>(null);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [overrides, setOverrides] = useState<AvailabilityOverrideItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [oauthMessage, setOauthMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-
-  useEffect(() => {
-    setViewMode(getStoredView());
-  }, []);
+  
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
 
   useEffect(() => {
     const connected = searchParams.get('connected');
@@ -52,26 +50,25 @@ export default function CalendarPage() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async (year: number, month: number) => {
     try {
       setLoading(true);
       setError(null);
+      
       const conn = await fetchCalendarConnection();
       setConnection(conn);
-      if (conn) {
-        try {
-          const eventsData = await fetchCalendarEvents();
-          setEvents(eventsData);
-        } catch {
-          setEvents([]);
-        }
-      } else {
-        setEvents([]);
-      }
+      
+      const { from, to } = getMonthDateRange(year, month);
+      
+      const [eventsData, bookingsData, overridesData] = await Promise.all([
+        conn ? fetchCalendarEvents({ dateFrom: from, dateTo: to }).catch(() => []) : Promise.resolve([]),
+        fetchInstructorBookings({ date_from: from, date_to: to }).catch(() => ({ items: [] })),
+        fetchAvailabilityOverrides({ from, to }).catch(() => []),
+      ]);
+      
+      setCalendarEvents(eventsData);
+      setBookings(bookingsData.items || []);
+      setOverrides(overridesData);
     } catch (err: any) {
       const status = err.status || 500;
       if (status === 401) {
@@ -86,28 +83,80 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    loadData(currentYear, currentMonth);
+  }, [loadData, currentYear, currentMonth]);
 
   const handleConnectionChange = (newConnection?: InstructorCalendarConnection | null) => {
-    // Update connection state if provided (including null for disconnect)
     if (newConnection !== undefined) {
       setConnection(newConnection);
     }
-    // Reload data after connection changes
-    loadData();
+    loadData(currentYear, currentMonth);
   };
 
-  if (loading && connection === null && events.length === 0 && !error) {
+  const handleMonthChange = (year: number, month: number) => {
+    setCurrentYear(year);
+    setCurrentMonth(month);
+  };
+
+  const calendarBookings: CalendarItem[] = useMemo(() => {
+    return bookings.map(b => ({
+      id: b.id,
+      type: b.status === 'confirmed' || b.status === 'modified' ? 'booking-confirmed' : 'booking-pending',
+      title: b.customer_name || b.customer_display_name || 'Booking',
+      startTime: b.start_time,
+      endTime: b.end_time,
+      customerName: b.customer_name || b.customer_display_name,
+    }));
+  }, [bookings]);
+
+  const googleEvents: CalendarItem[] = useMemo(() => {
+    return calendarEvents.map(e => ({
+      id: e.id,
+      type: 'google-event' as const,
+      title: e.title || 'Google Event',
+      startTime: e.start_at,
+      endTime: e.end_at,
+    }));
+  }, [calendarEvents]);
+
+  const blockedSlots: CalendarItem[] = useMemo(() => {
+    return overrides
+      .filter(o => !o.is_available)
+      .map(o => ({
+        id: o.id,
+        type: 'blocked' as const,
+        title: 'Blocked',
+        startTime: o.start_utc,
+        endTime: o.end_utc,
+      }));
+  }, [overrides]);
+
+  const availableSlots: CalendarItem[] = useMemo(() => {
+    return overrides
+      .filter(o => o.is_available)
+      .map(o => ({
+        id: o.id,
+        type: 'available' as const,
+        title: 'Extra Availability',
+        startTime: o.start_utc,
+        endTime: o.end_utc,
+      }));
+  }, [overrides]);
+
+  if (loading && connection === null && bookings.length === 0 && !error) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p>Loading...</p>
+        <p style={{ color: 'rgba(148, 163, 184, 0.8)' }}>Loading...</p>
       </div>
     );
   }
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>
+      <h1 style={{ fontSize: '1.875rem', fontWeight: '600', color: 'rgba(226, 232, 240, 0.95)', marginBottom: '1.5rem' }}>
         Calendar
       </h1>
 
@@ -115,11 +164,11 @@ export default function CalendarPage() {
         <div style={{
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
-          backgroundColor: oauthMessage.type === 'success' ? '#f0fdf4' : '#fef2f2',
-          border: `1px solid ${oauthMessage.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+          backgroundColor: oauthMessage.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          border: `1px solid ${oauthMessage.type === 'success' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
           borderRadius: '0.5rem',
           fontSize: '0.875rem',
-          color: oauthMessage.type === 'success' ? '#166534' : '#991b1b',
+          color: oauthMessage.type === 'success' ? '#4ade80' : '#f87171',
         }}>
           {oauthMessage.text}
         </div>
@@ -129,28 +178,28 @@ export default function CalendarPage() {
         <div style={{
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
           borderRadius: '0.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '0.75rem',
           fontSize: '0.875rem',
-          color: '#991b1b',
+          color: '#f87171',
         }}>
           <span>
             {error === 'Not authorized' ? 'Not authorized' : "Couldn't load calendar data. Check your connection and retry."}
           </span>
           <button
             type="button"
-            onClick={() => void loadData()}
+            onClick={() => void loadData(currentYear, currentMonth)}
             style={{
               padding: '0.375rem 0.75rem',
               borderRadius: '0.375rem',
-              border: '1px solid #f87171',
-              background: '#fff',
-              color: '#991b1b',
+              border: '1px solid rgba(239, 68, 68, 0.5)',
+              background: 'rgba(239, 68, 68, 0.2)',
+              color: '#f87171',
               fontWeight: 600,
               cursor: 'pointer',
               fontSize: '0.8125rem',
@@ -166,73 +215,51 @@ export default function CalendarPage() {
         onConnectionChange={handleConnectionChange}
       />
 
-      {connection && (
-        <>
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }} role="tablist" aria-label="Calendar view">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'table'}
-              onClick={() => {
-                setViewMode('table');
-                try {
-                  localStorage.setItem(VIEW_STORAGE_KEY, 'table');
-                } catch {
-                  // ignore
-                }
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                border: '1px solid rgba(148, 163, 184, 0.3)',
-                background: viewMode === 'table' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
-                color: 'rgba(226, 232, 240, 0.95)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Table
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'constellation'}
-              onClick={() => {
-                setViewMode('constellation');
-                try {
-                  localStorage.setItem(VIEW_STORAGE_KEY, 'constellation');
-                } catch {
-                  // ignore
-                }
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                border: '1px solid rgba(148, 163, 184, 0.3)',
-                background: viewMode === 'constellation' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
-                color: 'rgba(226, 232, 240, 0.95)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Constellation
-            </button>
-          </div>
-          <div style={{
-            border: '1px solid rgba(148, 163, 184, 0.2)',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}>
-            {viewMode === 'table' ? (
-              <CalendarEventsTable events={events} />
-            ) : (
-              <EventConstellationCalendar events={events} />
-            )}
-          </div>
-        </>
-      )}
+      <div style={{
+        marginTop: '1.5rem',
+        border: '1px solid rgba(148, 163, 184, 0.2)',
+        borderRadius: '0.75rem',
+        padding: '1.5rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+      }}>
+        <MonthCalendarView
+          bookings={calendarBookings}
+          googleEvents={googleEvents}
+          blockedSlots={blockedSlots}
+          availableSlots={availableSlots}
+          onMonthChange={handleMonthChange}
+        />
+      </div>
+
+      <div style={{
+        marginTop: '1rem',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1rem',
+        fontSize: '0.75rem',
+        color: 'rgba(148, 163, 184, 0.7)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: '#22c55e' }} />
+          Confirmed Booking
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: '#eab308' }} />
+          Pending Booking
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: '#6b7280' }} />
+          Google Calendar
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+          Blocked
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
+          Extra Availability
+        </div>
+      </div>
     </div>
   );
 }
