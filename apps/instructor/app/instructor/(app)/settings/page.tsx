@@ -1,6 +1,9 @@
 import SubscriptionStatusPanel from '@/components/SubscriptionStatusPanel';
 import WhatsAppSettingsSection from '@/components/settings/WhatsAppSettingsSection';
 import { StripeConnectCard } from '@/components/stripe/StripeConnectCard';
+import BookingRulesForm from '@/components/BookingRulesForm';
+import TravelTimesForm from '@/components/TravelTimesForm';
+import AvailabilitySettingsForm from '@/components/AvailabilitySettingsForm';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -75,6 +78,45 @@ export default function SettingsPage() {
           Collega il tuo account Stripe per ricevere i pagamenti dai clienti.
         </p>
         <StripeConnectCard variant="light" />
+      </section>
+
+      <section
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <AvailabilitySettingsForm />
+      </section>
+
+      <section
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <BookingRulesForm />
+      </section>
+
+      <section
+        style={{
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <TravelTimesForm />
       </section>
 
       <WhatsAppSettingsSection />

@@ -29,6 +29,8 @@ import { instructorKpisRoutes } from './instructor/kpis.js';
 import { instructorAIFeatureStatusRoutes } from './instructor/ai_feature_status.js';
 import { instructorAIToggleWhatsAppRoutes } from './instructor/ai_toggle_whatsapp.js';
 import { instructorFeedbackRoutes } from './instructor/feedback.js';
+import { instructorBookingRulesRoutes } from './instructor/booking_rules.js';
+import { instructorTravelTimesRoutes } from './instructor/travel_times.js';
 
 /**
  * Instructor routes (authenticated by JWT, no admin).
@@ -68,4 +70,6 @@ export async function instructorRoutes(fastify: FastifyInstance): Promise<void> 
   await fastify.register(instructorAIFeatureStatusRoutes);
   await fastify.register(instructorAIToggleWhatsAppRoutes);
   await fastify.register(instructorFeedbackRoutes);
+  await fastify.register(instructorBookingRulesRoutes);
+  await fastify.register(instructorTravelTimesRoutes);
 }

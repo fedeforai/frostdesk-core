@@ -3916,3 +3916,375 @@ export async function setAIWhatsAppEnabled(enabled: boolean): Promise<{ enabled:
   }
   return res.json();
 }
+
+// ── Booking Rules ─────────────────────────────────────────────────────────────
+
+export type BookingRuleType =
+  | 'min_duration'
+  | 'advance_booking'
+  | 'max_advance'
+  | 'travel_buffer'
+  | 'gap_protection'
+  | 'daily_limit'
+  | 'weekly_limit'
+  | 'full_week_preference';
+
+export interface BookingRuleConfig {
+  [key: string]: unknown;
+}
+
+export interface InstructorBookingRule {
+  id: string;
+  instructor_id: string;
+  rule_type: BookingRuleType;
+  config: BookingRuleConfig;
+  valid_from: string | null;
+  valid_to: string | null;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBookingRuleParams {
+  rule_type: BookingRuleType;
+  config?: BookingRuleConfig;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  priority?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateBookingRuleParams {
+  config?: BookingRuleConfig;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  priority?: number;
+  is_active?: boolean;
+}
+
+export interface BookingValidationResult {
+  valid: boolean;
+  errors: Array<{
+    rule_type: BookingRuleType;
+    rule_id: string;
+    message: string;
+    message_it?: string;
+    message_en?: string;
+  }>;
+  warnings: Array<{
+    rule_type: BookingRuleType;
+    rule_id: string;
+    message: string;
+    message_it?: string;
+    message_en?: string;
+    can_override: boolean;
+    suggestion?: string;
+  }>;
+  discounts: Array<{
+    rule_type: BookingRuleType;
+    rule_id: string;
+    percent: number;
+    reason: string;
+  }>;
+}
+
+export async function fetchBookingRules(): Promise<InstructorBookingRule[]> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.rules || [];
+}
+
+export async function fetchActiveBookingRules(date?: string): Promise<InstructorBookingRule[]> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const url = date
+    ? `${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/active?date=${encodeURIComponent(date)}`
+    : `${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/active`;
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.rules || [];
+}
+
+export async function fetchBookingRuleDefaults(): Promise<Record<BookingRuleType, BookingRuleConfig>> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/defaults`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.defaults;
+}
+
+export async function createBookingRule(params: CreateBookingRuleParams): Promise<InstructorBookingRule> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.rule;
+}
+
+export async function updateBookingRule(id: string, params: UpdateBookingRuleParams): Promise<InstructorBookingRule> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.rule;
+}
+
+export async function toggleBookingRule(id: string): Promise<InstructorBookingRule> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/${encodeURIComponent(id)}/toggle`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.rule;
+}
+
+export async function deleteBookingRule(id: string): Promise<void> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok && res.status !== 204) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+}
+
+export async function validateBooking(
+  startTime: string,
+  endTime: string,
+  meetingPointId?: string | null,
+): Promise<BookingValidationResult> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/booking-rules/validate`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({
+      start_time: startTime,
+      end_time: endTime,
+      meeting_point_id: meetingPointId ?? null,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Travel Times ─────────────────────────────────────────────────────────────
+
+export interface MeetingPointTravelTime {
+  id: string;
+  instructor_id: string;
+  from_meeting_point_id: string | null;
+  to_meeting_point_id: string | null;
+  travel_minutes: number;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface UpsertTravelTimeParams {
+  from_meeting_point_id?: string | null;
+  to_meeting_point_id?: string | null;
+  travel_minutes: number;
+  is_default?: boolean;
+}
+
+export async function fetchTravelTimes(): Promise<MeetingPointTravelTime[]> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/travel-times`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.travel_times || [];
+}
+
+export async function fetchDefaultTravelTime(): Promise<{ default_minutes: number; default_travel_time: MeetingPointTravelTime | null }> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/travel-times/default`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function upsertTravelTime(params: UpsertTravelTimeParams): Promise<MeetingPointTravelTime> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/travel-times`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.travel_time;
+}
+
+export async function setDefaultTravelBuffer(travelMinutes: number): Promise<MeetingPointTravelTime> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/travel-times/default`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify({ travel_minutes: travelMinutes }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.travel_time;
+}
+
+export async function deleteTravelTime(id: string): Promise<void> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/travel-times/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok && res.status !== 204) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Availability Settings (buffer, minimum notice)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface AvailabilitySettings {
+  buffer_before_minutes: number;
+  buffer_after_minutes: number;
+  min_notice_hours: number;
+  slot_duration_minutes: number;
+  timezone: string;
+}
+
+export async function fetchAvailabilitySettings(): Promise<AvailabilitySettings> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/availability-settings`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...authHeaders },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.settings;
+}
+
+export async function updateAvailabilitySettings(
+  settings: Partial<Omit<AvailabilitySettings, 'timezone'>>
+): Promise<AvailabilitySettings> {
+  const authHeaders = await getAuthHeadersForApi();
+  if (authHeaders === null) throw new Error('UNAUTHORIZED');
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/availability-settings`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+    body: JSON.stringify(settings),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.settings;
+}

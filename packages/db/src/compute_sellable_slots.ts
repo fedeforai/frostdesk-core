@@ -12,6 +12,10 @@ import { listExternalBusyBlocksInRange } from './external_busy_blocks_repository
 import type { ExternalBusyBlock } from './external_busy_blocks_repository.js';
 import { getConfirmedOrModifiedBookingsInRange } from './booking_repository.js';
 import type { ComputeSellableSlotsInput } from './instructor_domain.js';
+import { getActiveBookingRules } from './booking_rules_repository.js';
+import type { InstructorBookingRule, MinDurationConfig, AdvanceBookingConfig, MaxAdvanceConfig } from './booking_rules_repository.js';
+import { getTravelTimes } from './travel_times_repository.js';
+import type { MeetingPointTravelTime } from './travel_times_repository.js';
 
 export interface SellableSlot {
   start_utc: string;
@@ -39,6 +43,8 @@ export interface ComputeSellableSlotsDeps {
   listAvailabilityOverridesInRange: (instructorId: string, startUtc: string, endUtc: string) => Promise<InstructorAvailabilityOverride[]>;
   getConfirmedOrModifiedBookingsInRange: (instructorId: string, startUtc: string, endUtc: string) => Promise<Array<{ start_time: string; end_time: string }>>;
   listExternalBusyBlocksInRange: (instructorId: string, startUtc: string, endUtc: string) => Promise<ExternalBusyBlock[]>;
+  getActiveBookingRules?: (instructorId: string, forDate?: string) => Promise<InstructorBookingRule[]>;
+  getTravelTimes?: (instructorId: string) => Promise<MeetingPointTravelTime[]>;
 }
 
 export interface ComputeSellableSlotsParams {
@@ -49,6 +55,8 @@ export interface ComputeSellableSlotsParams {
   timezone?: string;
   /** Inject deps for tests; omit in production. */
   deps?: ComputeSellableSlotsDeps;
+  /** When true, filters slots based on instructor's active booking rules (min_duration, advance_booking, max_advance). Default: false. */
+  applyBookingRules?: boolean;
 }
 
 /**
@@ -116,7 +124,7 @@ export function computeSellableSlotsFromInput(
 export async function computeSellableSlots(
   params: ComputeSellableSlotsParams
 ): Promise<SellableSlot[]> {
-  const { instructorId, fromUtc, toUtc, deps } = params;
+  const { instructorId, fromUtc, toUtc, deps, applyBookingRules } = params;
   const tz = params.timezone ?? 'UTC';
 
   const getAvailability = deps?.getInstructorAvailability ?? getInstructorAvailability;
@@ -147,7 +155,59 @@ export async function computeSellableSlots(
     external_busy_blocks: busyBlocks.map((b) => ({ start_utc: b.start_utc, end_utc: b.end_utc })),
   };
   const result = computeSellableSlotsFromInput(input);
-  return result.slots;
+  let slots = result.slots;
+
+  if (applyBookingRules) {
+    const getRules = deps?.getActiveBookingRules ?? getActiveBookingRules;
+    const rules = await getRules(instructorId);
+    slots = filterSlotsByBookingRules(slots, rules, new Date());
+  }
+
+  return slots;
+}
+
+/**
+ * Pure helper: filters slots based on booking rules.
+ * Only applies rules that affect slot visibility (min_duration, advance_booking, max_advance).
+ * Does NOT apply rules that need full booking context (travel_buffer, daily_limit, etc.)
+ */
+function filterSlotsByBookingRules(
+  slots: SellableSlot[],
+  rules: InstructorBookingRule[],
+  now: Date
+): SellableSlot[] {
+  if (rules.length === 0) return slots;
+
+  const minDurationRule = rules.find(r => r.rule_type === 'min_duration' && r.is_active);
+  const advanceBookingRule = rules.find(r => r.rule_type === 'advance_booking' && r.is_active);
+  const maxAdvanceRule = rules.find(r => r.rule_type === 'max_advance' && r.is_active);
+
+  const minDurationHours = minDurationRule
+    ? (minDurationRule.config as MinDurationConfig).min_hours ?? 1
+    : 0;
+  const minAdvanceHours = advanceBookingRule
+    ? (advanceBookingRule.config as AdvanceBookingConfig).min_hours_advance ?? 0
+    : 0;
+  const maxAdvanceDays = maxAdvanceRule
+    ? (maxAdvanceRule.config as MaxAdvanceConfig).max_days_advance ?? Infinity
+    : Infinity;
+
+  const nowMs = now.getTime();
+  const minStartMs = nowMs + (minAdvanceHours * 60 * 60 * 1000);
+  const maxStartMs = nowMs + (maxAdvanceDays * 24 * 60 * 60 * 1000);
+  const minDurationMs = minDurationHours * 60 * 60 * 1000;
+
+  return slots.filter(slot => {
+    const startMs = new Date(slot.start_utc).getTime();
+    const endMs = new Date(slot.end_utc).getTime();
+    const durationMs = endMs - startMs;
+
+    if (durationMs < minDurationMs) return false;
+    if (startMs < minStartMs) return false;
+    if (startMs > maxStartMs) return false;
+
+    return true;
+  });
 }
 
 /**

@@ -295,7 +295,7 @@ export type {
 } from './calendar_conflict_repository.js';
 
 // Availability enforcement (conflict validation before booking creation)
-export { validateAvailability, AvailabilityConflictError } from './availability_validation.js';
+export { validateAvailability, getAvailabilityValidationInfo, AvailabilityConflictError } from './availability_validation.js';
 export type { ValidateAvailabilityParams } from './availability_validation.js';
 
 // Availability overrides (date-specific add/remove)
@@ -705,3 +705,78 @@ export {
   syncBookingCancelToCalendar,
 } from './booking_calendar_sync.js';
 export type { CalendarSyncResult } from './booking_calendar_sync.js';
+
+// Booking rules (instructor-defined validation rules)
+export {
+  getBookingRules,
+  getActiveBookingRules,
+  getBookingRuleById,
+  getActiveRuleByType,
+  createBookingRule,
+  updateBookingRule,
+  deleteBookingRule,
+  toggleBookingRule,
+  isHardRuleType,
+  getDefaultConfig,
+  BookingRuleNotFoundError,
+} from './booking_rules_repository.js';
+export type {
+  InstructorBookingRule,
+  BookingRuleType,
+  BookingRuleConfig,
+  MinDurationConfig,
+  AdvanceBookingConfig,
+  MaxAdvanceConfig,
+  TravelBufferConfig,
+  GapProtectionConfig,
+  DailyLimitConfig,
+  WeeklyLimitConfig,
+  FullWeekPreferenceConfig,
+  CreateBookingRuleParams,
+  UpdateBookingRuleParams,
+} from './booking_rules_repository.js';
+
+// Meeting point travel times (for buffer calculation)
+export {
+  getTravelTimes,
+  getDefaultTravelTime,
+  getTravelTimeBetween,
+  getRequiredTravelBuffer,
+  upsertTravelTime,
+  setDefaultTravelBuffer,
+  deleteTravelTime,
+  deleteAllTravelTimes,
+  TravelTimeNotFoundError,
+} from './travel_times_repository.js';
+export type {
+  MeetingPointTravelTime,
+  UpsertTravelTimeParams,
+} from './travel_times_repository.js';
+
+// Booking rules validator (pure function, loop-safe)
+export {
+  validateBookingRules,
+  isHardRule,
+} from './booking_rules_validator.js';
+export type {
+  BookingValidationInput,
+  BookingValidationResult,
+  ValidationError,
+  ValidationWarning,
+  AppliedDiscount,
+  ExistingBooking,
+} from './booking_rules_validator.js';
+
+// Compute available slots (Calendly-like model)
+export {
+  computeAvailableSlots,
+  getAvailabilitySettings,
+  updateAvailabilitySettings,
+  isSlotAvailable,
+} from './compute_available_slots.js';
+export type {
+  AvailabilitySettings,
+  AvailableSlot,
+  ComputeAvailableSlotsParams,
+  ComputeAvailableSlotsResult,
+} from './compute_available_slots.js';
