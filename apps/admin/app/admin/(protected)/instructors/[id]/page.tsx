@@ -127,8 +127,6 @@ export default function AdminInstructorDetailPage({
   const [savedId, setSavedId] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
-  }, [id, locale]);
-
   const load = useCallback(async () => {
     if (!id) return;
     setError(null);
