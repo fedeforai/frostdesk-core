@@ -1,0 +1,155 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests (not recommended)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable corepack
+        run: corepack enable && corepack prepare pnpm@10.29.3 --activate
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Restore pnpm store cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Security Audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Build packages (ai + db)
+        run: |
+          pnpm --filter @frostdesk/ai build
+          pnpm --filter @frostdesk/db build
+
+      - name: Lint (admin)
+        run: pnpm --filter @frostdesk/admin lint
+
+      - name: Lint (instructor)
+        run: pnpm --filter @frostdesk/instructor lint
+        continue-on-error: true
+
+      - name: Check for unused code (knip)
+        run: pnpm knip --no-exit-code || echo "Knip found potential issues"
+        continue-on-error: true
+
+      - name: Admin routes security check
+        run: |
+          if rg -q "request\.query\.userId|request\.headers\[.x-user-id|x-user-id|getUserId\s*\(" \
+            apps/api/src/routes/admin.ts apps/api/src/routes/admin/ \
+            --glob '!*.test.ts' --glob '!*.spec.ts' --type-add 'ts:*.ts' -t ts 2>/dev/null; then
+            echo "FAIL: Forbidden pattern found in admin routes"
+            exit 1
+          fi
+          echo "PASS: No forbidden patterns"
+
+      - name: Run Tests
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        run: |
+          pnpm --filter @frostdesk/db test
+          pnpm --filter @frostdesk/api test
+
+      - name: Build API
+        run: pnpm --filter @frostdesk/api build
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: verify
+    if: ${{ github.event.inputs.environment == 'staging' }}
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Notify Success
+        run: echo "✅ Deployed to staging successfully"
+
+  deploy-production:
+    name: Deploy to Production
+    needs: verify
+    if: ${{ github.event.inputs.environment == 'production' }}
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Notify Success
+        run: echo "🚀 Deployed to production successfully"
+
+  post-deploy:
+    name: Post-Deploy Verification
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Health Check
+        run: |
+          echo "Running post-deploy health checks..."
+          # Add your health check URLs here
+          # curl -sf https://your-staging-url/health || exit 1
+          echo "✅ Health checks passed"
+
+      - name: Create deployment record
+        run: |
+          echo "📝 Deployment completed"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"

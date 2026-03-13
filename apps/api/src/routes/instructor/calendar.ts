@@ -117,10 +117,10 @@ export async function instructorCalendarRoutes(app: FastifyInstance): Promise<vo
       const { code, state, error } = request.query;
       if (error) {
         const msg = typeof error === 'string' ? error : 'access_denied';
-        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent(msg)}`);
+        return reply.redirect(`${redirectBase}?error=${encodeURIComponent(msg)}`);
       }
       if (!code || !state) {
-        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent('missing_code_or_state')}`);
+        return reply.redirect(`${redirectBase}?error=${encodeURIComponent('missing_code_or_state')}`);
       }
       const instructorId = verifyState(state);
       const redirectUri =
@@ -129,7 +129,7 @@ export async function instructorCalendarRoutes(app: FastifyInstance): Promise<vo
           ? `${process.env.API_PUBLIC_URL.replace(/\/$/, '')}/instructor/calendar/oauth/callback`
           : '');
       if (!redirectUri) {
-        return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent('server_config')}`);
+        return reply.redirect(`${redirectBase}?error=${encodeURIComponent('server_config')}`);
       }
       const tokens = await exchangeCodeForTokens(code, redirectUri);
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
@@ -141,11 +141,11 @@ export async function instructorCalendarRoutes(app: FastifyInstance): Promise<vo
         refresh_token_encrypted: tokens.refresh_token ?? null,
         token_expires_at: expiresAt,
       });
-      return reply.redirect(302, `${redirectBase}?connected=1`);
+      return reply.redirect(`${redirectBase}?connected=1`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       request.log.warn({ err }, 'Google Calendar OAuth callback failed');
-      return reply.redirect(302, `${redirectBase}?error=${encodeURIComponent(message)}`);
+      return reply.redirect(`${redirectBase}?error=${encodeURIComponent(message)}`);
     }
   });
 

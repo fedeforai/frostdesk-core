@@ -1,0 +1,82 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.{js,mjs,ts,sh}"],
+      "project": ["scripts/**/*.{js,mjs,ts}"]
+    },
+    "apps/api": {
+      "entry": ["src/index.ts", "src/routes/**/*.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["**/*.test.ts", "**/*.spec.ts", "dist/**"]
+    },
+    "apps/admin": {
+      "entry": [
+        "app/**/*.{ts,tsx}",
+        "pages/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}"
+      ],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": [".next/**", "node_modules/**"]
+    },
+    "apps/instructor": {
+      "entry": [
+        "app/**/*.{ts,tsx}",
+        "pages/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}"
+      ],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": [".next/**", "node_modules/**"]
+    },
+    "apps/web": {
+      "entry": ["src/main.tsx", "src/App.tsx"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": ["dist/**"]
+    },
+    "apps/landing": {
+      "entry": ["app/**/*.{ts,tsx}"],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": [".next/**"]
+    },
+    "apps/worker": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["dist/**"]
+    },
+    "packages/db": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["**/*.test.ts", "dist/**"]
+    },
+    "packages/ai": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["**/*.test.ts", "dist/**"]
+    },
+    "packages/integrations": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["dist/**"]
+    }
+  },
+  "ignore": [
+    "**/*.d.ts",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/coverage/**"
+  ],
+  "ignoreDependencies": [
+    "typescript",
+    "@types/*",
+    "eslint",
+    "eslint-*",
+    "prettier",
+    "@typescript-eslint/*",
+    "vitest",
+    "@vitest/*",
+    "tsup",
+    "tsx"
+  ],
+  "ignoreExportsUsedInFile": true
+}

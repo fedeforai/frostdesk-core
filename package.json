@@ -16,6 +16,14 @@
     "dev:web": "pnpm --filter @frostdesk/web dev",
     "test": "pnpm --filter @frostdesk/db test && pnpm --filter @frostdesk/api test",
     "verify:pnpm": "bash scripts/verify_repo.sh",
+    "verify": "bash scripts/pre-deploy-check.sh",
+    "verify:code": "pnpm knip",
+    "verify:security": "pnpm audit --audit-level=high",
+    "verify:types": "pnpm -r exec tsc --noEmit",
+    "lint": "pnpm --filter @frostdesk/admin lint && pnpm --filter @frostdesk/instructor lint",
+    "lint:fix": "pnpm --filter @frostdesk/admin lint --fix && pnpm --filter @frostdesk/instructor lint --fix",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:dry": "DRY_RUN=true bash scripts/deploy.sh",
     "build:api": "pnpm --filter @frostdesk/api build",
     "start:api": "node apps/api/dist/index.js",
     "build:instructor": "pnpm --filter @frostdesk/instructor build",
@@ -34,8 +42,16 @@
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "dotenv": "^16.6.1",
+    "knip": "^5.86.0",
     "resolve-pkg-maps": "^1.0.0",
-    "tsup": "^8.0.1",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": ">=4.59.0",
+      "minimatch": ">=10.2.3",
+      "serialize-javascript": ">=7.0.3"
+    }
   }
 }

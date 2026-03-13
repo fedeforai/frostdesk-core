@@ -16,7 +16,7 @@
     "@sentry/node": "^10.40.0",
     "@supabase/supabase-js": "^2.95.3",
     "exceljs": "^4.4.0",
-    "fastify": "^4.24.3",
+    "fastify": "^5.8.2",
     "pdfkit": "^0.17.2",
     "resolve-pkg-maps": "^1.0.0",
     "stripe": "^20.3.1"
