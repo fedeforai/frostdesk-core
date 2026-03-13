@@ -10,13 +10,13 @@ import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import Link from 'next/link';
 
 interface HumanInboxDetailPageProps {
-  params: {
+  params: Promise<{
     conversationId: string;
-  };
+  }>;
 }
 
 export default async function HumanInboxDetailPage({ params }: HumanInboxDetailPageProps) {
-  const conversationId = params.conversationId;
+  const { conversationId } = await params;
 
   try {
     const data = await fetchHumanInboxDetail(conversationId);

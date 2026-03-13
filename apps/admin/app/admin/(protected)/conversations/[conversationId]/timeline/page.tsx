@@ -5,13 +5,13 @@ import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import Link from 'next/link';
 
 interface ConversationTimelinePageProps {
-  params: {
+  params: Promise<{
     conversationId: string;
-  };
+  }>;
 }
 
 export default async function ConversationTimelinePage({ params }: ConversationTimelinePageProps) {
-  const { conversationId } = params;
+  const { conversationId } = await params;
 
   try {
     const data = await fetchConversationTimelineEvents(conversationId);
