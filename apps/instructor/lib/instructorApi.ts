@@ -878,6 +878,7 @@ export async function cancelInstructorBooking(id: string): Promise<{ ok?: boolea
     method: 'POST',
     credentials: 'include',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders },
+    body: JSON.stringify({}),
   });
   if (response.status === 401) {
     const err = new Error('UNAUTHORIZED');
@@ -1518,7 +1519,8 @@ export async function deleteAvailabilityOverride(id: string): Promise<void> {
   const response = await fetch(`${baseUrl.replace(/\/$/, '')}/instructor/availability/overrides/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     credentials: 'include',
-    headers: authHeaders,
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    body: JSON.stringify({}),
   });
   if (response.status === 401) {
     const err = new Error('UNAUTHORIZED');
