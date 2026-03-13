@@ -39,7 +39,7 @@ export async function webhookStripeSubscriptionRoutes(app: FastifyInstance): Pro
   );
 
   app.post('/webhook/stripe/subscription', async (request, reply) => {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const webhookSecret = process.env.STRIPE_SUBSCRIPTION_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
       request.log.error('STRIPE_WEBHOOK_SECRET not configured');
       return reply.status(500).send({ ok: false, error: 'Webhook secret not configured' });
