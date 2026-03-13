@@ -2535,6 +2535,7 @@ export async function disconnectCalendar(): Promise<void> {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
   };
   if (baseUrl !== '/api') {
     const auth = await getAuthHeadersForApi();
