@@ -16,7 +16,7 @@ const raleway = Raleway({
 
 export const metadata: Metadata = {
   title: "FrostDesk — Fill your calendar. Eliminate admin.",
-  description: "AI-powered operations for ski and driving instructors. Join the waitlist.",
+  description: "AI-powered operations for ski and diving instructors. Join the waitlist.",
 };
 
 export default function RootLayout({

@@ -136,7 +136,7 @@ const translations: Record<Lang, Translations> = {
     hero: {
       variantA: "Fill your calendar. Eliminate admin. Stay in control.",
       variantB: "Stop losing bookings. Automate your operations.",
-      subline: "AI-powered operations for ski & driving instructors.",
+      subline: "AI-powered operations for ski & diving instructors.",
       cta: "Join the waitlist",
       ctaSecondary: "Reserve your spot",
       ctaHint: "Join the waitlist to get notified when we launch. Reserve early access to secure your onboarding slot now.",
@@ -178,7 +178,7 @@ const translations: Record<Lang, Translations> = {
     faq: {
       title: "FAQ",
       q1: "Who is FrostDesk for?",
-      a1: "Ski and driving instructors who want to fill their calendar and cut admin time.",
+      a1: "Ski and diving instructors who want to fill their calendar and cut admin time.",
       q2: "Is there a free trial?",
       a2: "Early access is limited. Join the waitlist to be invited.",
       q3: "What does the deposit do?",
@@ -235,7 +235,7 @@ const translations: Record<Lang, Translations> = {
     },
     meta: {
       title: "FrostDesk — Fill your calendar. Eliminate admin.",
-      description: "AI-powered operations for ski and driving instructors. Join the waitlist.",
+      description: "AI-powered operations for ski and diving instructors. Join the waitlist.",
     },
   },
   it: {
@@ -243,7 +243,7 @@ const translations: Record<Lang, Translations> = {
     hero: {
       variantA: "Riempi il calendario. Elimina l'amministrazione. Resta in controllo.",
       variantB: "Basta perdere prenotazioni. Automatizza le tue operazioni.",
-      subline: "Operazioni basate su AI per maestri di sci e istruttori di guida.",
+      subline: "Operazioni basate su AI per maestri di sci e istruttori sub.",
       cta: "Iscriviti alla waitlist",
       ctaSecondary: "Prenota il tuo posto",
       ctaHint: "Iscriviti alla waitlist per essere avvisato al lancio. Prenota l'accesso anticipato per assicurarti lo slot di onboarding.",
@@ -285,7 +285,7 @@ const translations: Record<Lang, Translations> = {
     faq: {
       title: "FAQ",
       q1: "Per chi è FrostDesk?",
-      a1: "Maestri di sci e istruttori di guida che vogliono riempire il calendario e tagliare l'amministrazione.",
+      a1: "Maestri di sci e istruttori sub che vogliono riempire il calendario e tagliare l'amministrazione.",
       q2: "C'è una prova gratuita?",
       a2: "L'accesso anticipato è limitato. Iscriviti alla waitlist per essere invitato.",
       q3: "A cosa serve il deposito?",
@@ -350,7 +350,7 @@ const translations: Record<Lang, Translations> = {
     hero: {
       variantA: "Remplissez votre calendrier. Éliminez l'admin. Gardez le contrôle.",
       variantB: "Arrêtez de perdre des réservations. Automatisez vos opérations.",
-      subline: "Opérations pilotées par l'IA pour moniteurs de ski et d'auto-école.",
+      subline: "Opérations pilotées par l'IA pour moniteurs de ski et de plongée.",
       cta: "Rejoindre la liste",
       ctaSecondary: "Réserver ma place",
       ctaHint: "Rejoignez la liste pour être notifié au lancement. Réservez l'accès anticipé pour sécuriser votre créneau d'onboarding.",
@@ -392,7 +392,7 @@ const translations: Record<Lang, Translations> = {
     faq: {
       title: "FAQ",
       q1: "Pour qui est FrostDesk ?",
-      a1: "Moniteurs de ski et d'auto-école qui veulent remplir leur calendrier et réduire l'admin.",
+      a1: "Moniteurs de ski et de plongée qui veulent remplir leur calendrier et réduire l'admin.",
       q2: "Y a-t-il un essai gratuit ?",
       a2: "L'accès anticipé est limité. Rejoignez la liste pour être invité.",
       q3: "À quoi sert le dépôt ?",
@@ -457,7 +457,7 @@ const translations: Record<Lang, Translations> = {
     hero: {
       variantA: "Kalender füllen. Verwaltung reduzieren. Alles unter Kontrolle.",
       variantB: "Keine verlorenen Buchungen mehr. Abläufe automatisieren.",
-      subline: "KI-gestützte Abläufe für Ski- und Fahrlehrer.",
+      subline: "KI-gestützte Abläufe für Ski- und Tauchlehrer.",
       cta: "Zur Warteliste",
       ctaSecondary: "Platz sichern",
       ctaHint: "Warteliste: Benachrichtigung beim Start. Frühzugang sichern: Onboarding-Slot jetzt reservieren.",
@@ -482,7 +482,7 @@ const translations: Record<Lang, Translations> = {
       step1: "Zur Warteliste",
       step1Desc: "Erzähl uns von deinem Gebiet und deiner Erfahrung.",
       step2: "Frühzugang",
-      step2Desc: "Wir onboarden Fahrlehrer in kleinen Gruppen.",
+      step2Desc: "Wir onboarden Tauchlehrer in kleinen Gruppen.",
       step3: "Live gehen",
       step3Desc: "WhatsApp und Kalender verbinden, Zeit sparen.",
     },
@@ -499,7 +499,7 @@ const translations: Record<Lang, Translations> = {
     faq: {
       title: "FAQ",
       q1: "Für wen ist FrostDesk?",
-      a1: "Ski- und Fahrlehrer, die ihren Kalender füllen und Verwaltung reduzieren wollen.",
+      a1: "Ski- und Tauchlehrer, die ihren Kalender füllen und Verwaltung reduzieren wollen.",
       q2: "Gibt es eine kostenlose Testversion?",
       a2: "Frühzugang ist begrenzt. Melde dich auf der Warteliste an.",
       q3: "Wofür ist die Anzahlung?",
@@ -507,7 +507,7 @@ const translations: Record<Lang, Translations> = {
     },
     cta: {
       title: "Bereit, deine Zeit zurückzugewinnen?",
-      sub: "Hunderte Fahrlehrer sind schon auf der Warteliste.",
+      sub: "Hunderte Tauchlehrer sind schon auf der Warteliste.",
       button: "Zur Warteliste",
     },
     waitlist: {
@@ -556,7 +556,7 @@ const translations: Record<Lang, Translations> = {
     },
     meta: {
       title: "FrostDesk — Kalender füllen. Verwaltung reduzieren.",
-      description: "KI-gestützte Abläufe für Ski- und Fahrlehrer. Zur Warteliste.",
+      description: "KI-gestützte Abläufe für Ski- und Tauchlehrer. Zur Warteliste.",
     },
   },
 };

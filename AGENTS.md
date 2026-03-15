@@ -53,7 +53,7 @@ Before suggesting or running commands that call the API, hit the inbox, or use W
 
 ### Project overview
 
-FrostDesk is an AI-powered customer support / CRM platform for driving instructors. It is a **pnpm monorepo** (pnpm v10.29.3 via corepack) with TypeScript throughout. See `package.json` `scripts` for the full list of run commands.
+FrostDesk is an AI-powered customer support / CRM platform for diving instructors. It is a **pnpm monorepo** (pnpm v10.29.3 via corepack) with TypeScript throughout. See `package.json` `scripts` for the full list of run commands.
 
 ### Key services
 
